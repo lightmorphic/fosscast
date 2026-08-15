@@ -8,6 +8,7 @@ WORKDIR /app
 RUN apk update && apk upgrade --no-cache
 
 COPY package.json server.js ./
+COPY lib ./lib
 
 # Remove the npm CLI from the image: it is only needed to install
 # dependencies, and we have none.

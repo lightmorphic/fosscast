@@ -11,9 +11,11 @@ self-hosted studio hosts record and stream from. The two are separate
 apps that talk through small, stable interfaces; neither needs the
 other to run.
 
-**Status: early development.** The skeleton runs (site, streaming
-ingest, health checks); episodes, players, chat and the publish API are
-under construction.
+**Status: early development.** Working today: the public site with show
+pages, episode players and RSS feeds; the admin dashboard (shows,
+episodes, per-show stream keys, accounts); and authenticated live
+streaming ingest. Still to come: the live player page, chat, media
+uploads and the publish API.
 
 ## What it will do
 
@@ -48,14 +50,28 @@ the app and the ingest instead, and point your proxy at
 docker compose up -d --build app mediamtx
 ```
 
+### Managing your instance
+
+The dashboard lives at `/admin`. The first admin account comes from
+`ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env` (created on first start;
+change the password from the Account page after logging in). From the
+dashboard you create shows, publish episodes (media by URL: your own
+storage, archive.org, anywhere reachable) and manage stream keys. Every
+show gets its own public page and RSS feed automatically.
+
+The same code serves a single podcast or many: the instance admin can
+create any number of shows, each with its own stream key, pages and
+feed. Owner accounts scoped to their own podcasts are coming next, so
+an instance can host podcasts for other people too.
+
 ### Going live from a studio
 
 In FOSSStudio (or OBS, or anything that speaks RTMP), set:
 
 - Stream URL: `rtmp://<your-domain>/live`
-- Stream key: the `STREAM_KEY` value from your `.env`
+- Stream key: the show's key from the dashboard's Stream page
 
-Publishing without the key is refused; playback is public.
+Publishing without a valid key is refused; playback is public.
 
 ### Data
 
