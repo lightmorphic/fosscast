@@ -77,7 +77,12 @@ Publishing without a valid key is refused; playback is public.
 
 Everything the app stores lives in one directory (`./data` by default,
 `DATA_PATH` to move it): bind mounted, so it is plain files you can
-inspect and back up directly.
+inspect and back up directly. The app container runs as UID 1000, so
+the directory must be writable by that user:
+
+```bash
+sudo chown -R 1000:1000 ./data
+```
 
 ## Deploying updates from a dev machine
 
