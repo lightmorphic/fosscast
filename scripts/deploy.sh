@@ -27,25 +27,24 @@ rsync -az --delete -e "ssh -i $SSH_KEY -o IdentitiesOnly=yes" \
   "$REPO_ROOT/" "$HOST:$BASE/releases/$RELEASE/"
 
 echo "== Switching current -> $RELEASE =="
+PREV_RELEASE="$(run "readlink -f $BASE/current 2>/dev/null" || true)"
 run "ln -sfn $BASE/.env $BASE/releases/$RELEASE/.env && ln -sfn $BASE/releases/$RELEASE $BASE/current"
 
 echo "== Starting stack =="
 run "cd $BASE/current && DATA_PATH=$BASE/data docker compose -p fosscast up -d --build app mediamtx"
 
-# The mediamtx config is bind-mounted through the `current` symlink,
-# which pins the file at container start; a config change in a new
-# release does not reach the running container. Compare what the
-# container actually sees with the current release and recreate only
-# on a real difference, so ordinary deploys never drop a live stream.
+# MediaMTX reads its config once at start and its file watcher never
+# fires when the `current` symlink flips to a new release, so a config
+# change needs an explicit recreate. Compare the new release's config
+# with the previously deployed one and recreate only on a real
+# difference, so ordinary deploys never drop a live stream.
 echo "== MediaMTX config check =="
-run "docker cp fosscast-mediamtx-1:/mediamtx.yml /tmp/mediamtx-running.yml 2>/dev/null || true
-if ! cmp -s /tmp/mediamtx-running.yml $BASE/current/mediamtx.yml; then
+run "if ! cmp -s $BASE/releases/$RELEASE/mediamtx.yml '$PREV_RELEASE/mediamtx.yml' 2>/dev/null; then
   echo 'config changed, recreating mediamtx'
   cd $BASE/current && DATA_PATH=$BASE/data docker compose -p fosscast up -d --force-recreate mediamtx
 else
   echo 'mediamtx config unchanged'
-fi
-rm -f /tmp/mediamtx-running.yml"
+fi"
 
 echo "== Health check =="
 sleep 3
