@@ -19,8 +19,8 @@ For self-hosters assessing the project:
 
 - **Streaming ingest**: every RTMP publish attempt is authorised by the
   app before MediaMTX accepts it; without a valid stream key nothing
-  can go live. Playback is deliberately public. RTSP, WebRTC and SRT
-  are disabled outright, as are MediaMTX's API, metrics and pprof
+  can go live. Playback is deliberately public. RTSP, WebRTC, SRT and
+  MoQ are disabled outright, as are MediaMTX's API, metrics and pprof
   endpoints.
 - **Network surface**: the only public ports are 80/443 (the reverse
   proxy) and 1935 (RTMP ingest). The app and the HLS output bind to
