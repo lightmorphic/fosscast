@@ -4,6 +4,13 @@
 
 authMethod: http
 authHTTPAddress: http://app:3100/api/internal/mediamtx-auth
+# The control API is only reachable inside the compose network (the
+# port is never published); the app polls it for live status.
+authHTTPExclude:
+  - action: api
+
+api: yes
+apiAddress: :9997
 
 # Only the two protocols FOSSCast uses.
 rtsp: false
