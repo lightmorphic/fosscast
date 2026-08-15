@@ -34,6 +34,11 @@ streaming with audience chat.
   token. Accounts could come later without breaking anything.
 - **Publishers** are studio hosts holding a FOSSCast token
   (`PUBLISHER_TOKEN`). No shared auth with FOSSStudio.
+- **Instances stack.** Several FOSSCast instances can share one
+  machine: each is its own compose project with its own data dir,
+  domain and ports (`HTTP_PORT`, `RTMP_PORT`, `HLS_PORT`), behind one
+  shared reverse proxy. Or give an instance its own machine; nothing
+  changes.
 - **One instance, one podcast.** This edition manages a single show.
   The data model still carries roles on accounts and `ownerId` plus a
   per-show `streamKey` on shows, so the internals stay general and the
