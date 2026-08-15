@@ -13,12 +13,22 @@ const MEDIA_TYPES = {
 
 function mediaType(url) {
   try {
-    const pathname = new URL(url).pathname.toLowerCase();
+    const pathname = new URL(url, 'http://relative').pathname.toLowerCase();
     const ext = pathname.slice(pathname.lastIndexOf('.'));
     return MEDIA_TYPES[ext] || 'application/octet-stream';
   } catch {
     return 'application/octet-stream';
   }
+}
+
+// Episodes the public can see: published and not future-dated.
+function visible(episodes) {
+  const today = new Date().toISOString().slice(0, 10);
+  return episodes.filter((e) => !e.draft && e.date <= today);
+}
+
+function absolute(url, domain) {
+  return url.startsWith('/') ? `https://${domain}${url}` : url;
 }
 
 function player(episode) {
@@ -139,7 +149,8 @@ ${chatPanel}
   });
 }
 
-function showPage(show, episodes, domain, live = false) {
+function showPage(show, allEpisodes, domain, live = false) {
+  const episodes = visible(allEpisodes);
   const liveBanner = live
     ? `<a class="panel live-banner" href="/live/${esc(show.slug)}">
         <span class="live-badge on"><span class="dot"></span>LIVE</span>
@@ -179,28 +190,70 @@ function escXml(value) {
     .replaceAll('"', '&quot;');
 }
 
+function itunesDuration(seconds) {
+  if (!seconds) return '';
+  return `<itunes:duration>${Math.round(seconds)}</itunes:duration>`;
+}
+
 function feed(show, episodes, domain) {
   const base = `https://${domain}`;
-  const items = episodes.map((episode) => `
+  const items = visible(episodes).map((episode) => `
     <item>
       <title>${escXml(episode.title)}</title>
-      <guid isPermaLink="false">${escXml(episode.id)}</guid>
+      <guid isPermaLink="false">${escXml(episode.guid || episode.id)}</guid>
       <pubDate>${new Date(episode.date + 'T00:00:00Z').toUTCString()}</pubDate>
       <description>${escXml(episode.description)}</description>
-      <enclosure url="${escXml(episode.mediaUrl)}" length="0" type="${escXml(mediaType(episode.mediaUrl))}"/>
+      <enclosure url="${escXml(absolute(episode.mediaUrl, domain))}" length="${Number(episode.bytes) || 0}" type="${escXml(mediaType(episode.mediaUrl))}"/>
+      ${episode.episode ? `<itunes:episode>${Number(episode.episode)}</itunes:episode>` : ''}
+      ${episode.season ? `<itunes:season>${Number(episode.season)}</itunes:season>` : ''}
+      <itunes:episodeType>${escXml(episode.type || 'full')}</itunes:episodeType>
+      ${itunesDuration(episode.duration)}
+      <itunes:explicit>${show.explicit ? 'true' : 'false'}</itunes:explicit>
     </item>`).join('');
   return `<?xml version="1.0" encoding="UTF-8"?>
-<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+<rss version="2.0"
+  xmlns:atom="http://www.w3.org/2005/Atom"
+  xmlns:itunes="http://www.itunes.com/dtds/podcast-1.0.dtd"
+  xmlns:podcast="https://podcastindex.org/namespace/1.0">
   <channel>
     <title>${escXml(show.name)}</title>
     <link>${escXml(`${base}/shows/${show.slug}`)}</link>
     <atom:link href="${escXml(`${base}/shows/${show.slug}/feed.xml`)}" rel="self" type="application/rss+xml"/>
     <description>${escXml(show.description)}</description>
-    <language>en</language>
+    <language>${escXml(show.language || 'en')}</language>
+    <podcast:guid>${escXml(show.id)}</podcast:guid>
+    ${show.author ? `<itunes:author>${escXml(show.author)}</itunes:author>` : ''}
+    ${show.artwork ? `<itunes:image href="${escXml(absolute(show.artwork, domain))}"/><image><url>${escXml(absolute(show.artwork, domain))}</url><title>${escXml(show.name)}</title><link>${escXml(`${base}/shows/${show.slug}`)}</link></image>` : ''}
+    ${show.category ? `<itunes:category text="${escXml(show.category)}"/>` : ''}
+    <itunes:explicit>${show.explicit ? 'true' : 'false'}</itunes:explicit>
     ${items}
   </channel>
 </rss>
 `;
 }
 
-module.exports = { landing, showsIndex, showPage, livePage, feed, mediaType };
+// Minimal embeddable player page for one episode.
+function embedPage(show, episode) {
+  return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(episode.title)} - ${esc(show.name)}</title>
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body class="embed">
+<div class="embed-player">
+  ${show.artwork ? `<img class="embed-art" src="${esc(show.artwork)}" alt="">` : ''}
+  <div class="embed-meta">
+    <strong>${esc(episode.title)}</strong>
+    <span class="hint">${esc(show.name)}</span>
+    ${player(episode)}
+  </div>
+</div>
+</body>
+</html>
+`;
+}
+
+module.exports = { landing, showsIndex, showPage, livePage, feed, embedPage, mediaType, visible };

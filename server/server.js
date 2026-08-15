@@ -10,6 +10,8 @@ const { Store } = require('./lib/store');
 const { createAdminRouter } = require('./lib/admin');
 const { ChatHub } = require('./lib/chat');
 const { LiveStatus } = require('./lib/live');
+const { Recordings } = require('./lib/recordings');
+const media = require('./lib/media');
 const publicSite = require('./lib/public');
 
 const HTTP_PORT = Number(process.env.HTTP_PORT || 3100);
@@ -71,7 +73,19 @@ const liveStatus = new LiveStatus({
     if (show) chat.broadcast(show.id, { type: 'status', live: isLive });
   },
 });
-const admin = createAdminRouter({ store, readBody, chat });
+const MEDIA_DIR = path.join(DATA_DIR, 'media');
+const recordings = new Recordings({ dataDir: DATA_DIR, store });
+const admin = createAdminRouter({ store, readBody, chat, recordings, mediaDir: MEDIA_DIR, dataDir: DATA_DIR });
+
+// Reminder/cleanup sweep for unpublished live recordings, daily.
+const sweep = () => recordings.sweep({
+  adminEmails: store.load('users', []).map((u) => u.email),
+  showForKey: (key) => store.load('shows', []).find((s) => s.streamKey === key) || null,
+  domain: DOMAIN,
+}).catch(() => {});
+const sweepTimer = setInterval(sweep, 24 * 3600 * 1000);
+sweepTimer.unref();
+setTimeout(sweep, 60 * 1000).unref();
 
 const MEDIAMTX_HLS = process.env.MEDIAMTX_HLS || 'http://mediamtx:8888';
 
@@ -146,6 +160,18 @@ const server = http.createServer((req, res) => {
     return;
   }
 
+  if (req.method === 'PUT' && p === '/admin/api/upload') {
+    if (!admin.currentUser(req)) return sendJson(res, 401, { error: 'not signed in' });
+    media.saveUpload(req, MEDIA_DIR, url.searchParams.get('show') || 'show', url.searchParams.get('filename') || 'file')
+      .then((result) => sendJson(res, 200, result))
+      .catch((err) => sendJson(res, 400, { error: err.message }));
+    return;
+  }
+
+  if (p.startsWith('/media/') && (req.method === 'GET' || req.method === 'HEAD')) {
+    return media.serveMedia(req, res, MEDIA_DIR, p);
+  }
+
   if (p.startsWith('/admin')) {
     admin.handle(req, res, url).catch((err) => {
       console.error('admin error:', err.message);
@@ -217,6 +243,14 @@ const server = http.createServer((req, res) => {
       });
     }
     return sendHtml(res, publicSite.showPage(show, items, DOMAIN, liveStatus.isLive(show.streamKey)));
+  }
+
+  const embedMatch = p.match(/^\/embed\/([a-f0-9-]+)$/);
+  if (embedMatch) {
+    const episode = store.load('episodes', []).find((e) => e.id === embedMatch[1]);
+    const show = episode && store.load('shows', []).find((s) => s.id === episode.showId);
+    if (!episode || !show || episode.draft) return send(res, 404, 'not found');
+    return sendHtml(res, publicSite.embedPage(show, episode));
   }
 
   const liveMatch = p.match(/^\/live\/([a-z0-9-]+)$/);

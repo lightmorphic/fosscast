@@ -11,11 +11,14 @@ self-hosted studio hosts record and stream from. The two are separate
 apps that talk through small, stable interfaces; neither needs the
 other to run.
 
-**Status: early development.** Working today: the public site with show
-pages, episode players and RSS feeds; the admin dashboard (shows,
-episodes, per-show stream keys, accounts); and authenticated live
-streaming ingest. Still to come: the live player page, chat, media
-uploads and the publish API.
+**Status: early development, moving fast.** Working today: the public
+site with episode pages, players and directory-grade RSS; live pages
+with an HLS player and nickname chat (IP bans, word masking); live DVR
+with one-click publish-as-episode; media uploads with byte-range
+serving; one-click import from an existing feed; drafts and
+future-dated scheduling; an embeddable episode player; and the admin
+dashboard tying it all together. Still to come: Podcasting 2.0 tags
+(transcripts, chapters, liveItem), analytics, theming.
 
 ## What it will do
 

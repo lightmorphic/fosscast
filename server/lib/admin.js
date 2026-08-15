@@ -8,8 +8,13 @@
 // admin can simply create podcasts and owner accounts for others.
 
 const crypto = require('crypto');
+const path = require('path');
+const fs = require('fs');
 const { esc, adminPage, ICONS } = require('./html');
 const auth = require('./auth');
+const CATEGORIES = require('./categories');
+const { probeDuration } = require('./media');
+const importer = require('./import');
 
 // This edition manages one podcast.
 const MAX_SHOWS = 1;
@@ -81,7 +86,25 @@ function deleteButton(action, label) {
 }
 
 function createAdminRouter(ctx) {
-  const { store, readBody, chat } = ctx;
+  const { store, readBody, chat, recordings, mediaDir, dataDir } = ctx;
+
+  // Fill in size and duration for an episode's media, async.
+  async function measure(episodeId) {
+    const list = episodes();
+    const episode = list.find((e) => e.id === episodeId);
+    if (!episode) return;
+    try {
+      if (episode.mediaUrl.startsWith('/media/')) {
+        const file = path.join(dataDir, decodeURIComponent(episode.mediaUrl.slice(1)));
+        episode.bytes = fs.statSync(file).size;
+        episode.duration = await probeDuration(file);
+      } else if (!episode.bytes) {
+        const res = await fetch(episode.mediaUrl, { method: 'HEAD', signal: AbortSignal.timeout(10000) });
+        episode.bytes = Number(res.headers.get('content-length')) || 0;
+      }
+      store.save('episodes', list);
+    } catch { /* sizes stay unknown */ }
+  }
   const limiter = new auth.RateLimiter();
 
   function settings() {
@@ -205,27 +228,30 @@ function createAdminRouter(ctx) {
     });
   }
 
-  function showDetail(show) {
+  function showDetail(show, notice = '') {
     const items = episodes()
       .filter((e) => e.showId === show.id)
       .sort((a, b) => (a.date < b.date ? 1 : -1));
+    const nextEpisode = items.reduce((n, e) => Math.max(n, e.episode || 0), 0) + 1;
     const rows = items.map((episode) => `<tr>
-      <td>${esc(episode.title)}</td>
+      <td>${esc(episode.title)}${episode.draft ? ' <span class="tag">draft</span>' : ''}</td>
       <td>${esc(episode.date)}</td>
-      <td class="media-cell"><a href="${esc(episode.mediaUrl)}">media</a></td>
+      <td class="media-cell"><a href="${esc(episode.mediaUrl)}">media</a> &middot; <a href="/embed/${esc(episode.id)}">embed</a></td>
       <td class="actions">${deleteButton(`/admin/episodes/${esc(episode.id)}/delete`, 'Delete episode')}</td>
     </tr>`).join('');
     return adminPage({
       title: show.name,
       active: 'shows',
       body: `<h1 class="page-title">${esc(show.name)}</h1>
+      ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
       <p class="hint">Public page: <a href="/shows/${esc(show.slug)}">/shows/${esc(show.slug)}</a>
-      &middot; RSS: <a href="/shows/${esc(show.slug)}/feed.xml">/shows/${esc(show.slug)}/feed.xml</a></p>
+      &middot; RSS: <a href="/shows/${esc(show.slug)}/feed.xml">/shows/${esc(show.slug)}/feed.xml</a>
+      &middot; <a href="/live/${esc(show.slug)}">live page</a></p>
       <section class="panel">
         <h2>Episodes</h2>
         <table>
           <caption class="sr-only">Episodes of ${esc(show.name)}</caption>
-          <thead><tr><th>Title</th><th>Date</th><th>Media</th><th></th></tr></thead>
+          <thead><tr><th>Title</th><th>Date</th><th>Links</th><th></th></tr></thead>
           <tbody>${rows || '<tr><td colspan="4" class="hint">No episodes yet.</td></tr>'}</tbody>
         </table>
       </section>
@@ -234,15 +260,93 @@ function createAdminRouter(ctx) {
         <form method="post" action="/admin/shows/${esc(show.slug)}/episodes">
           <label for="title">Title</label>
           <input id="title" name="title" required maxlength="200">
-          <label for="date">Date</label>
-          <input id="date" name="date" type="date" required value="${new Date().toISOString().slice(0, 10)}">
-          <label for="mediaUrl">Media URL (the episode file: your own storage, archive.org, anywhere reachable)</label>
-          <input id="mediaUrl" name="mediaUrl" type="url" required maxlength="1000" placeholder="https://archive.org/download/...">
+          <div class="field-row">
+            <div><label for="date">Date</label>
+            <input id="date" name="date" type="date" required value="${new Date().toISOString().slice(0, 10)}"></div>
+            <div><label for="epnum">Episode #</label>
+            <input id="epnum" name="episode" type="number" min="1" value="${nextEpisode}"></div>
+            <div><label for="season">Season</label>
+            <input id="season" name="season" type="number" min="1" placeholder=""></div>
+            <div><label for="eptype">Type</label>
+            <select id="eptype" name="type"><option value="full">Full</option><option value="trailer">Trailer</option><option value="bonus">Bonus</option></select></div>
+          </div>
+          <label for="mediaFile">Media file (uploads to this server)</label>
+          <input id="mediaFile" type="file" accept="audio/*,video/*" data-upload data-show="${esc(show.slug)}" data-target="mediaUrl" data-status="upload-status">
+          <p class="hint" id="upload-status"></p>
+          <label for="mediaUrl">Or media URL (your own storage, archive.org, anywhere reachable)</label>
+          <input id="mediaUrl" name="mediaUrl" maxlength="1000" placeholder="https://archive.org/download/...">
           <label for="epDescription">Description</label>
           <textarea id="epDescription" name="description" rows="4" maxlength="4000"></textarea>
+          <label class="check-label"><input type="checkbox" name="draft" value="1" class="check"> Save as draft (hidden from the public site and feed)</label>
           <button class="btn-primary" type="submit">Publish episode</button>
         </form>
+      </section>
+      <section class="panel">
+        <h2>Show settings</h2>
+        <form method="post" action="/admin/shows/${esc(show.slug)}/settings">
+          <label for="sname">Name</label>
+          <input id="sname" name="name" required maxlength="120" value="${esc(show.name)}">
+          <label for="sdesc">Description</label>
+          <textarea id="sdesc" name="description" rows="3" maxlength="2000">${esc(show.description)}</textarea>
+          <div class="field-row">
+            <div><label for="sauthor">Author</label>
+            <input id="sauthor" name="author" maxlength="120" value="${esc(show.author || '')}"></div>
+            <div><label for="slang">Language</label>
+            <input id="slang" name="language" maxlength="10" value="${esc(show.language || 'en')}"></div>
+            <div><label for="scat">Category</label>
+            <select id="scat" name="category">${CATEGORIES.map((c) => `<option${show.category === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
+          </div>
+          <label for="sart">Artwork (square, 3000x3000 recommended, JPG or PNG)</label>
+          <input id="sart" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="artwork" data-status="art-status">
+          <p class="hint" id="art-status">${show.artwork ? `Current: ${esc(show.artwork)}` : 'No artwork yet (directories require it).'}</p>
+          <input type="hidden" id="artwork" name="artwork" value="${esc(show.artwork || '')}">
+          <label class="check-label"><input type="checkbox" name="explicit" value="1" class="check"${show.explicit ? ' checked' : ''}> Explicit content</label>
+          <button class="btn-primary" type="submit">Save settings</button>
+        </form>
+      </section>
+      <section class="panel">
+        <h2>Import from an existing feed</h2>
+        <p class="hint">Paste a podcast's RSS URL: every episode comes in
+        with its metadata (media stays at the old URLs until you
+        re-upload). Missing show settings are filled from the feed.</p>
+        <form method="post" action="/admin/shows/${esc(show.slug)}/import">
+          <label for="feedUrl">Feed URL</label>
+          <input id="feedUrl" name="feedUrl" type="url" required maxlength="1000" placeholder="https://example.com/feed.xml">
+          <button class="btn-primary" type="submit">Import episodes</button>
+        </form>
       </section>`,
+    });
+  }
+
+  function recordingsPage(domain) {
+    const cards = shows().map((show) => {
+      const sessions = recordings ? recordings.sessions(show.streamKey) : [];
+      const rows = sessions.map((s) => `<tr>
+        <td>${esc(new Date(s.end).toISOString().slice(0, 16).replace('T', ' '))}</td>
+        <td>${(s.bytes / 1048576).toFixed(0)} MB (${s.files.length} part${s.files.length === 1 ? '' : 's'})</td>
+        <td class="actions">
+          <form method="post" action="/admin/recordings/${esc(show.slug)}/publish" class="inline-form">
+            <input type="hidden" name="sessionId" value="${esc(s.id)}">
+            <button class="btn-primary btn-small" type="submit">Publish as episode</button>
+          </form>
+          ${(() => deleteButton(`/admin/recordings/${esc(show.slug)}/discard?sessionId=${encodeURIComponent(s.id)}`, 'Discard recording'))()}
+        </td>
+      </tr>`).join('');
+      return `<section class="panel">
+        <h2>${esc(show.name)}</h2>
+        ${rows ? `<table><thead><tr><th>Recorded</th><th>Size</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+          : '<p class="hint">No live recordings waiting. Go live and the recording appears here.</p>'}
+      </section>`;
+    }).join('');
+    return adminPage({
+      title: 'Recordings',
+      active: 'recordings',
+      body: `<h1 class="page-title">Live recordings</h1>
+      <p class="hint">Every live stream is recorded automatically.
+      Publish one as an episode (no re-encoding, instant) or discard it.
+      Unpublished recordings are deleted after 7 days, with an email
+      reminder on day 5.</p>
+      ${cards || '<section class="panel"><p class="hint">No shows yet.</p></section>'}`,
     });
   }
 
@@ -392,7 +496,43 @@ function createAdminRouter(ctx) {
     if (p === '/admin/shows' && req.method === 'GET') { html(res, showsPage()); return true; }
     if (p === '/admin/stream' && req.method === 'GET') { html(res, streamPage(domain)); return true; }
     if (p === '/admin/chat' && req.method === 'GET') { html(res, chatPage()); return true; }
+    if (p === '/admin/recordings' && req.method === 'GET') { html(res, recordingsPage(domain)); return true; }
     if (p === '/admin/account' && req.method === 'GET') { html(res, accountPage(user)); return true; }
+
+    const recMatch = p.match(/^\/admin\/recordings\/([a-z0-9-]+)\/(publish|discard)$/);
+    if (recMatch && req.method === 'POST' && recordings) {
+      const show = shows().find((s) => s.slug === recMatch[1]);
+      if (!show) { redirect(res, '/admin/recordings'); return true; }
+      const form = await formBody(req, readBody);
+      const sessionId = String(form.get('sessionId') || url.searchParams.get('sessionId') || '');
+      if (recMatch[2] === 'discard') {
+        recordings.discard(show.streamKey, sessionId);
+        redirect(res, '/admin/recordings');
+        return true;
+      }
+      const outName = await recordings.publish(show.streamKey, sessionId, mediaDir, show.slug);
+      if (outName) {
+        const list = episodes();
+        const episode = {
+          id: crypto.randomUUID(),
+          showId: show.id,
+          title: `Live show, ${sessionId.slice(0, 10)}`,
+          date: new Date().toISOString().slice(0, 10),
+          mediaUrl: `/media/${show.slug}/${outName}`,
+          description: '',
+          type: 'full',
+          draft: true,
+          createdAt: new Date().toISOString(),
+        };
+        list.push(episode);
+        store.save('episodes', list);
+        measure(episode.id);
+        redirect(res, `/admin/shows/${show.slug}`);
+      } else {
+        redirect(res, '/admin/recordings');
+      }
+      return true;
+    }
 
     if (p === '/admin/chat/words' && req.method === 'POST') {
       const form = await formBody(req, readBody);
@@ -460,7 +600,7 @@ function createAdminRouter(ctx) {
       return true;
     }
 
-    const showMatch = p.match(/^\/admin\/shows\/([a-z0-9-]+)(\/episodes|\/delete|\/regenerate-key)?$/);
+    const showMatch = p.match(/^\/admin\/shows\/([a-z0-9-]+)(\/episodes|\/delete|\/regenerate-key|\/settings|\/import)?$/);
     if (showMatch) {
       const show = shows().find((s) => s.slug === showMatch[1]);
       if (!show) { html(res, adminPage({ title: 'Not found', body: '<p>Show not found.</p>' }), 404); return true; }
@@ -490,21 +630,86 @@ function createAdminRouter(ctx) {
         const mediaUrl = String(form.get('mediaUrl') || '').trim().slice(0, 1000);
         const description = String(form.get('description') || '').trim().slice(0, 4000);
         const validDate = /^\d{4}-\d{2}-\d{2}$/.test(date);
-        const validUrl = /^https?:\/\//.test(mediaUrl);
+        const validUrl = /^https?:\/\//.test(mediaUrl) || /^\/media\/[^/]+\/[^/]+$/.test(mediaUrl);
         if (title && validDate && validUrl) {
           const list = episodes();
-          list.push({
+          const episode = {
             id: crypto.randomUUID(),
             showId: show.id,
             title,
             date,
             mediaUrl,
             description,
+            episode: Number(form.get('episode')) || null,
+            season: Number(form.get('season')) || null,
+            type: ['full', 'trailer', 'bonus'].includes(form.get('type')) ? form.get('type') : 'full',
+            draft: form.get('draft') === '1',
             createdAt: new Date().toISOString(),
-          });
+          };
+          list.push(episode);
           store.save('episodes', list);
+          measure(episode.id);
         }
         redirect(res, `/admin/shows/${show.slug}`);
+        return true;
+      }
+
+      if (action === '/settings' && req.method === 'POST') {
+        const form = await formBody(req, readBody);
+        const list = shows();
+        const entry = list.find((s) => s.id === show.id);
+        entry.name = String(form.get('name') || entry.name).trim().slice(0, 120) || entry.name;
+        entry.description = String(form.get('description') || '').trim().slice(0, 2000);
+        entry.author = String(form.get('author') || '').trim().slice(0, 120);
+        entry.language = String(form.get('language') || 'en').trim().slice(0, 10);
+        entry.category = CATEGORIES.includes(form.get('category')) ? form.get('category') : entry.category;
+        entry.explicit = form.get('explicit') === '1';
+        const artwork = String(form.get('artwork') || '').trim();
+        if (/^\/media\/[^/]+\/[^/]+$/.test(artwork)) entry.artwork = artwork;
+        store.save('shows', list);
+        redirect(res, `/admin/shows/${show.slug}`);
+        return true;
+      }
+
+      if (action === '/import' && req.method === 'POST') {
+        const form = await formBody(req, readBody);
+        const feedUrl = String(form.get('feedUrl') || '').trim();
+        let imported = 0;
+        try {
+          const { channel, items } = await importer.fetchFeed(feedUrl);
+          const list = episodes();
+          const existing = new Set(list.map((e) => e.guid || e.mediaUrl));
+          for (const item of items) {
+            if (existing.has(item.guid) || existing.has(item.mediaUrl)) continue;
+            list.push({
+              id: crypto.randomUUID(),
+              showId: show.id,
+              title: item.title,
+              date: item.date,
+              mediaUrl: item.mediaUrl,
+              bytes: item.bytes,
+              duration: importer.parseDuration(item.durationRaw),
+              description: item.description.slice(0, 4000),
+              episode: item.episode,
+              season: item.season,
+              type: 'full',
+              draft: false,
+              guid: item.guid || undefined,
+              createdAt: new Date().toISOString(),
+            });
+            imported += 1;
+          }
+          store.save('episodes', list);
+          const showList = shows();
+          const entry = showList.find((s) => s.id === show.id);
+          if (!entry.author && channel.author) entry.author = channel.author;
+          if (!entry.language && channel.language) entry.language = channel.language.slice(0, 10);
+          if (!entry.category && CATEGORIES.includes(channel.category)) entry.category = channel.category;
+          store.save('shows', showList);
+          html(res, showDetail(entry, `Imported ${imported} episode${imported === 1 ? '' : 's'} from the feed.`));
+        } catch (err) {
+          html(res, showDetail(show, `Import failed: ${err.message}`));
+        }
         return true;
       }
     }
@@ -521,7 +726,7 @@ function createAdminRouter(ctx) {
   }
 
   bootstrap();
-  return { handle, settings, shows, users };
+  return { handle, settings, shows, users, currentUser };
 }
 
 module.exports = { createAdminRouter, slugify };
