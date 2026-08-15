@@ -25,8 +25,15 @@ For self-hosters assessing the project:
 - **Network surface**: the only public ports are 80/443 (the reverse
   proxy) and 1935 (RTMP ingest). The app and the HLS output bind to
   loopback and are only reachable through the proxy.
+- **Admin authentication**: scrypt password hashing, HMAC-signed
+  HttpOnly session cookies (`Secure` behind HTTPS, `SameSite=Lax`),
+  per-IP login rate limiting with lockout. The first admin account
+  bootstraps from the environment only while no accounts exist. Viewers
+  never need accounts, so the app stores no viewer data.
+- **Stream keys** are per show, generated server-side (128-bit random),
+  shown only inside the authenticated dashboard, and revocable per show
+  with one regenerate click.
 - **App**: plain Node with zero runtime npm dependencies, so the supply
   chain is Node itself. The container runs as a non-root user with the
   npm CLI removed from the image.
-- **Publish API** (under construction) will be token-authenticated;
-  viewers never need accounts in v1, so the app stores no passwords.
+- **Publish API** (under construction) will be token-authenticated.
