@@ -11,6 +11,9 @@ const crypto = require('crypto');
 const { esc, adminPage, ICONS } = require('./html');
 const auth = require('./auth');
 
+// This edition manages one podcast.
+const MAX_SHOWS = 1;
+
 function slugify(name) {
   return String(name).toLowerCase().trim()
     .replace(/[^a-z0-9]+/g, '-')
@@ -187,7 +190,9 @@ function createAdminRouter(ctx) {
           <tbody>${rows || '<tr><td colspan="4" class="hint">No shows yet. Create the first one below.</td></tr>'}</tbody>
         </table>
       </section>
-      <section class="panel">
+      ${shows().length >= MAX_SHOWS
+        ? '<section class="panel"><p class="hint">This edition manages one podcast. Delete the existing show to start over.</p></section>'
+        : `<section class="panel">
         <h2>New show</h2>
         <form method="post" action="/admin/shows">
           <label for="name">Name</label>
@@ -196,7 +201,7 @@ function createAdminRouter(ctx) {
           <textarea id="description" name="description" rows="4" maxlength="2000"></textarea>
           <button class="btn-primary" type="submit">Create show</button>
         </form>
-      </section>`,
+      </section>`}`,
     });
   }
 
@@ -417,6 +422,7 @@ function createAdminRouter(ctx) {
       const description = String(form.get('description') || '').trim().slice(0, 2000);
       if (!name) { redirect(res, '/admin/shows'); return true; }
       const list = shows();
+      if (list.length >= MAX_SHOWS) { redirect(res, '/admin/shows'); return true; }
       let slug = slugify(name);
       while (list.some((s) => s.slug === slug)) slug += '-2';
       list.push({

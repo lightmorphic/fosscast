@@ -108,6 +108,15 @@ test('create a show, publish an episode, see both publicly', async () => {
   assert.ok(feed.includes('type="audio/mpeg"'));
 });
 
+test('a second show is refused (this edition manages one podcast)', async () => {
+  const res = await fetch(`${BASE}/admin/shows`, form({
+    name: 'Second Show', description: 'One too many.',
+  }));
+  assert.strictEqual(res.status, 303);
+  const shows = JSON.parse(fs.readFileSync(path.join(DATA, 'shows.json'), 'utf8'));
+  assert.strictEqual(shows.length, 1);
+});
+
 test('stream auth accepts the show key and refuses others', async () => {
   const shows = JSON.parse(fs.readFileSync(path.join(DATA, 'shows.json'), 'utf8'));
   const key = shows[0].streamKey;

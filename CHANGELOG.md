@@ -4,6 +4,8 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- This edition manages one podcast: show creation stops at one, and
+  the dashboard says so instead of offering a form that would fail.
 - Live is live: every show has a public live page (`/live/<slug>`)
   with an HLS player (self-hosted hls.js, Apache-2.0, the project's
   only vendored client library) that switches on and off automatically

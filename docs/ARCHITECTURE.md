@@ -34,15 +34,10 @@ streaming with audience chat.
   token. Accounts could come later without breaking anything.
 - **Publishers** are studio hosts holding a FOSSCast token
   (`PUBLISHER_TOKEN`). No shared auth with FOSSStudio.
-- **One codebase, hosted layer included.** There is no private fork:
-  the GitHub version is the whole product. Accounts carry roles
-  (`admin` today, `owner` next); shows carry `ownerId` and their own
-  `streamKey`. The instance admin can create podcasts and, soon, owner
-  accounts scoped to their own podcasts. That role layer is the entire
-  hosted-service offering (people paying to have their podcast hosted
-  on the instance): a self-hoster downloading the repo gets identical
-  code and is simply the admin of their own instance. Billing, if it
-  ever exists, stays outside this repo.
+- **One instance, one podcast.** This edition manages a single show.
+  The data model still carries roles on accounts and `ownerId` plus a
+  per-show `streamKey` on shows, so the internals stay general and the
+  single-show cap is one constant (`MAX_SHOWS` in `lib/admin.js`).
 - **Admin auth**: scrypt, HMAC-signed HttpOnly cookies, per-IP login
   rate limiting, environment-bootstrapped first account. Flat JSON
   files in the data dir (users, shows, episodes, settings), no

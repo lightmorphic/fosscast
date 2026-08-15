@@ -55,14 +55,12 @@ docker compose up -d --build app mediamtx
 The dashboard lives at `/admin`. The first admin account comes from
 `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env` (created on first start;
 change the password from the Account page after logging in). From the
-dashboard you create shows, publish episodes (media by URL: your own
-storage, archive.org, anywhere reachable) and manage stream keys. Every
-show gets its own public page and RSS feed automatically.
+dashboard you create your show, publish episodes (media by URL: your
+own storage, archive.org, anywhere reachable) and manage the stream
+key. The show gets its public pages and RSS feed automatically.
 
-The same code serves a single podcast or many: the instance admin can
-create any number of shows, each with its own stream key, pages and
-feed. Owner accounts scoped to their own podcasts are coming next, so
-an instance can host podcasts for other people too.
+One instance hosts one podcast: your show, your site, your feed, your
+live stage, on your own hardware.
 
 ### Going live from a studio
 

@@ -74,14 +74,12 @@ integration with the open analytics prefix (OP3) for publicly
 verifiable numbers. No listener tracking, no third parties: for a
 European audience this is a selling point the big players cannot copy.
 
-## Phase E: the hosted layer
+## Phase E: branding and identity
 
-Already modelled, needs the UI: owner accounts scoped to their own
-podcasts (the instance admin creates them), per-owner storage usage,
-and per-show branding. With wildcard DNS an instance can give each
-show its own subdomain; custom domains per show via on-demand TLS.
-This is the entire "people pay the instance operator to host their
-podcast" story, and self-hosters get the same multi-tenancy for free.
+Make the one show feel fully owned: site theming (accent colour,
+artwork-driven pages), the show's own domain via the bundled Caddy,
+and polished share cards (Open Graph and oEmbed) so links look right
+everywhere they land.
 
 ## Phase F: production assists (all optional, all local-first)
 
