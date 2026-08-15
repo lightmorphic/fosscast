@@ -4,6 +4,29 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Live DVR: every live stream is recorded automatically (fMP4 segments,
+  no re-encoding). The dashboard's new Recordings page publishes a
+  recording as an episode in one click (instant stream-copy concat with
+  faststart) or discards it. Unpublished recordings are deleted after 7
+  days with an email reminder to the admins on day 5 (via the new
+  optional SMTP settings and a dependency-free SMTP client).
+- Media uploads: episodes and show artwork upload straight from the
+  dashboard (streamed to disk, up to 4 GB) and are served with proper
+  byte-range support; external URLs (archive.org, anywhere) remain a
+  first-class alternative per episode.
+- Directory-grade feeds: full iTunes namespace (author, artwork, the
+  official Apple category picker, explicit flag, language, episode and
+  season numbers, episode types, durations via ffprobe, real enclosure
+  sizes) plus podcast:guid. Show settings are editable in the
+  dashboard.
+- One-click import: paste an existing podcast's RSS URL and every
+  episode comes in with metadata; missing show settings fill from the
+  feed. De-duplicates by guid and media URL, so re-running is safe.
+- Drafts and scheduling: episodes can be saved as drafts, and
+  future-dated episodes stay hidden from the site and feed until their
+  date arrives.
+- Embeddable player: every episode has a compact player page at
+  /embed/<id> for iframing into any website.
 - This edition manages one podcast: show creation stops at one, and
   the dashboard says so instead of offering a form that would fail.
 - Live is live: every show has a public live page (`/live/<slug>`)

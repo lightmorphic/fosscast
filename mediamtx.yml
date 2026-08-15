@@ -25,5 +25,13 @@ hls: true
 hlsAddress: :8888
 hlsVariant: lowLatency
 
+# Record every live stream (fMP4 segments) so it can be published as an
+# episode afterwards. The app manages reminders and 7-day cleanup.
+pathDefaults:
+  record: yes
+  recordPath: /recordings/%path/%Y-%m-%d_%H-%M-%S-%f
+  recordFormat: fmp4
+  recordDeleteAfter: 0s
+
 paths:
   all_others:

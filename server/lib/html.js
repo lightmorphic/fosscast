@@ -67,6 +67,20 @@ ${body}
 // The tiny bit of client behaviour the admin needs: two-click delete
 // confirmation, reveal/copy for secrets. No framework, no build step.
 const ADMIN_SCRIPT = `
+document.addEventListener('change', (e) => {
+  const input = e.target.closest('input[type=file][data-upload]');
+  if (!input || !input.files[0]) return;
+  const file = input.files[0];
+  const status = document.getElementById(input.dataset.status);
+  const target = document.getElementById(input.dataset.target);
+  status.textContent = 'Uploading ' + file.name + ' (' + (file.size / 1048576).toFixed(1) + ' MB)...';
+  fetch('/admin/api/upload?show=' + encodeURIComponent(input.dataset.show) + '&filename=' + encodeURIComponent(file.name), {
+    method: 'PUT', body: file,
+  }).then((r) => r.json()).then((d) => {
+    if (d.urlPath) { target.value = d.urlPath; status.textContent = 'Uploaded: ' + d.name; }
+    else { status.textContent = 'Upload failed: ' + (d.error || 'unknown error'); }
+  }).catch(() => { status.textContent = 'Upload failed.'; });
+});
 document.addEventListener('click', (e) => {
   const confirmBtn = e.target.closest('.btn-confirm');
   if (confirmBtn) {
@@ -101,7 +115,7 @@ document.addEventListener('click', (e) => {
 function adminPage({ title, body, active = '', authed = true }) {
   const nav = authed
     ? `<nav class="admin-nav">
-        ${[['', 'Dashboard'], ['shows', 'Shows'], ['stream', 'Stream'], ['chat', 'Chat'], ['account', 'Account']]
+        ${[['', 'Dashboard'], ['shows', 'Shows'], ['stream', 'Stream'], ['recordings', 'Recordings'], ['chat', 'Chat'], ['account', 'Account']]
           .map(([slug, label]) => `<a class="admin-link${active === (slug || 'dashboard') || (active === '' && slug === '') ? ' current' : ''}" href="/admin${slug ? '/' + slug : ''}">${label}</a>`)
           .join('')}
         <form method="post" action="/admin/logout" class="logout-form">
