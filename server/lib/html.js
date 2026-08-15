@@ -101,7 +101,7 @@ document.addEventListener('click', (e) => {
 function adminPage({ title, body, active = '', authed = true }) {
   const nav = authed
     ? `<nav class="admin-nav">
-        ${[['', 'Dashboard'], ['shows', 'Shows'], ['stream', 'Stream'], ['account', 'Account']]
+        ${[['', 'Dashboard'], ['shows', 'Shows'], ['stream', 'Stream'], ['chat', 'Chat'], ['account', 'Account']]
           .map(([slug, label]) => `<a class="admin-link${active === (slug || 'dashboard') || (active === '' && slug === '') ? ' current' : ''}" href="/admin${slug ? '/' + slug : ''}">${label}</a>`)
           .join('')}
         <form method="post" action="/admin/logout" class="logout-form">

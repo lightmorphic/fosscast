@@ -78,7 +78,7 @@ function deleteButton(action, label) {
 }
 
 function createAdminRouter(ctx) {
-  const { store, readBody } = ctx;
+  const { store, readBody, chat } = ctx;
   const limiter = new auth.RateLimiter();
 
   function settings() {
@@ -258,6 +258,65 @@ function createAdminRouter(ctx) {
     });
   }
 
+  function chatPage() {
+    const rooms = shows().map((show) => {
+      const messages = chat ? chat.recent(show.id, 30) : [];
+      const withIps = chat ? chat.room(show.id).messages.slice(-30) : [];
+      const rows = withIps.map((m) => `<tr>
+        <td class="chat-when">${esc(m.at.slice(11, 16))}</td>
+        <td><strong>${esc(m.name)}</strong></td>
+        <td>${esc(m.text)}</td>
+        <td class="actions">
+          <form method="post" action="/admin/chat/${esc(show.id)}/ban" class="inline-form">
+            <input type="hidden" name="messageId" value="${esc(m.id)}">
+            <button class="btn-icon btn-confirm danger" type="submit" data-tip="Ban this IP and remove their messages" aria-label="Ban sender">
+              <span class="icon-a">${ICONS.trash}</span><span class="icon-b">${ICONS.tick}</span>
+            </button>
+          </form>
+        </td>
+      </tr>`).join('');
+      return `<section class="panel">
+        <h2>${esc(show.name)}</h2>
+        ${messages.length
+          ? `<table><thead><tr><th>Time</th><th>Name</th><th>Message</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
+          : '<p class="hint">No recent messages.</p>'}
+      </section>`;
+    }).join('');
+
+    const bans = (chat ? chat.bannedIps() : []).map((ban) => `<tr>
+      <td><code>${esc(ban.ip)}</code></td>
+      <td class="hint">${esc(ban.at.slice(0, 16).replace('T', ' '))}</td>
+      <td class="actions">
+        <form method="post" action="/admin/chat/unban" class="inline-form">
+          <input type="hidden" name="ip" value="${esc(ban.ip)}">
+          <button class="btn-icon btn-confirm" type="submit" data-tip="Unban" aria-label="Unban">
+            <span class="icon-a">${ICONS.refresh}</span><span class="icon-b">${ICONS.tick}</span>
+          </button>
+        </form>
+      </td>
+    </tr>`).join('');
+
+    return adminPage({
+      title: 'Chat',
+      active: 'chat',
+      body: `<h1 class="page-title">Chat</h1>
+      ${rooms || '<section class="panel"><p class="hint">No shows yet.</p></section>'}
+      <section class="panel">
+        <h2>Banned IPs</h2>
+        ${bans ? `<table><thead><tr><th>IP</th><th>Since</th><th></th></tr></thead><tbody>${bans}</tbody></table>` : '<p class="hint">Nobody is banned.</p>'}
+      </section>
+      <section class="panel narrow">
+        <h2>Filtered words</h2>
+        <p class="hint">One per line. Matches are star-masked in chat
+        (first and last letter kept) instead of dropping the message.</p>
+        <form method="post" action="/admin/chat/words">
+          <textarea name="words" rows="6">${esc((chat ? chat.bannedWords() : []).join('\n'))}</textarea>
+          <button class="btn-primary" type="submit">Save list</button>
+        </form>
+      </section>`,
+    });
+  }
+
   function accountPage(user, message = '', error = '') {
     return adminPage({
       title: 'Account',
@@ -327,7 +386,30 @@ function createAdminRouter(ctx) {
     if (p === '/admin' && req.method === 'GET') { html(res, dashboard(user)); return true; }
     if (p === '/admin/shows' && req.method === 'GET') { html(res, showsPage()); return true; }
     if (p === '/admin/stream' && req.method === 'GET') { html(res, streamPage(domain)); return true; }
+    if (p === '/admin/chat' && req.method === 'GET') { html(res, chatPage()); return true; }
     if (p === '/admin/account' && req.method === 'GET') { html(res, accountPage(user)); return true; }
+
+    if (p === '/admin/chat/words' && req.method === 'POST') {
+      const form = await formBody(req, readBody);
+      if (chat) chat.saveBannedWords(String(form.get('words') || '').split('\n'));
+      redirect(res, '/admin/chat');
+      return true;
+    }
+
+    if (p === '/admin/chat/unban' && req.method === 'POST') {
+      const form = await formBody(req, readBody);
+      if (chat) chat.unbanIp(String(form.get('ip') || ''));
+      redirect(res, '/admin/chat');
+      return true;
+    }
+
+    const banMatch = p.match(/^\/admin\/chat\/([a-f0-9-]+)\/ban$/);
+    if (banMatch && req.method === 'POST') {
+      const form = await formBody(req, readBody);
+      if (chat) chat.banBySender(banMatch[1], String(form.get('messageId') || ''), `by ${user.email}`);
+      redirect(res, '/admin/chat');
+      return true;
+    }
 
     if (p === '/admin/shows' && req.method === 'POST') {
       const form = await formBody(req, readBody);

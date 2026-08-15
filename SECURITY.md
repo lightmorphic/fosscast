@@ -33,7 +33,14 @@ For self-hosters assessing the project:
 - **Stream keys** are per show, generated server-side (128-bit random),
   shown only inside the authenticated dashboard, and revocable per show
   with one regenerate click.
-- **App**: plain Node with zero runtime npm dependencies, so the supply
-  chain is Node itself. The container runs as a non-root user with the
-  npm CLI removed from the image.
+- **Chat**: anonymous by design; the server stores no viewer identity
+  beyond the message history kept in memory. Posting is rate-limited
+  per IP; moderation is per-IP bans and a word filter. Viewer IPs are
+  used server-side only and are never exposed through any endpoint or
+  page. The HLS playback proxy keeps stream keys out of viewer-facing
+  URLs.
+- **App**: plain Node with zero runtime npm dependencies (one vendored
+  client library, hls.js, served from the instance itself), so the
+  server supply chain is Node itself. The container runs as a non-root
+  user with the npm CLI removed from the image.
 - **Publish API** (under construction) will be token-authenticated.

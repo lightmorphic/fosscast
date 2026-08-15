@@ -78,7 +78,74 @@ function showsIndex(shows, episodes) {
   });
 }
 
-function showPage(show, episodes, domain) {
+function livePage(show, { live, embed }) {
+  const chatPanel = `
+  <aside class="panel chat-panel" id="chat">
+    <div class="chat-head">
+      <span class="live-badge${live ? ' on' : ''}" id="live-badge"><span class="dot"></span><span id="live-label">${live ? 'LIVE' : 'OFFLINE'}</span></span>
+      <span class="hint" id="viewers"></span>
+    </div>
+    <div class="chat-log" id="chat-log" aria-live="polite"></div>
+    <form id="nick-form" class="chat-form">
+      <input id="nick" maxlength="24" placeholder="Pick a nickname to chat" aria-label="Nickname" required>
+      <button class="btn-primary" type="submit">Join</button>
+    </form>
+    <form id="msg-form" class="chat-form" hidden>
+      <input id="msg" maxlength="500" placeholder="Say something" aria-label="Message" autocomplete="off" required>
+      <button class="btn-primary" type="submit">Send</button>
+    </form>
+  </aside>`;
+
+  if (embed) {
+    return `<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>${esc(show.name)} chat</title>
+<meta name="robots" content="noindex">
+<link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/site.css">
+</head>
+<body class="embed" data-slug="${esc(show.slug)}" data-live="${live ? '1' : ''}">
+${chatPanel}
+<script src="/js/live.js"></script>
+</body>
+</html>
+`;
+  }
+
+  return publicPage({
+    title: `${show.name} live - FOSSCast`,
+    description: `Watch ${show.name} live.`,
+    body: `
+  <div class="live-layout" data-slug="${esc(show.slug)}" data-live="${live ? '1' : ''}" id="live-root">
+    <section class="panel player-panel">
+      <div class="player-frame">
+        <video id="player" controls autoplay playsinline ${live ? '' : 'hidden'}></video>
+        <div id="offline" class="offline-state" ${live ? 'hidden' : ''}>
+          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+          <p><strong>${esc(show.name)}</strong> is not live right now.</p>
+          <p class="hint">This page comes alive the moment the show starts. Leave it open.</p>
+        </div>
+      </div>
+      <h1 class="live-title">${esc(show.name)}</h1>
+      <p class="hint"><a href="/shows/${esc(show.slug)}">Episodes and RSS feed</a></p>
+    </section>
+    ${chatPanel}
+  </div>
+  <script src="/js/hls.min.js"></script>
+  <script src="/js/live.js"></script>`,
+  });
+}
+
+function showPage(show, episodes, domain, live = false) {
+  const liveBanner = live
+    ? `<a class="panel live-banner" href="/live/${esc(show.slug)}">
+        <span class="live-badge on"><span class="dot"></span>LIVE</span>
+        <span>${esc(show.name)} is live right now. Watch and join the chat.</span>
+      </a>`
+    : '';
   const items = episodes.length
     ? episodes.map((episode) => `
       <article class="panel episode">
@@ -92,11 +159,13 @@ function showPage(show, episodes, domain) {
     title: `${show.name} - FOSSCast`,
     description: show.description,
     body: `
+  ${liveBanner}
   <section class="panel hero">
     <h1>${esc(show.name)}</h1>
     <p class="lede">${esc(show.description)}</p>
     <p class="feed-line"><a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
-    for any podcast app: <code>https://${esc(domain)}/shows/${esc(show.slug)}/feed.xml</code></p>
+    for any podcast app: <code>https://${esc(domain)}/shows/${esc(show.slug)}/feed.xml</code>
+    &middot; <a href="/live/${esc(show.slug)}">live page</a></p>
   </section>
   <section class="episodes">${items}</section>`,
   });
@@ -134,4 +203,4 @@ function feed(show, episodes, domain) {
 `;
 }
 
-module.exports = { landing, showsIndex, showPage, feed, mediaType };
+module.exports = { landing, showsIndex, showPage, livePage, feed, mediaType };
