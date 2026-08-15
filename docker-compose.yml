@@ -1,0 +1,50 @@
+services:
+  app:
+    image: ghcr.io/lightmorphic/fosscast:latest
+    build: ./server
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      # Inside the container the app always listens on 3100; HTTP_PORT
+      # in .env only changes the host port it is published on.
+      HTTP_PORT: 3100
+      DATA_DIR: /data
+      WEB_DIR: /app/web
+    ports:
+      - "127.0.0.1:${HTTP_PORT:-3100}:3100"
+    volumes:
+      - ${DATA_PATH:-./data}:/data
+      - ./web:/app/web:ro
+
+  mediamtx:
+    image: bluenviron/mediamtx:1
+    restart: unless-stopped
+    ports:
+      # RTMP ingest from studios: the one deliberately public port.
+      - "1935:1935"
+      # HLS out, loopback only; the reverse proxy or app fronts it.
+      - "127.0.0.1:8888:8888"
+    volumes:
+      - ./mediamtx.yml:/mediamtx.yml:ro
+    depends_on:
+      - app
+
+  # Bundled reverse proxy with automatic HTTPS certificates. A plain
+  # `docker compose up -d` gives a complete public site; hosts whose
+  # machine already runs its own proxy on 80/443 start only the other
+  # two services instead: `docker compose up -d app mediamtx`.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    env_file: .env
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+
+volumes:
+  caddy_data:
+  caddy_config:

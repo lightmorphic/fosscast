@@ -1,0 +1,11 @@
+{
+  "name": "fosscast",
+  "version": "0.1.0",
+  "private": true,
+  "license": "GPL-3.0-only",
+  "description": "The public home of shows recorded on FOSSStudio: live streams, chat and an episode archive.",
+  "scripts": {
+    "start": "node server.js",
+    "test": "node --test"
+  }
+}
