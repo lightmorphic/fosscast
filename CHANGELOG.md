@@ -2,7 +2,7 @@
 
 All notable changes to FOSSCast are documented here.
 
-## Unreleased
+## 0.1.0 - 2026-08-15
 
 - Publish API: PUT /api/v1/media then POST /api/v1/episodes with the
   publisher token pushes an episode from a studio; it arrives as a
