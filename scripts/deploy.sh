@@ -32,6 +32,21 @@ run "ln -sfn $BASE/.env $BASE/releases/$RELEASE/.env && ln -sfn $BASE/releases/$
 echo "== Starting stack =="
 run "cd $BASE/current && DATA_PATH=$BASE/data docker compose -p fosscast up -d --build app mediamtx"
 
+# The mediamtx config is bind-mounted through the `current` symlink,
+# which pins the file at container start; a config change in a new
+# release does not reach the running container. Compare what the
+# container actually sees with the current release and recreate only
+# on a real difference, so ordinary deploys never drop a live stream.
+echo "== MediaMTX config check =="
+run "docker cp fosscast-mediamtx-1:/mediamtx.yml /tmp/mediamtx-running.yml 2>/dev/null || true
+if ! cmp -s /tmp/mediamtx-running.yml $BASE/current/mediamtx.yml; then
+  echo 'config changed, recreating mediamtx'
+  cd $BASE/current && DATA_PATH=$BASE/data docker compose -p fosscast up -d --force-recreate mediamtx
+else
+  echo 'mediamtx config unchanged'
+fi
+rm -f /tmp/mediamtx-running.yml"
+
 echo "== Health check =="
 sleep 3
 # Explicit if: a plain `run ... && echo` would not abort on failure
