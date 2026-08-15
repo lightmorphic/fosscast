@@ -4,6 +4,14 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Podcasting 2.0: feeds now carry transcript, chapters, person,
+  funding, and locked tags, and while a show streams the feed
+  announces a liveItem (HLS enclosure plus a contentLink to the live
+  page) so supporting podcast apps can tune in natively; an optional
+  podping token notifies the network the moment a stream starts or
+  ends. Episodes gained an edit page with transcript upload (.vtt,
+  .srt, .txt, .json) and a plain-text chapter editor (HH:MM:SS Title
+  per line) served as namespace-format chapters JSON.
 - Live DVR: every live stream is recorded automatically (fMP4 segments,
   no re-encoding). The dashboard's new Recordings page publishes a
   recording as an episode in one click (instant stream-copy concat with

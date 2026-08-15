@@ -70,7 +70,18 @@ const chat = new ChatHub(store);
 const liveStatus = new LiveStatus({
   onChange(streamKey, isLive) {
     const show = store.load('shows', []).find((s) => s.streamKey === streamKey);
-    if (show) chat.broadcast(show.id, { type: 'status', live: isLive });
+    if (!show) return;
+    chat.broadcast(show.id, { type: 'status', live: isLive });
+    // Podping tells Podcasting 2.0 apps the feed changed (live started
+    // or ended), so liveItem consumers re-fetch promptly. Optional.
+    const token = (process.env.PODPING_TOKEN || '').trim();
+    if (token) {
+      const feedUrl = encodeURIComponent(`https://${DOMAIN}/shows/${show.slug}/feed.xml`);
+      fetch(`https://podping.cloud/?url=${feedUrl}&reason=${isLive ? 'live' : 'liveEnd'}`, {
+        headers: { Authorization: token, 'User-Agent': 'FOSSCast' },
+        signal: AbortSignal.timeout(10000),
+      }).catch(() => {});
+    }
   },
 });
 const MEDIA_DIR = path.join(DATA_DIR, 'media');
@@ -238,11 +249,19 @@ const server = http.createServer((req, res) => {
       .filter((e) => e.showId === show.id)
       .sort((a, b) => (a.date < b.date ? 1 : -1));
     if (showMatch[2]) {
-      return send(res, 200, publicSite.feed(show, items, DOMAIN), {
+      const liveInfo = { live: liveStatus.isLive(show.streamKey), since: liveStatus.since(show.streamKey) };
+      return send(res, 200, publicSite.feed(show, items, DOMAIN, liveInfo), {
         'Content-Type': 'application/rss+xml; charset=utf-8',
       });
     }
     return sendHtml(res, publicSite.showPage(show, items, DOMAIN, liveStatus.isLive(show.streamKey)));
+  }
+
+  const chaptersMatch = p.match(/^\/api\/v1\/episodes\/([a-f0-9-]+)\/chapters\.json$/);
+  if (chaptersMatch) {
+    const episode = store.load('episodes', []).find((e) => e.id === chaptersMatch[1]);
+    if (!episode || episode.draft) return sendJson(res, 404, { error: 'not found' });
+    return sendJson(res, 200, publicSite.chaptersJson(episode));
   }
 
   const embedMatch = p.match(/^\/embed\/([a-f0-9-]+)$/);

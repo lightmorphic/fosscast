@@ -16,6 +16,9 @@ const MEDIA_TYPES = {
   '.opus': 'audio/opus', '.wav': 'audio/wav',
   '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
   '.webp': 'image/webp',
+  '.vtt': 'text/vtt; charset=utf-8', '.srt': 'application/x-subrip',
+  '.txt': 'text/plain; charset=utf-8', '.json': 'application/json',
+  '.html': 'text/html; charset=utf-8',
 };
 
 function safeName(name) {
