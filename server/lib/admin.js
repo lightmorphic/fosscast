@@ -107,7 +107,35 @@ function deleteButton(action, label) {
 }
 
 function createAdminRouter(ctx) {
-  const { store, readBody, chat, recordings, mediaDir, dataDir } = ctx;
+  const { store, readBody, chat, recordings, mediaDir, dataDir, stats } = ctx;
+
+  function statsPage() {
+    const episodeList = episodes();
+    const days = stats ? stats.lastDays(30) : [];
+    const max = Math.max(1, ...days.map((d) => d.count));
+    const bars = days.map((d, i) => `<rect x="${i * 12}" y="${60 - (d.count / max) * 56}" width="9" height="${(d.count / max) * 56 + 1}" rx="1.5"><title>${esc(d.day)}: ${d.count}</title></rect>`).join('');
+    const rows = episodeList
+      .map((e) => ({ e, n: stats ? stats.total(e.id) : 0 }))
+      .sort((a, b) => b.n - a.n)
+      .map(({ e, n }) => `<tr><td>${esc(e.title)}</td><td>${esc(e.date)}</td><td>${n}</td></tr>`)
+      .join('');
+    return adminPage({
+      title: 'Stats',
+      active: 'stats',
+      body: `<h1 class="page-title">Stats</h1>
+      <p class="hint">Downloads of episodes hosted on this instance: one
+      per listener per episode per day, no cookies, nothing stored about
+      any individual. Externally hosted media can't be counted here.</p>
+      <section class="panel">
+        <h2>Last 30 days</h2>
+        <svg class="stats-chart" viewBox="0 0 360 64" role="img" aria-label="Daily downloads, last 30 days">${bars}</svg>
+      </section>
+      <section class="panel">
+        <h2>Per episode</h2>
+        ${rows ? `<table><thead><tr><th>Episode</th><th>Date</th><th>Downloads</th></tr></thead><tbody>${rows}</tbody></table>` : '<p class="hint">No episodes yet.</p>'}
+      </section>`,
+    });
+  }
 
   // Fill in size and duration for an episode's media, async.
   async function measure(episodeId) {
@@ -564,6 +592,7 @@ function createAdminRouter(ctx) {
     if (p === '/admin/stream' && req.method === 'GET') { html(res, streamPage(domain)); return true; }
     if (p === '/admin/chat' && req.method === 'GET') { html(res, chatPage()); return true; }
     if (p === '/admin/recordings' && req.method === 'GET') { html(res, recordingsPage(domain)); return true; }
+    if (p === '/admin/stats' && req.method === 'GET') { html(res, statsPage()); return true; }
     if (p === '/admin/account' && req.method === 'GET') { html(res, accountPage(user)); return true; }
 
     const recMatch = p.match(/^\/admin\/recordings\/([a-z0-9-]+)\/(publish|discard)$/);
@@ -841,7 +870,7 @@ function createAdminRouter(ctx) {
   }
 
   bootstrap();
-  return { handle, settings, shows, users, currentUser };
+  return { handle, settings, shows, users, currentUser, measureEpisode: measure };
 }
 
 module.exports = { createAdminRouter, slugify };

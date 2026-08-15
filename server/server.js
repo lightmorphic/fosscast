@@ -11,6 +11,7 @@ const { createAdminRouter } = require('./lib/admin');
 const { ChatHub } = require('./lib/chat');
 const { LiveStatus } = require('./lib/live');
 const { Recordings } = require('./lib/recordings');
+const { Stats } = require('./lib/stats');
 const media = require('./lib/media');
 const publicSite = require('./lib/public');
 
@@ -86,7 +87,8 @@ const liveStatus = new LiveStatus({
 });
 const MEDIA_DIR = path.join(DATA_DIR, 'media');
 const recordings = new Recordings({ dataDir: DATA_DIR, store });
-const admin = createAdminRouter({ store, readBody, chat, recordings, mediaDir: MEDIA_DIR, dataDir: DATA_DIR });
+const stats = new Stats(store);
+const admin = createAdminRouter({ store, readBody, chat, recordings, mediaDir: MEDIA_DIR, dataDir: DATA_DIR, stats });
 
 // Reminder/cleanup sweep for unpublished live recordings, daily.
 const sweep = () => recordings.sweep({
@@ -105,6 +107,14 @@ function clientIp(req) {
   if (xff) return String(xff).split(',')[0].trim();
   return req.socket.remoteAddress || 'unknown';
 }
+
+function publisherAuthed(req) {
+  const token = (admin.settings().publisherToken || '').trim();
+  const given = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
+  if (!token || !given || given.length !== token.length) return false;
+  return require('crypto').timingSafeEqual(Buffer.from(given), Buffer.from(token));
+}
+const crypto = require('crypto');
 
 // Public HLS playback is proxied per show slug so stream keys never
 // appear in viewer-facing URLs.
@@ -180,6 +190,15 @@ const server = http.createServer((req, res) => {
   }
 
   if (p.startsWith('/media/') && (req.method === 'GET' || req.method === 'HEAD')) {
+    // Count a download on the first byte of an episode file (full GETs
+    // or ranges starting at 0), deduplicated per listener per day.
+    if (req.method === 'GET') {
+      const range = req.headers.range;
+      if (!range || /^bytes=0-/.test(range)) {
+        const episode = store.load('episodes', []).find((e) => e.mediaUrl === p);
+        if (episode) stats.record(episode.id, clientIp(req), req.headers['user-agent'] || '');
+      }
+    }
     return media.serveMedia(req, res, MEDIA_DIR, p);
   }
 
@@ -188,6 +207,52 @@ const server = http.createServer((req, res) => {
       console.error('admin error:', err.message);
       if (!res.headersSent) send(res, 500, 'server error');
     });
+    return;
+  }
+
+  // Publisher API: token-authenticated, used by studios to push
+  // episodes. Two steps: PUT the media, then POST the episode.
+  if (p === '/api/v1/media' && req.method === 'PUT') {
+    if (!publisherAuthed(req)) return sendJson(res, 401, { error: 'bad token' });
+    const show = store.load('shows', [])[0];
+    if (!show) return sendJson(res, 409, { error: 'no show configured yet' });
+    media.saveUpload(req, MEDIA_DIR, show.slug, url.searchParams.get('filename') || 'upload')
+      .then((result) => sendJson(res, 200, result))
+      .catch((err) => sendJson(res, 400, { error: err.message }));
+    return;
+  }
+  if (p === '/api/v1/episodes' && req.method === 'POST') {
+    if (!publisherAuthed(req)) return sendJson(res, 401, { error: 'bad token' });
+    readBody(req).then((raw) => {
+      let body;
+      try { body = JSON.parse(raw.toString() || '{}'); } catch {
+        return sendJson(res, 400, { error: 'bad json' });
+      }
+      const show = store.load('shows', [])[0];
+      if (!show) return sendJson(res, 409, { error: 'no show configured yet' });
+      const title = String(body.title || '').trim().slice(0, 200);
+      const mediaUrl = String(body.mediaUrl || '').trim().slice(0, 1000);
+      const validUrl = /^https?:\/\//.test(mediaUrl) || /^\/media\/[^/]+\/[^/]+$/.test(mediaUrl);
+      if (!title || !validUrl) return sendJson(res, 400, { error: 'title and mediaUrl required' });
+      const list = store.load('episodes', []);
+      const episode = {
+        id: crypto.randomUUID(),
+        showId: show.id,
+        title,
+        date: /^\d{4}-\d{2}-\d{2}$/.test(body.date) ? body.date : new Date().toISOString().slice(0, 10),
+        mediaUrl,
+        description: String(body.description || '').trim().slice(0, 4000),
+        episode: Number(body.episode) || null,
+        season: Number(body.season) || null,
+        type: ['full', 'trailer', 'bonus'].includes(body.type) ? body.type : 'full',
+        draft: body.draft !== false, // arrives as a draft unless told otherwise
+        createdAt: new Date().toISOString(),
+      };
+      list.push(episode);
+      store.save('episodes', list);
+      admin.measureEpisode(episode.id);
+      sendJson(res, 200, { ok: true, id: episode.id, draft: episode.draft, editUrl: `https://${DOMAIN}/admin/episodes/${episode.id}` });
+    }).catch(() => sendJson(res, 400, { error: 'bad request' }));
     return;
   }
 
