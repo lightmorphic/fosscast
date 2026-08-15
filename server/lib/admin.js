@@ -19,6 +19,27 @@ const importer = require('./import');
 // This edition manages one podcast.
 const MAX_SHOWS = 1;
 
+// "HH:MM:SS Title" or "MM:SS Title", one per line -> chapter objects.
+function parseChapters(text) {
+  const chapters = [];
+  for (const line of String(text).split('\n')) {
+    const m = line.trim().match(/^(\d{1,2}:)?(\d{1,2}):(\d{2})\s+(.+)$/);
+    if (!m) continue;
+    const hours = m[1] ? Number(m[1].slice(0, -1)) : 0;
+    chapters.push({ start: hours * 3600 + Number(m[2]) * 60 + Number(m[3]), title: m[4].trim().slice(0, 200) });
+  }
+  return chapters.sort((a, b) => a.start - b.start);
+}
+
+function formatChapters(chapters) {
+  return (chapters || []).map((c) => {
+    const h = Math.floor(c.start / 3600);
+    const m = Math.floor((c.start % 3600) / 60);
+    const s = c.start % 60;
+    return `${h ? String(h).padStart(2, '0') + ':' : ''}${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')} ${c.title}`;
+  }).join('\n');
+}
+
 function slugify(name) {
   return String(name).toLowerCase().trim()
     .replace(/[^a-z0-9]+/g, '-')
@@ -234,7 +255,7 @@ function createAdminRouter(ctx) {
       .sort((a, b) => (a.date < b.date ? 1 : -1));
     const nextEpisode = items.reduce((n, e) => Math.max(n, e.episode || 0), 0) + 1;
     const rows = items.map((episode) => `<tr>
-      <td>${esc(episode.title)}${episode.draft ? ' <span class="tag">draft</span>' : ''}</td>
+      <td><a href="/admin/episodes/${esc(episode.id)}">${esc(episode.title)}</a>${episode.draft ? ' <span class="tag">draft</span>' : ''}</td>
       <td>${esc(episode.date)}</td>
       <td class="media-cell"><a href="${esc(episode.mediaUrl)}">media</a> &middot; <a href="/embed/${esc(episode.id)}">embed</a></td>
       <td class="actions">${deleteButton(`/admin/episodes/${esc(episode.id)}/delete`, 'Delete episode')}</td>
@@ -301,6 +322,15 @@ function createAdminRouter(ctx) {
           <p class="hint" id="art-status">${show.artwork ? `Current: ${esc(show.artwork)}` : 'No artwork yet (directories require it).'}</p>
           <input type="hidden" id="artwork" name="artwork" value="${esc(show.artwork || '')}">
           <label class="check-label"><input type="checkbox" name="explicit" value="1" class="check"${show.explicit ? ' checked' : ''}> Explicit content</label>
+          <div class="field-row">
+            <div><label for="sfundurl">Funding URL (donations, memberships)</label>
+            <input id="sfundurl" name="fundingUrl" type="url" maxlength="500" value="${esc(show.funding?.url || '')}"></div>
+            <div><label for="sfundlabel">Funding label</label>
+            <input id="sfundlabel" name="fundingLabel" maxlength="120" value="${esc(show.funding?.label || '')}" placeholder="Support the show"></div>
+          </div>
+          <label for="spersons">People (one per line: Name | role, e.g. "Sam Smith | host")</label>
+          <textarea id="spersons" name="persons" rows="3">${esc((show.persons || []).map((p) => p.role ? `${p.name} | ${p.role}` : p.name).join('\n'))}</textarea>
+          <label class="check-label"><input type="checkbox" name="locked" value="1" class="check"${show.locked ? ' checked' : ''}> Lock the feed (tells other hosts not to import it without permission)</label>
           <button class="btn-primary" type="submit">Save settings</button>
         </form>
       </section>
@@ -421,6 +451,43 @@ function createAdminRouter(ctx) {
         <form method="post" action="/admin/chat/words">
           <textarea name="words" rows="6">${esc((chat ? chat.bannedWords() : []).join('\n'))}</textarea>
           <button class="btn-primary" type="submit">Save list</button>
+        </form>
+      </section>`,
+    });
+  }
+
+  function episodeEditPage(episode, show) {
+    return adminPage({
+      title: episode.title,
+      active: 'shows',
+      body: `<h1 class="page-title">Edit episode</h1>
+      <p class="hint"><a href="/admin/shows/${esc(show.slug)}">&larr; ${esc(show.name)}</a></p>
+      <section class="panel">
+        <form method="post" action="/admin/episodes/${esc(episode.id)}">
+          <label for="title">Title</label>
+          <input id="title" name="title" required maxlength="200" value="${esc(episode.title)}">
+          <div class="field-row">
+            <div><label for="date">Date</label>
+            <input id="date" name="date" type="date" required value="${esc(episode.date)}"></div>
+            <div><label for="epnum">Episode #</label>
+            <input id="epnum" name="episode" type="number" min="1" value="${episode.episode || ''}"></div>
+            <div><label for="season">Season</label>
+            <input id="season" name="season" type="number" min="1" value="${episode.season || ''}"></div>
+            <div><label for="eptype">Type</label>
+            <select id="eptype" name="type">${['full', 'trailer', 'bonus'].map((t) => `<option value="${t}"${(episode.type || 'full') === t ? ' selected' : ''}>${t[0].toUpperCase()}${t.slice(1)}</option>`).join('')}</select></div>
+          </div>
+          <label for="mediaUrl">Media URL</label>
+          <input id="mediaUrl" name="mediaUrl" maxlength="1000" value="${esc(episode.mediaUrl)}">
+          <label for="epDescription">Description</label>
+          <textarea id="epDescription" name="description" rows="4" maxlength="4000">${esc(episode.description)}</textarea>
+          <label for="transcriptFile">Transcript (.vtt, .srt, .txt or .json; podcast apps show it)</label>
+          <input id="transcriptFile" type="file" accept=".vtt,.srt,.txt,.json,.html" data-upload data-show="${esc(show.slug)}" data-target="transcript" data-status="tr-status">
+          <p class="hint" id="tr-status">${episode.transcript ? `Current: ${esc(episode.transcript)}` : 'None yet.'}</p>
+          <input type="hidden" id="transcript" name="transcript" value="${esc(episode.transcript || '')}">
+          <label for="chapters">Chapters (one per line: HH:MM:SS Title)</label>
+          <textarea id="chapters" name="chapters" rows="5" placeholder="00:00 Intro&#10;05:30 The main topic">${esc(formatChapters(episode.chapters))}</textarea>
+          <label class="check-label"><input type="checkbox" name="draft" value="1" class="check"${episode.draft ? ' checked' : ''}> Draft (hidden from the public site and feed)</label>
+          <button class="btn-primary" type="submit">Save episode</button>
         </form>
       </section>`,
     });
@@ -664,6 +731,19 @@ function createAdminRouter(ctx) {
         entry.language = String(form.get('language') || 'en').trim().slice(0, 10);
         entry.category = CATEGORIES.includes(form.get('category')) ? form.get('category') : entry.category;
         entry.explicit = form.get('explicit') === '1';
+        entry.locked = form.get('locked') === '1';
+        entry.lockedOwner = user.email;
+        const fundingUrl = String(form.get('fundingUrl') || '').trim().slice(0, 500);
+        entry.funding = /^https?:\/\//.test(fundingUrl)
+          ? { url: fundingUrl, label: String(form.get('fundingLabel') || '').trim().slice(0, 120) }
+          : null;
+        entry.persons = String(form.get('persons') || '').split('\n')
+          .map((line) => {
+            const [name, role] = line.split('|').map((s) => s.trim());
+            return name ? { name: name.slice(0, 120), role: (role || '').slice(0, 60) } : null;
+          })
+          .filter(Boolean)
+          .slice(0, 20);
         const artwork = String(form.get('artwork') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(artwork)) entry.artwork = artwork;
         store.save('shows', list);
@@ -714,11 +794,46 @@ function createAdminRouter(ctx) {
       }
     }
 
-    const episodeMatch = p.match(/^\/admin\/episodes\/([a-f0-9-]+)\/delete$/);
-    if (episodeMatch && req.method === 'POST') {
-      store.save('episodes', episodes().filter((e) => e.id !== episodeMatch[1]));
-      redirect(res, req.headers.referer || '/admin/shows');
-      return true;
+    const episodeMatch = p.match(/^\/admin\/episodes\/([a-f0-9-]+)(\/delete)?$/);
+    if (episodeMatch) {
+      const episode = episodes().find((e) => e.id === episodeMatch[1]);
+      if (!episode) { redirect(res, '/admin/shows'); return true; }
+      const show = shows().find((s) => s.id === episode.showId);
+
+      if (episodeMatch[2] === '/delete' && req.method === 'POST') {
+        store.save('episodes', episodes().filter((e) => e.id !== episode.id));
+        redirect(res, req.headers.referer || '/admin/shows');
+        return true;
+      }
+      if (!episodeMatch[2] && req.method === 'GET') {
+        html(res, episodeEditPage(episode, show));
+        return true;
+      }
+      if (!episodeMatch[2] && req.method === 'POST') {
+        const form = await formBody(req, readBody);
+        const list = episodes();
+        const entry = list.find((e) => e.id === episode.id);
+        const title = String(form.get('title') || '').trim().slice(0, 200);
+        const date = String(form.get('date') || '').trim();
+        const mediaUrl = String(form.get('mediaUrl') || '').trim().slice(0, 1000);
+        if (title) entry.title = title;
+        if (/^\d{4}-\d{2}-\d{2}$/.test(date)) entry.date = date;
+        if (/^https?:\/\//.test(mediaUrl) || /^\/media\/[^/]+\/[^/]+$/.test(mediaUrl)) {
+          if (mediaUrl !== entry.mediaUrl) { entry.mediaUrl = mediaUrl; entry.bytes = 0; entry.duration = null; }
+        }
+        entry.description = String(form.get('description') || '').trim().slice(0, 4000);
+        entry.episode = Number(form.get('episode')) || null;
+        entry.season = Number(form.get('season')) || null;
+        entry.type = ['full', 'trailer', 'bonus'].includes(form.get('type')) ? form.get('type') : 'full';
+        entry.draft = form.get('draft') === '1';
+        const transcript = String(form.get('transcript') || '').trim();
+        entry.transcript = /^\/media\/[^/]+\/[^/]+$/.test(transcript) ? transcript : entry.transcript;
+        entry.chapters = parseChapters(form.get('chapters') || '');
+        store.save('episodes', list);
+        measure(entry.id);
+        redirect(res, `/admin/shows/${show.slug}`);
+        return true;
+      }
     }
 
     html(res, adminPage({ title: 'Not found', body: '<p>Page not found.</p>' }), 404);
