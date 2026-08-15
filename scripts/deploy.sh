@@ -4,61 +4,45 @@
 # previous release stays on disk, so rollback is just moving the
 # symlink back (scripts/rollback.sh).
 #
-# Only `app` and `mediamtx` are started: on our VPS the box's shared
-# Caddy serves HTTPS, so the bundled caddy service stays off there.
+# The deploy key is forced-command restricted on the server to exactly
+# the verbs this script sends (see scripts/deploy-wrapper.sh) - upload,
+# activate, start, health-check, prune, roll back - with no shell
+# access. Only `app` and `mediamtx` are started; boxes with their own
+# proxy on 80/443 never start the bundled caddy this way.
 #
 # Usage: scripts/deploy.sh   (uses $FOSSCAST_HOST, e.g. root@1.2.3.4)
 set -euo pipefail
 
 HOST="${FOSSCAST_HOST:?Set FOSSCAST_HOST, e.g. root@1.2.3.4}"
 SSH_KEY="${FOSSCAST_SSH_KEY:-/home/charlie/2-Data/SSH/lightmorphic-fosscast-vps-deploy}"
-BASE="${FOSSCAST_BASE:-/opt/fosscast}"
-PROJECT="$(basename "$BASE")"
-PORT="${FOSSCAST_HTTP_PORT:-3100}"
 RELEASE="$(date +%Y%m%d-%H%M%S)"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
 run() { ssh -i "$SSH_KEY" -o IdentitiesOnly=yes "$HOST" "$@"; }
 
 echo "== Uploading release $RELEASE =="
-# The app container runs as UID 1000, so the bind-mounted data dir must
-# be writable by that user or every write fails with EACCES.
-run "mkdir -p $BASE/releases/$RELEASE $BASE/data && chown -R 1000:1000 $BASE/data"
+run "mkdir-release $RELEASE"
 rsync -az --delete -e "ssh -i $SSH_KEY -o IdentitiesOnly=yes" \
   --exclude .git --exclude node_modules --exclude data --exclude .env \
-  "$REPO_ROOT/" "$HOST:$BASE/releases/$RELEASE/"
+  "$REPO_ROOT/" "$HOST:$RELEASE/"
 
 echo "== Switching current -> $RELEASE =="
-PREV_RELEASE="$(run "readlink -f $BASE/current 2>/dev/null" || true)"
-run "ln -sfn $BASE/.env $BASE/releases/$RELEASE/.env && ln -sfn $BASE/releases/$RELEASE $BASE/current"
+run "activate-release $RELEASE"
 
 echo "== Starting stack =="
-run "cd $BASE/current && DATA_PATH=$BASE/data docker compose -p $PROJECT up -d --build app mediamtx"
-
-# MediaMTX reads its config once at start and its file watcher never
-# fires when the `current` symlink flips to a new release, so a config
-# change needs an explicit recreate. Compare the new release's config
-# with the previously deployed one and recreate only on a real
-# difference, so ordinary deploys never drop a live stream.
-echo "== MediaMTX config check =="
-run "if ! cmp -s $BASE/releases/$RELEASE/mediamtx.yml '$PREV_RELEASE/mediamtx.yml' 2>/dev/null; then
-  echo 'config changed, recreating mediamtx'
-  cd $BASE/current && DATA_PATH=$BASE/data docker compose -p $PROJECT up -d --force-recreate mediamtx
-else
-  echo 'mediamtx config unchanged'
-fi"
+run "start-release $RELEASE"
 
 echo "== Health check =="
 sleep 3
 # Explicit if: a plain `run ... && echo` would not abort on failure
 # (set -e exempts non-final commands in && lists).
-if ! run "curl -fsS http://127.0.0.1:$PORT/healthz"; then
+if ! run "healthcheck"; then
   echo "Health check FAILED; roll back with scripts/rollback.sh"
   exit 1
 fi
 echo " OK"
 
 echo "== Pruning old releases (keep 5) =="
-run "cd $BASE/releases && ls -1t | tail -n +6 | xargs -r rm -rf --"
+run "prune-releases"
 
 echo "Deployed $RELEASE"
