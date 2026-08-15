@@ -9,6 +9,7 @@ authHTTPAddress: http://app:3100/api/internal/mediamtx-auth
 rtsp: false
 webrtc: false
 srt: false
+moq: false
 
 rtmp: true
 rtmpAddress: :1935
