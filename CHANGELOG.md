@@ -62,6 +62,10 @@ All notable changes to FOSSCast are documented here.
   auth hook checks against live show keys. Flat JSON data files, no
   database. Tests cover auth, sessions, rate limiting and the full
   login/show/episode/feed/stream-auth flow.
+- Instances can stack on one machine: RTMP and HLS host ports are
+  configurable per instance (RTMP_PORT, HLS_PORT), so several podcasts
+  can run side by side behind one reverse proxy, or each on its own
+  machine.
 - Project skeleton: Node app (zero runtime dependencies) serving the
   landing page, health check and version endpoints; MediaMTX ingest
   (RTMP in on 1935, HLS out on 8888) with publish authorisation
