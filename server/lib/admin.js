@@ -72,7 +72,12 @@ function redirect(res, to, extraHeaders = {}) {
 }
 
 function html(res, page, status = 200) {
-  res.writeHead(status, { 'Content-Type': 'text/html; charset=utf-8' });
+  res.writeHead(status, {
+    'Content-Type': 'text/html; charset=utf-8',
+    // The dashboard must never render inside anyone's iframe.
+    'Content-Security-Policy': "frame-ancestors 'none'",
+    'X-Frame-Options': 'DENY',
+  });
   res.end(page);
 }
 
