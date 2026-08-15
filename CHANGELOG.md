@@ -4,6 +4,15 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Publish API: PUT /api/v1/media then POST /api/v1/episodes with the
+  publisher token pushes an episode from a studio; it arrives as a
+  draft for review by default. This is the small, stable contract a
+  studio "Publish to FOSSCast" button calls, documented in
+  docs/studio-integration.md.
+- Download stats without surveillance: episodes hosted on the instance
+  count one download per listener per episode per day (salted daily
+  hash, never stored raw, no cookies), shown on the dashboard Stats
+  page as a 30-day chart and per-episode totals.
 - Podcasting 2.0: feeds now carry transcript, chapters, person,
   funding, and locked tags, and while a show streams the feed
   announces a liveItem (HLS enclosure plus a contentLink to the live
