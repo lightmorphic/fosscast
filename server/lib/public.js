@@ -117,11 +117,11 @@ function livePage(show, { live, embed }) {
 <title>${esc(show.name)} chat</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css">
+<link rel="stylesheet" href="/css/site.css?v=0.1.0">
 </head>
 <body class="embed" data-slug="${esc(show.slug)}" data-live="${live ? '1' : ''}">
 ${chatPanel}
-<script src="/js/live.js"></script>
+<script src="/js/live.js?v=0.1.0"></script>
 </body>
 </html>
 `;
@@ -146,8 +146,8 @@ ${chatPanel}
     </section>
     ${chatPanel}
   </div>
-  <script src="/js/hls.min.js"></script>
-  <script src="/js/live.js"></script>`,
+  <script src="/js/hls.min.js?v=0.1.0"></script>
+  <script src="/js/live.js?v=0.1.0"></script>`,
   });
 }
 
@@ -293,7 +293,7 @@ function embedPage(show, episode) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(episode.title)} - ${esc(show.name)}</title>
-<link rel="stylesheet" href="/css/site.css">
+<link rel="stylesheet" href="/css/site.css?v=0.1.0">
 </head>
 <body class="embed">
 <div class="embed-player">

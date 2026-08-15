@@ -29,7 +29,7 @@ function publicPage({ title, description, body }) {
 <title>${esc(title)}</title>
 <meta name="description" content="${esc(description || 'Independent shows, live and on demand.')}">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css">
+<link rel="stylesheet" href="/css/site.css?v=0.1.0">
 </head>
 <body>
 <header class="top">
@@ -131,7 +131,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css">
+<link rel="stylesheet" href="/css/site.css?v=0.1.0">
 </head>
 <body class="admin">
 <header class="top">
