@@ -1,0 +1,21 @@
+# MediaMTX configuration for FOSSCast: RTMP in from studios, HLS out.
+# Every publish and play attempt is authorised by the FOSSCast app, so
+# going live needs a valid stream key while playback stays public.
+
+authMethod: http
+authHTTPAddress: http://app:3100/api/internal/mediamtx-auth
+
+# Only the two protocols FOSSCast uses.
+rtsp: false
+webrtc: false
+srt: false
+
+rtmp: true
+rtmpAddress: :1935
+
+hls: true
+hlsAddress: :8888
+hlsVariant: lowLatency
+
+paths:
+  all_others:
