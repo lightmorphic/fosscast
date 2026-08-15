@@ -2,6 +2,16 @@
 
 All notable changes to FOSSCast are documented here.
 
+## Unreleased
+
+- Security hardening pass: the VPS deploy key is forced-command
+  restricted server-side to exactly the deploy verbs (upload, activate,
+  start, health-check, prune, rollback, status, logs) via
+  scripts/deploy-wrapper.sh, with rsync locked to the releases dir by
+  rrsync. Deploys now pull upstream images so security fixes land
+  automatically. Admin pages refuse to render in iframes; the bundled
+  Caddyfile adds nosniff and Referrer-Policy headers.
+
 ## 0.1.0 - 2026-08-15
 
 - Publish API: PUT /api/v1/media then POST /api/v1/episodes with the
