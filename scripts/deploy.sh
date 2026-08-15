@@ -19,7 +19,9 @@ REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 run() { ssh -i "$SSH_KEY" -o IdentitiesOnly=yes "$HOST" "$@"; }
 
 echo "== Uploading release $RELEASE =="
-run "mkdir -p $BASE/releases/$RELEASE $BASE/data"
+# The app container runs as UID 1000, so the bind-mounted data dir must
+# be writable by that user or every write fails with EACCES.
+run "mkdir -p $BASE/releases/$RELEASE $BASE/data && chown -R 1000:1000 $BASE/data"
 rsync -az --delete -e "ssh -i $SSH_KEY -o IdentitiesOnly=yes" \
   --exclude .git --exclude node_modules --exclude data --exclude .env \
   "$REPO_ROOT/" "$HOST:$BASE/releases/$RELEASE/"
@@ -32,7 +34,13 @@ run "cd $BASE/current && DATA_PATH=$BASE/data docker compose -p fosscast up -d -
 
 echo "== Health check =="
 sleep 3
-run "curl -fsS http://127.0.0.1:3100/healthz" && echo " OK"
+# Explicit if: a plain `run ... && echo` would not abort on failure
+# (set -e exempts non-final commands in && lists).
+if ! run "curl -fsS http://127.0.0.1:3100/healthz"; then
+  echo "Health check FAILED; roll back with scripts/rollback.sh"
+  exit 1
+fi
+echo " OK"
 
 echo "== Pruning old releases (keep 5) =="
 run "cd $BASE/releases && ls -1t | tail -n +6 | xargs -r rm -rf --"
