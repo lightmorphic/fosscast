@@ -62,6 +62,8 @@ All notable changes to FOSSCast are documented here.
   auth hook checks against live show keys. Flat JSON data files, no
   database. Tests cover auth, sessions, rate limiting and the full
   login/show/episode/feed/stream-auth flow.
+- Deploy scripts drive any instance: FOSSCAST_BASE and FOSSCAST_HTTP_PORT
+  select the install dir, compose project and health port.
 - Instances can stack on one machine: RTMP and HLS host ports are
   configurable per instance (RTMP_PORT, HLS_PORT), so several podcasts
   can run side by side behind one reverse proxy, or each on its own

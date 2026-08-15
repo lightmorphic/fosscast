@@ -12,7 +12,9 @@ set -euo pipefail
 
 HOST="${FOSSCAST_HOST:?Set FOSSCAST_HOST, e.g. root@1.2.3.4}"
 SSH_KEY="${FOSSCAST_SSH_KEY:-/home/charlie/2-Data/SSH/lightmorphic-fosscast-vps-deploy}"
-BASE=/opt/fosscast
+BASE="${FOSSCAST_BASE:-/opt/fosscast}"
+PROJECT="$(basename "$BASE")"
+PORT="${FOSSCAST_HTTP_PORT:-3100}"
 RELEASE="$(date +%Y%m%d-%H%M%S)"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 
@@ -31,7 +33,7 @@ PREV_RELEASE="$(run "readlink -f $BASE/current 2>/dev/null" || true)"
 run "ln -sfn $BASE/.env $BASE/releases/$RELEASE/.env && ln -sfn $BASE/releases/$RELEASE $BASE/current"
 
 echo "== Starting stack =="
-run "cd $BASE/current && DATA_PATH=$BASE/data docker compose -p fosscast up -d --build app mediamtx"
+run "cd $BASE/current && DATA_PATH=$BASE/data docker compose -p $PROJECT up -d --build app mediamtx"
 
 # MediaMTX reads its config once at start and its file watcher never
 # fires when the `current` symlink flips to a new release, so a config
@@ -41,7 +43,7 @@ run "cd $BASE/current && DATA_PATH=$BASE/data docker compose -p fosscast up -d -
 echo "== MediaMTX config check =="
 run "if ! cmp -s $BASE/releases/$RELEASE/mediamtx.yml '$PREV_RELEASE/mediamtx.yml' 2>/dev/null; then
   echo 'config changed, recreating mediamtx'
-  cd $BASE/current && DATA_PATH=$BASE/data docker compose -p fosscast up -d --force-recreate mediamtx
+  cd $BASE/current && DATA_PATH=$BASE/data docker compose -p $PROJECT up -d --force-recreate mediamtx
 else
   echo 'mediamtx config unchanged'
 fi"
@@ -50,7 +52,7 @@ echo "== Health check =="
 sleep 3
 # Explicit if: a plain `run ... && echo` would not abort on failure
 # (set -e exempts non-final commands in && lists).
-if ! run "curl -fsS http://127.0.0.1:3100/healthz"; then
+if ! run "curl -fsS http://127.0.0.1:$PORT/healthz"; then
   echo "Health check FAILED; roll back with scripts/rollback.sh"
   exit 1
 fi
