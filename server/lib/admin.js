@@ -227,21 +227,37 @@ function createAdminRouter(ctx) {
   }
 
   function dashboard(user) {
-    const showList = shows();
-    const episodeCount = episodes().length;
+    const show = shows()[0];
+    const episodeList = episodes();
+    const drafts = episodeList.filter((e) => e.draft).length;
+    const hero = show
+      ? `<section class="panel hero">
+        <p class="status"><span aria-hidden="true">&#9679;</span> Your podcast</p>
+        <h1>${esc(show.name)}</h1>
+        <p class="lede">${esc(show.description || 'No description yet: add one in the show settings.')}</p>
+        <p class="hint"><a href="/shows/${esc(show.slug)}">Public page</a>
+        &middot; <a href="/live/${esc(show.slug)}">live page</a>
+        &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
+        &middot; <a href="/admin/shows/${esc(show.slug)}">manage</a></p>
+      </section>`
+      : `<section class="panel hero">
+        <h1>Welcome to FOSSCast</h1>
+        <p class="lede">One thing to do first: create your show. Its
+        public pages, RSS feed, stream key and live stage all follow
+        from it.</p>
+        <p><a class="btn-primary" href="/admin/shows">Create your show</a></p>
+      </section>`;
     return adminPage({
       title: 'Dashboard',
       active: 'dashboard',
-      body: `<h1 class="page-title">Dashboard</h1>
+      body: `${hero}
       <section class="grid">
-        <a class="panel stat" href="/admin/shows"><span class="stat-n">${showList.length}</span><span>show${showList.length === 1 ? '' : 's'}</span></a>
-        <a class="panel stat" href="/admin/shows"><span class="stat-n">${episodeCount}</span><span>episode${episodeCount === 1 ? '' : 's'}</span></a>
-        <a class="panel stat" href="/admin/stream"><span class="stat-n">${showList.length}</span><span>stream key${showList.length === 1 ? '' : 's'}</span></a>
+        <a class="panel stat" href="${show ? `/admin/shows/${esc(show.slug)}` : '/admin/shows'}"><span class="stat-n">${episodeList.length - drafts}</span><span>published episode${episodeList.length - drafts === 1 ? '' : 's'}</span></a>
+        <a class="panel stat" href="${show ? `/admin/shows/${esc(show.slug)}` : '/admin/shows'}"><span class="stat-n">${drafts}</span><span>draft${drafts === 1 ? '' : 's'}</span></a>
+        <a class="panel stat" href="/admin/recordings"><span class="stat-n">${show && recordings ? recordings.sessions(show.streamKey).length : 0}</span><span>live recording${show && recordings && recordings.sessions(show.streamKey).length === 1 ? '' : 's'} waiting</span></a>
+        <a class="panel stat" href="/admin/stats"><span class="stat-n">${stats ? Object.values(stats.data().totals).reduce((a, b) => a + b, 0) : 0}</span><span>downloads all time</span></a>
       </section>
-      <section class="panel">
-        <h2>Signed in as</h2>
-        <p>${esc(user.email)} (${esc(user.role)})</p>
-      </section>`,
+      <p class="hint">Signed in as ${esc(user.email)}.</p>`,
     });
   }
 
@@ -301,6 +317,8 @@ function createAdminRouter(ctx) {
       <p class="hint">Public page: <a href="/shows/${esc(show.slug)}">/shows/${esc(show.slug)}</a>
       &middot; RSS: <a href="/shows/${esc(show.slug)}/feed.xml">/shows/${esc(show.slug)}/feed.xml</a>
       &middot; <a href="/live/${esc(show.slug)}">live page</a></p>
+      <div class="cols">
+      <div>
       <section class="panel">
         <h2>Episodes</h2>
         <table>
@@ -335,6 +353,8 @@ function createAdminRouter(ctx) {
           <button class="btn-primary" type="submit">Publish episode</button>
         </form>
       </section>
+      </div>
+      <div>
       <section class="panel">
         <h2>Show settings</h2>
         <form method="post" action="/admin/shows/${esc(show.slug)}/settings">
@@ -377,7 +397,9 @@ function createAdminRouter(ctx) {
           <input id="feedUrl" name="feedUrl" type="url" required maxlength="1000" placeholder="https://example.com/feed.xml">
           <button class="btn-primary" type="submit">Import episodes</button>
         </form>
-      </section>`,
+      </section>
+      </div>
+      </div>`,
     });
   }
 
