@@ -23,9 +23,9 @@ services:
     user: "1000:1000"
     ports:
       # RTMP ingest from studios: the one deliberately public port.
-      - "1935:1935"
+      - "${RTMP_PORT:-1935}:1935"
       # HLS out, loopback only; the reverse proxy or app fronts it.
-      - "127.0.0.1:8888:8888"
+      - "127.0.0.1:${HLS_PORT:-8888}:8888"
     volumes:
       - ./mediamtx.yml:/mediamtx.yml:ro
       - ${DATA_PATH:-./data}/recordings:/recordings
