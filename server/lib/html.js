@@ -22,7 +22,7 @@ const ICONS = {
 
 function publicPage({ title, description, body }) {
   return `<!doctype html>
-<html lang="en">
+<html lang="en" data-accent="deep_orange">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -124,7 +124,7 @@ function adminPage({ title, body, active = '', authed = true }) {
       </nav>`
     : '';
   return `<!doctype html>
-<html lang="en">
+<html lang="en" data-accent="deep_orange">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">

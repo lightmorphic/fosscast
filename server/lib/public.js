@@ -51,20 +51,22 @@ function landing() {
     anywhere podcasts go.</p>
   </section>
   <section class="grid">
-    <div class="panel">
-      <h2>Live</h2>
+    <div class="panel wide">
+      <h2>Live, with the room in it</h2>
       <p>When a show goes on air it streams right here. No account, no
-      app, just press play.</p>
-    </div>
-    <div class="panel">
-      <h2>Chat</h2>
-      <p>Every live stream has a room beside it. Pick a nickname and join
-      in; the hosts see the chat from their studio.</p>
+      app, just press play, and a chat room sits beside every stream:
+      pick a nickname and join in while the hosts watch from their
+      studio.</p>
     </div>
     <div class="panel">
       <h2>Episodes</h2>
-      <p>Missed it? Every episode stays: video and audio, with RSS feeds
-      any podcast app can subscribe to.</p>
+      <p>Missed it? Every episode stays: video and audio, playable
+      here.</p>
+    </div>
+    <div class="panel">
+      <h2>Subscribe anywhere</h2>
+      <p>RSS feeds any podcast app understands, transcripts and
+      chapters included.</p>
     </div>
   </section>`,
   });
@@ -108,7 +110,7 @@ function livePage(show, { live, embed }) {
 
   if (embed) {
     return `<!doctype html>
-<html lang="en">
+<html lang="en" data-accent="deep_orange">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -286,7 +288,7 @@ function feed(show, episodes, domain, liveInfo = null) {
 // Minimal embeddable player page for one episode.
 function embedPage(show, episode) {
   return `<!doctype html>
-<html lang="en">
+<html lang="en" data-accent="deep_orange">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
