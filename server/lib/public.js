@@ -195,7 +195,52 @@ function itunesDuration(seconds) {
   return `<itunes:duration>${Math.round(seconds)}</itunes:duration>`;
 }
 
-function feed(show, episodes, domain) {
+const TRANSCRIPT_TYPES = {
+  '.vtt': 'text/vtt', '.srt': 'application/x-subrip',
+  '.json': 'application/json', '.txt': 'text/plain', '.html': 'text/html',
+};
+
+function transcriptTag(episode, domain) {
+  if (!episode.transcript) return '';
+  const ext = episode.transcript.slice(episode.transcript.lastIndexOf('.')).toLowerCase();
+  const type = TRANSCRIPT_TYPES[ext] || 'text/plain';
+  return `<podcast:transcript url="${escXml(absolute(episode.transcript, domain))}" type="${type}"/>`;
+}
+
+function chaptersTag(episode, domain) {
+  if (!episode.chapters || !episode.chapters.length) return '';
+  return `<podcast:chapters url="${escXml(`https://${domain}/api/v1/episodes/${episode.id}/chapters.json`)}" type="application/json+chapters"/>`;
+}
+
+function chaptersJson(episode) {
+  return {
+    version: '1.2.0',
+    chapters: (episode.chapters || []).map((c) => ({ startTime: c.start, title: c.title })),
+  };
+}
+
+// The Podcasting 2.0 live announcement: apps that support liveItem see
+// the stream natively while the show is on air.
+function liveItemTag(show, liveInfo, domain) {
+  if (!liveInfo || !liveInfo.live) return '';
+  const base = `https://${domain}`;
+  const start = liveInfo.since || new Date().toISOString();
+  return `
+    <podcast:liveItem status="live" start="${escXml(start)}">
+      <title>LIVE: ${escXml(show.name)}</title>
+      <guid isPermaLink="false">live-${escXml(show.id)}-${escXml(start)}</guid>
+      <enclosure url="${escXml(`${base}/hls/${show.slug}/index.m3u8`)}" type="application/x-mpegURL" length="0"/>
+      <podcast:contentLink href="${escXml(`${base}/live/${show.slug}`)}">Watch and chat live</podcast:contentLink>
+    </podcast:liveItem>`;
+}
+
+function personTags(show) {
+  return (show.persons || [])
+    .map((p) => `<podcast:person${p.role ? ` role="${escXml(p.role)}"` : ''}>${escXml(p.name)}</podcast:person>`)
+    .join('\n    ');
+}
+
+function feed(show, episodes, domain, liveInfo = null) {
   const base = `https://${domain}`;
   const items = visible(episodes).map((episode) => `
     <item>
@@ -209,6 +254,8 @@ function feed(show, episodes, domain) {
       <itunes:episodeType>${escXml(episode.type || 'full')}</itunes:episodeType>
       ${itunesDuration(episode.duration)}
       <itunes:explicit>${show.explicit ? 'true' : 'false'}</itunes:explicit>
+      ${transcriptTag(episode, domain)}
+      ${chaptersTag(episode, domain)}
     </item>`).join('');
   return `<?xml version="1.0" encoding="UTF-8"?>
 <rss version="2.0"
@@ -226,6 +273,10 @@ function feed(show, episodes, domain) {
     ${show.artwork ? `<itunes:image href="${escXml(absolute(show.artwork, domain))}"/><image><url>${escXml(absolute(show.artwork, domain))}</url><title>${escXml(show.name)}</title><link>${escXml(`${base}/shows/${show.slug}`)}</link></image>` : ''}
     ${show.category ? `<itunes:category text="${escXml(show.category)}"/>` : ''}
     <itunes:explicit>${show.explicit ? 'true' : 'false'}</itunes:explicit>
+    <podcast:locked${show.lockedOwner ? ` owner="${escXml(show.lockedOwner)}"` : ''}>${show.locked ? 'yes' : 'no'}</podcast:locked>
+    ${show.funding && show.funding.url ? `<podcast:funding url="${escXml(show.funding.url)}">${escXml(show.funding.label || 'Support the show')}</podcast:funding>` : ''}
+    ${personTags(show)}
+    ${liveItemTag(show, liveInfo, domain)}
     ${items}
   </channel>
 </rss>
@@ -256,4 +307,4 @@ function embedPage(show, episode) {
 `;
 }
 
-module.exports = { landing, showsIndex, showPage, livePage, feed, embedPage, mediaType, visible };
+module.exports = { landing, showsIndex, showPage, livePage, feed, embedPage, chaptersJson, mediaType, visible };
