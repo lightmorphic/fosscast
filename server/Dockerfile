@@ -1,6 +1,8 @@
 # FOSSCast app image. The app has zero runtime npm dependencies, so
 # there is no install stage: the image is just Node plus our sources.
-FROM node:22-alpine
+# Pinned base for reproducible builds; OS packages still refresh on
+# every (weekly) rebuild via apk upgrade below.
+FROM node:22.23.2-alpine
 
 WORKDIR /app
 
