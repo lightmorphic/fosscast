@@ -176,9 +176,14 @@ function createAdminRouter(ctx) {
         const file = path.join(dataDir, decodeURIComponent(episode.mediaUrl.slice(1)));
         episode.bytes = fs.statSync(file).size;
         episode.duration = await probeDuration(file);
-      } else if (!episode.bytes) {
-        const res = await fetch(episode.mediaUrl, { method: 'HEAD', signal: AbortSignal.timeout(10000) });
-        episode.bytes = Number(res.headers.get('content-length')) || 0;
+      } else {
+        if (!episode.bytes) {
+          const res = await fetch(episode.mediaUrl, { method: 'HEAD', signal: AbortSignal.timeout(10000) });
+          episode.bytes = Number(res.headers.get('content-length')) || 0;
+        }
+        // Directories want a duration, and ffprobe reads a remote file
+        // without downloading all of it.
+        if (!episode.duration) episode.duration = await probeDuration(episode.mediaUrl);
       }
       store.save('episodes', list);
     } catch { /* sizes stay unknown */ }
@@ -395,6 +400,22 @@ function createAdminRouter(ctx) {
       &middot; <a href="/live/${esc(show.slug)}">live page</a></p>
       <div class="cols">
       <div>
+      ${(() => {
+        const checks = feedChecks(show, items);
+        const failed = checks.filter(([, ok]) => !ok);
+        return `<section class="panel">
+        <h2>Feed check</h2>
+        <p class="hint">What Apple, Spotify and the rest look for before
+        they accept a podcast.</p>
+        <ul class="checks">
+          ${checks.map(([label, ok, fix]) => `<li class="${ok ? 'check-ok' : 'check-bad'}">
+            <span aria-hidden="true">${ok ? '&#10003;' : '!'}</span>
+            <span>${esc(label)}${ok ? '' : ` &mdash; ${esc(fix)}`}</span>
+          </li>`).join('')}
+        </ul>
+        <p class="hint">${failed.length ? `${failed.length} to sort out before submitting.` : 'Ready to submit to the directories.'}</p>
+      </section>`;
+      })()}
       <section class="panel">
         <h2>Episodes</h2>
         <table>
@@ -453,6 +474,26 @@ function createAdminRouter(ctx) {
             <input id="slang" name="language" maxlength="10" value="${esc(show.language || 'en')}"></div>
             <div><label for="scat">Category</label>
             <select id="scat" name="category">${CATEGORIES.map((c) => `<option${show.category === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
+          </div>
+          <div class="field-row">
+            <div><label for="sowner">Owner name</label>
+            <input id="sowner" name="ownerName" maxlength="120" value="${esc(show.ownerName || '')}"></div>
+            <div><label for="sowneremail">Owner email</label>
+            <input id="sowneremail" name="ownerEmail" type="email" maxlength="200" value="${esc(show.ownerEmail || '')}"></div>
+          </div>
+          <p class="hint">Directories require an owner email in the feed
+          and use it to verify you own the show: Spotify and Apple both
+          reject a feed without one. It appears in the feed, which is
+          public, so use an address you are happy to publish. It does
+          not have to be the address you log in with.</p>
+          <div class="field-row">
+            <div><label for="stype">Type</label>
+            <select id="stype" name="serial">
+              <option value="">Episodic (newest first, the usual)</option>
+              <option value="1"${show.serial ? ' selected' : ''}>Serial (meant to be heard in order)</option>
+            </select></div>
+            <div><label for="scopyright">Copyright (optional)</label>
+            <input id="scopyright" name="copyright" maxlength="200" value="${esc(show.copyright || '')}" placeholder="2026 Your Name"></div>
           </div>
           <label for="sart">Podcast artwork</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels (Apple
@@ -513,6 +554,26 @@ function createAdminRouter(ctx) {
       </div>
       </div>`,
     });
+  }
+
+  // What the directories insist on, checked against what is actually
+  // in the show right now.
+  function feedChecks(show, showEpisodes) {
+    const published = showEpisodes.filter((e) => !e.draft);
+    return [
+      ['Title', !!show.name, 'Set the show name.'],
+      ['Description', (show.description || '').length > 20, 'Write a description of a sentence or two.'],
+      ['Artwork', !!show.artwork, 'Upload square artwork, 3000 x 3000.'],
+      ['Owner email', !!show.ownerEmail, 'Add an owner email: Spotify and Apple reject feeds without one.'],
+      ['Category', !!show.category, 'Choose a category.'],
+      ['Language', !!show.language, 'Set the language.'],
+      ['Author', !!show.author, 'Add an author name.'],
+      ['A published episode', published.length > 0, 'Publish at least one episode before submitting.'],
+      ['File sizes known', published.every((e) => Number(e.bytes) > 0),
+        'An episode has no file size in the feed. Re-save it so the size can be read.'],
+      ['Durations known', published.every((e) => Number(e.duration) > 0),
+        'An episode has no duration. Re-save it so the length can be read.'],
+    ];
   }
 
   function recordingsPage(domain) {
@@ -994,6 +1055,11 @@ function createAdminRouter(ctx) {
         entry.language = String(form.get('language') || 'en').trim().slice(0, 10);
         entry.category = CATEGORIES.includes(form.get('category')) ? form.get('category') : entry.category;
         entry.explicit = form.get('explicit') === '1';
+        entry.ownerName = String(form.get('ownerName') || '').trim().slice(0, 120);
+        const ownerEmail = String(form.get('ownerEmail') || '').trim().slice(0, 200);
+        entry.ownerEmail = /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(ownerEmail) ? ownerEmail : '';
+        entry.serial = form.get('serial') === '1';
+        entry.copyright = String(form.get('copyright') || '').trim().slice(0, 200);
         const guid = String(form.get('podcastGuid') || '').trim().slice(0, 60);
         entry.podcastGuid = /^[a-zA-Z0-9-]{8,}$/.test(guid) ? guid : undefined;
         entry.locked = form.get('locked') === '1';
