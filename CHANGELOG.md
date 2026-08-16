@@ -4,6 +4,19 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Light and dark, chosen by the visitor: a toggle in the header on the
+  public site and in the dashboard, remembered per browser, following
+  the operating system until someone picks. No flash of the wrong
+  theme on load.
+- Artwork everywhere. A show can have a wide website banner (2560 x
+  640) as well as its square artwork (3000 x 3000), and every episode
+  can carry its own cover art, falling back to the show's when it does
+  not. Episode pages, the embedded player and the RSS feed all show
+  it, with per-episode `itunes:image` for apps that support it.
+- Show pages redesigned around that artwork: banner across the top,
+  cover beside the title, and episode cards led by their own artwork
+  with episode number and running time. Share links now carry proper
+  preview images too.
 - Forgotten passwords: the login page can email a reset link (single
   use, expires in an hour, only its hash is stored, and the reply never
   reveals whether an address has an account). Where no email is

@@ -568,3 +568,76 @@ body.embed .chat-panel { height: 100vh; border: none; border-radius: 0; box-shad
   margin: 0 0 1rem;
 }
 .demo-creds code { background: var(--panel); }
+
+
+/* ---------- Theme toggle ---------- */
+.theme-toggle .icon-dark { display: none; }
+.theme-toggle .icon-light { display: block; line-height: 0; }
+@media (prefers-color-scheme: dark) {
+  .theme-toggle .icon-light { display: none; }
+  .theme-toggle .icon-dark { display: block; line-height: 0; }
+}
+:root[data-theme="dark"] .theme-toggle .icon-light { display: none; }
+:root[data-theme="dark"] .theme-toggle .icon-dark { display: block; line-height: 0; }
+:root[data-theme="light"] .theme-toggle .icon-light { display: block; line-height: 0; }
+:root[data-theme="light"] .theme-toggle .icon-dark { display: none; }
+
+/* ---------- Show banner and artwork ---------- */
+.show-banner {
+  max-width: 64rem;
+  width: 100%;
+  margin: 0 auto 1.5rem;
+  padding: 0 1.5rem;
+}
+.show-banner img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 1;
+  object-fit: cover;
+  border-radius: var(--panel-radius);
+  border: 1px solid var(--panel-border);
+}
+@media (max-width: 40rem) {
+  .show-banner img { aspect-ratio: 3 / 1; }
+}
+
+.show-hero { display: flex; gap: 1.5rem; align-items: flex-start; }
+.show-hero-text { flex: 1; min-width: 0; }
+.show-art {
+  width: 10rem;
+  height: 10rem;
+  flex: none;
+  border-radius: var(--radius);
+  object-fit: cover;
+  border: 1px solid var(--panel-border);
+}
+@media (max-width: 40rem) {
+  .show-hero { flex-direction: column; gap: 1rem; }
+  .show-art { width: 7rem; height: 7rem; }
+}
+
+/* ---------- Episode cards ---------- */
+.episode-head { display: flex; gap: 1rem; align-items: center; margin-bottom: 0.75rem; }
+.episode-meta { flex: 1; min-width: 0; }
+.episode-meta h2 { margin: 0 0 0.125rem; }
+.episode-art {
+  width: 6rem;
+  height: 6rem;
+  flex: none;
+  border-radius: var(--radius);
+  object-fit: cover;
+  border: 1px solid var(--panel-border);
+}
+@media (max-width: 40rem) {
+  .episode-art { width: 4.5rem; height: 4.5rem; }
+}
+
+.art-preview {
+  display: block;
+  margin-top: 0.75rem;
+  width: 7.5rem;
+  height: 7.5rem;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}

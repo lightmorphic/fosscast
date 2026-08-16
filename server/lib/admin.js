@@ -406,6 +406,14 @@ function createAdminRouter(ctx) {
           <p class="hint" id="upload-status"></p>
           <label for="mediaUrl">Or media URL (your own storage, archive.org, anywhere reachable)</label>
           <input id="mediaUrl" name="mediaUrl" maxlength="1000" placeholder="https://archive.org/download/...">
+          <label for="epArt">Episode cover art (optional)</label>
+          <p class="hint">Square, <strong>3000 x 3000</strong> pixels, same
+          rules as the show artwork. Leave it empty and the episode uses
+          the show's artwork; players that support per-episode art will
+          show whichever applies.</p>
+          <input id="epArt" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="epArtwork" data-status="epart-status">
+          <p class="hint" id="epart-status"></p>
+          <input type="hidden" id="epArtwork" name="artwork" value="">
           <label for="epDescription">Description</label>
           <textarea id="epDescription" name="description" rows="4" maxlength="4000"></textarea>
           <label class="check-label"><input type="checkbox" name="draft" value="1" class="check"> Save as draft (hidden from the public site and feed)</label>
@@ -429,10 +437,23 @@ function createAdminRouter(ctx) {
             <div><label for="scat">Category</label>
             <select id="scat" name="category">${CATEGORIES.map((c) => `<option${show.category === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
           </div>
-          <label for="sart">Artwork (square, 3000x3000 recommended, JPG or PNG)</label>
+          <label for="sart">Podcast artwork</label>
+          <p class="hint">Square, <strong>3000 x 3000</strong> pixels (Apple
+          accepts 1400 x 1400 upwards). JPG or PNG, RGB, under about 500 KB.
+          Every directory and app shows this, and every episode uses it
+          unless the episode has its own.</p>
           <input id="sart" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="artwork" data-status="art-status">
-          <p class="hint" id="art-status">${show.artwork ? `Current: ${esc(show.artwork)}` : 'No artwork yet (directories require it).'}</p>
+          <p class="hint" id="art-status">${show.artwork ? `Current: ${esc(show.artwork)}` : 'None yet. Directories will not list a show without it.'}</p>
           <input type="hidden" id="artwork" name="artwork" value="${esc(show.artwork || '')}">
+          ${show.artwork ? `<img class="art-preview" src="${esc(show.artwork)}" alt="Current artwork" width="120" height="120">` : ''}
+          <label for="sbanner">Website banner</label>
+          <p class="hint">Wide strip across the top of your site.
+          <strong>2560 x 640</strong> pixels (4:1) keeps it sharp on large
+          screens; anything from 1920 x 480 works. JPG, PNG or WebP. Keep
+          the important part central: the edges crop on phones.</p>
+          <input id="sbanner" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="banner" data-status="banner-status">
+          <p class="hint" id="banner-status">${show.banner ? `Current: ${esc(show.banner)}` : 'None yet, so the page starts at the title.'}</p>
+          <input type="hidden" id="banner" name="banner" value="${esc(show.banner || '')}">
           <label class="check-label"><input type="checkbox" name="explicit" value="1" class="check"${show.explicit ? ' checked' : ''}> Explicit content</label>
           <div class="field-row">
             <div><label for="sfundurl">Funding URL (donations, memberships)</label>
@@ -600,6 +621,13 @@ function createAdminRouter(ctx) {
           <input id="mediaUrl" name="mediaUrl" maxlength="1000" value="${esc(episode.mediaUrl)}">
           <label for="epDescription">Description</label>
           <textarea id="epDescription" name="description" rows="4" maxlength="4000">${esc(episode.description)}</textarea>
+          <label for="epArt">Episode cover art (optional)</label>
+          <p class="hint">Square, <strong>3000 x 3000</strong> pixels. Empty
+          means the show's artwork is used.</p>
+          <input id="epArt" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="epArtwork" data-status="epart-status">
+          <p class="hint" id="epart-status">${episode.artwork ? `Current: ${esc(episode.artwork)}` : "Using the show's artwork."}</p>
+          <input type="hidden" id="epArtwork" name="artwork" value="${esc(episode.artwork || '')}">
+          ${episode.artwork ? `<img class="art-preview" src="${esc(episode.artwork)}" alt="Episode artwork" width="120" height="120">` : ''}
           <label for="transcriptFile">Transcript (.vtt, .srt, .txt or .json; podcast apps show it)</label>
           <input id="transcriptFile" type="file" accept=".vtt,.srt,.txt,.json,.html" data-upload data-show="${esc(show.slug)}" data-target="transcript" data-status="tr-status">
           <p class="hint" id="tr-status">${episode.transcript ? `Current: ${esc(episode.transcript)}` : 'None yet.'}</p>
@@ -910,6 +938,8 @@ function createAdminRouter(ctx) {
             episode: Number(form.get('episode')) || null,
             season: Number(form.get('season')) || null,
             type: ['full', 'trailer', 'bonus'].includes(form.get('type')) ? form.get('type') : 'full',
+            artwork: /^\/media\/[^/]+\/[^/]+$/.test(String(form.get('artwork') || '').trim())
+              ? String(form.get('artwork')).trim() : undefined,
             draft: form.get('draft') === '1',
             createdAt: new Date().toISOString(),
           };
@@ -946,6 +976,8 @@ function createAdminRouter(ctx) {
           .slice(0, 20);
         const artwork = String(form.get('artwork') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(artwork)) entry.artwork = artwork;
+        const banner = String(form.get('banner') || '').trim();
+        if (/^\/media\/[^/]+\/[^/]+$/.test(banner)) entry.banner = banner;
         store.save('shows', list);
         redirect(res, `/admin/shows/${show.slug}`);
         return true;
@@ -1026,6 +1058,9 @@ function createAdminRouter(ctx) {
         entry.season = Number(form.get('season')) || null;
         entry.type = ['full', 'trailer', 'bonus'].includes(form.get('type')) ? form.get('type') : 'full';
         entry.draft = form.get('draft') === '1';
+        const artwork = String(form.get('artwork') || '').trim();
+        if (/^\/media\/[^/]+\/[^/]+$/.test(artwork)) entry.artwork = artwork;
+        else if (!artwork) delete entry.artwork;
         const transcript = String(form.get('transcript') || '').trim();
         entry.transcript = /^\/media\/[^/]+\/[^/]+$/.test(transcript) ? transcript : entry.transcript;
         entry.chapters = parseChapters(form.get('chapters') || '');
