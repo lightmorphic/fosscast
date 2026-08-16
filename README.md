@@ -152,6 +152,25 @@ key. The show gets its public pages and RSS feed automatically.
 One instance hosts one podcast: your show, your site, your feed, your
 live stage, on your own hardware.
 
+### Moving a podcast here from another host
+
+Podcast apps and directories follow a move when you do two things, and
+you need the old feed's address to keep working while they catch up:
+
+1. **Import the old feed** in the dashboard. Episode GUIDs and the
+   show's `podcast:guid` come across, so directories see the same
+   podcast rather than a new one, and nobody's app re-downloads the
+   back catalogue.
+2. **On the old host**, add `<itunes:new-feed-url>` to the old feed
+   pointing at the new one, and 301-redirect the old feed URL to the
+   new one. Leave both in place for at least a year: apps re-check on
+   their own schedules, and a few only notice when someone opens them
+   after months away.
+
+Update the address by hand in Apple Podcasts Connect and Spotify for
+Creators too, rather than waiting: both act on it immediately, and the
+tags above only cover apps that subscribe to the feed directly.
+
 ### Artwork sizes
 
 | What | Size | Notes |
