@@ -34,6 +34,9 @@ function parseFeed(xml) {
     image: attr(channelXml, 'itunes:image', 'href') || pick(channelXml, 'url'),
     explicit: /<itunes:explicit>\s*(yes|true)\s*</i.test(channelXml),
     category: attr(channelXml, 'itunes:category', 'text'),
+    // Podcast Index and friends identify a show by this, not by URL.
+    podcastGuid: pick(channelXml, 'podcast:guid'),
+    newFeedUrl: pick(channelXml, 'itunes:new-feed-url'),
   };
   const items = [];
   const itemBlocks = xml.match(/<item[\s>][\s\S]*?<\/item>/gi) || [];

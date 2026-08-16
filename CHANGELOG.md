@@ -4,6 +4,10 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Moving a podcast in keeps its identity: importing an old feed now
+  carries over its `podcast:guid` as well as every episode GUID, and
+  the field can be set by hand, so directories treat the move as the
+  same show rather than a new one.
 - Every episode has its own page (`/shows/<show>/<episode>`), with its
   artwork, player, chapters, transcript link and share card. The feed
   links each item to it, which is what podcast apps open from their

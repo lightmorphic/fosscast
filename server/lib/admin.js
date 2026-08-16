@@ -478,6 +478,13 @@ function createAdminRouter(ctx) {
             <div><label for="sfundlabel">Funding label</label>
             <input id="sfundlabel" name="fundingLabel" maxlength="120" value="${esc(show.funding?.label || '')}" placeholder="Support the show"></div>
           </div>
+          <label for="sguid">Feed GUID (only when moving from another host)</label>
+          <p class="hint">Directories identify a podcast by this rather
+          than by its address. Copy the <code>podcast:guid</code> from
+          your old feed and the move is treated as the same show.
+          Importing an old feed fills this in by itself. Leave it empty
+          for a new podcast.</p>
+          <input id="sguid" name="podcastGuid" maxlength="60" value="${esc(show.podcastGuid || '')}" placeholder="">
           <label for="spersons">People (one per line: Name | role, e.g. "Sam Smith | host")</label>
           <textarea id="spersons" name="persons" rows="3">${esc((show.persons || []).map((p) => p.role ? `${p.name} | ${p.role}` : p.name).join('\n'))}</textarea>
           <h2 style="margin-top:1.5rem">Listen on</h2>
@@ -987,6 +994,8 @@ function createAdminRouter(ctx) {
         entry.language = String(form.get('language') || 'en').trim().slice(0, 10);
         entry.category = CATEGORIES.includes(form.get('category')) ? form.get('category') : entry.category;
         entry.explicit = form.get('explicit') === '1';
+        const guid = String(form.get('podcastGuid') || '').trim().slice(0, 60);
+        entry.podcastGuid = /^[a-zA-Z0-9-]{8,}$/.test(guid) ? guid : undefined;
         entry.locked = form.get('locked') === '1';
         entry.lockedOwner = user.email;
         const fundingUrl = String(form.get('fundingUrl') || '').trim().slice(0, 500);
@@ -1048,6 +1057,8 @@ function createAdminRouter(ctx) {
           if (!entry.author && channel.author) entry.author = channel.author;
           if (!entry.language && channel.language) entry.language = channel.language.slice(0, 10);
           if (!entry.category && CATEGORIES.includes(channel.category)) entry.category = channel.category;
+          // The old feed's identity moves with the episodes.
+          if (!entry.podcastGuid && channel.podcastGuid) entry.podcastGuid = channel.podcastGuid;
           store.save('shows', showList);
           html(res, showDetail(entry, `Imported ${imported} episode${imported === 1 ? '' : 's'} from the feed.`));
         } catch (err) {
