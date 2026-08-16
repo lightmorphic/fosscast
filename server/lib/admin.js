@@ -16,6 +16,7 @@ const CATEGORIES = require('./categories');
 const { probeDuration } = require('./media');
 const importer = require('./import');
 const { sendMail, configured: mailConfigured } = require('./mailer');
+const { APPS } = require('./public');
 
 // This edition manages one podcast.
 const MAX_SHOWS = 1;
@@ -119,6 +120,22 @@ function deleteButton(action, label) {
 }
 
 function createAdminRouter(ctx) {
+  // Episode permalinks must stay unique within a show: podcast apps
+  // link to them from the feed.
+  function uniqueEpisodeSlug(title, showId, exceptId) {
+    const taken = new Set(
+      ctx.store.load('episodes', [])
+        .filter((e) => e.showId === showId && e.id !== exceptId)
+        .map((e) => e.slug)
+        .filter(Boolean),
+    );
+    const base = slugify(title);
+    let slug = base;
+    let n = 2;
+    while (taken.has(slug)) { slug = `${base}-${n}`; n += 1; }
+    return slug;
+  }
+
   const { store, readBody, chat, recordings, mediaDir, dataDir, stats } = ctx;
 
   function statsPage() {
@@ -365,7 +382,7 @@ function createAdminRouter(ctx) {
     const rows = items.map((episode) => `<tr>
       <td><a href="/admin/episodes/${esc(episode.id)}">${esc(episode.title)}</a>${episode.draft ? ' <span class="tag">draft</span>' : ''}</td>
       <td>${esc(episode.date)}</td>
-      <td class="media-cell"><a href="${esc(episode.mediaUrl)}">media</a> &middot; <a href="/embed/${esc(episode.id)}">embed</a></td>
+      <td class="media-cell"><a href="/shows/${esc(show.slug)}/${esc(episode.slug || episode.id)}">page</a> &middot; <a href="/embed/${esc(episode.id)}">embed</a></td>
       <td class="actions">${deleteButton(`/admin/episodes/${esc(episode.id)}/delete`, 'Delete episode')}</td>
     </tr>`).join('');
     return adminPage({
@@ -463,6 +480,14 @@ function createAdminRouter(ctx) {
           </div>
           <label for="spersons">People (one per line: Name | role, e.g. "Sam Smith | host")</label>
           <textarea id="spersons" name="persons" rows="3">${esc((show.persons || []).map((p) => p.role ? `${p.name} | ${p.role}` : p.name).join('\n'))}</textarea>
+          <h2 style="margin-top:1.5rem">Listen on</h2>
+          <p class="hint">Paste the address of your show on each platform
+          and its button appears on your pages. You get these after
+          submitting your RSS feed to them, which usually takes a few
+          days. RSS is always offered, so listeners are never stuck
+          waiting for approvals.</p>
+          ${APPS.map(([key, label]) => `<label for="link-${key}">${esc(label)}</label>
+          <input id="link-${key}" name="link_${key}" type="url" maxlength="500" value="${esc((show.links || {})[key] || '')}" placeholder="https://">`).join('')}
           <label class="check-label"><input type="checkbox" name="locked" value="1" class="check"${show.locked ? ' checked' : ''}> Lock the feed (tells other hosts not to import it without permission)</label>
           <button class="btn-primary" type="submit">Save settings</button>
         </form>
@@ -938,6 +963,7 @@ function createAdminRouter(ctx) {
             episode: Number(form.get('episode')) || null,
             season: Number(form.get('season')) || null,
             type: ['full', 'trailer', 'bonus'].includes(form.get('type')) ? form.get('type') : 'full',
+            slug: uniqueEpisodeSlug(title, show.id),
             artwork: /^\/media\/[^/]+\/[^/]+$/.test(String(form.get('artwork') || '').trim())
               ? String(form.get('artwork')).trim() : undefined,
             draft: form.get('draft') === '1',
@@ -978,6 +1004,11 @@ function createAdminRouter(ctx) {
         if (/^\/media\/[^/]+\/[^/]+$/.test(artwork)) entry.artwork = artwork;
         const banner = String(form.get('banner') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(banner)) entry.banner = banner;
+        entry.links = {};
+        for (const [key] of APPS) {
+          const url = String(form.get(`link_${key}`) || '').trim().slice(0, 500);
+          if (/^https?:\/\//.test(url)) entry.links[key] = url;
+        }
         store.save('shows', list);
         redirect(res, `/admin/shows/${show.slug}`);
         return true;
@@ -1048,7 +1079,11 @@ function createAdminRouter(ctx) {
         const title = String(form.get('title') || '').trim().slice(0, 200);
         const date = String(form.get('date') || '').trim();
         const mediaUrl = String(form.get('mediaUrl') || '').trim().slice(0, 1000);
-        if (title) entry.title = title;
+        if (title && title !== entry.title) {
+          entry.title = title;
+          entry.slug = uniqueEpisodeSlug(title, entry.showId, entry.id);
+        }
+        if (!entry.slug) entry.slug = uniqueEpisodeSlug(entry.title, entry.showId, entry.id);
         if (/^\d{4}-\d{2}-\d{2}$/.test(date)) entry.date = date;
         if (/^https?:\/\//.test(mediaUrl) || /^\/media\/[^/]+\/[^/]+$/.test(mediaUrl)) {
           if (mediaUrl !== entry.mediaUrl) { entry.mediaUrl = mediaUrl; entry.bytes = 0; entry.duration = null; }
