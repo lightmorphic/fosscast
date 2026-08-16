@@ -7,6 +7,7 @@ const { slugify } = require('../lib/admin');
 const show = {
   id: 'show-guid', slug: 'my-show', name: 'My Show', description: 'D',
   author: 'Jo', language: 'en', category: 'Technology', explicit: false,
+  ownerName: 'Jo Host', ownerEmail: 'jo@x.y',
   artwork: '/media/my-show/art.jpg', locked: true, lockedOwner: 'jo@x.y',
   funding: { url: 'https://pay.example/jo', label: 'Support' },
   persons: [{ name: 'Jo Host', role: 'host' }],
@@ -27,6 +28,12 @@ test('feed carries the Podcasting 2.0 and iTunes tags', () => {
     '<itunes:image href="https://pod.example/media/my-show/art.jpg"/>',
     '<itunes:category text="Technology"/>',
     '<podcast:locked owner="jo@x.y">yes</podcast:locked>',
+    '<itunes:owner>',
+    '<itunes:email>jo@x.y</itunes:email>',
+    '<itunes:name>Jo Host</itunes:name>',
+    '<managingEditor>jo@x.y (Jo Host)</managingEditor>',
+    '<itunes:type>episodic</itunes:type>',
+    '<generator>FOSSCast</generator>',
     '<podcast:funding url="https://pay.example/jo">Support</podcast:funding>',
     '<podcast:person role="host">Jo Host</podcast:person>',
     'url="https://pod.example/media/my-show/ep1.mp3" length="999" type="audio/mpeg"',
@@ -102,4 +109,13 @@ test('subscribe buttons appear only for platforms the show is on', () => {
   assert.ok(listed.includes('Apple Podcasts'));
   assert.ok(listed.includes('rel="noopener noreferrer"'));
   assert.ok(!listed.includes('YouTube'), 'only what is configured');
+});
+
+test('a feed with no owner email omits the tag rather than faking one', () => {
+  const { ownerName, ownerEmail, ...noOwner } = show;
+  const xml = feed(noOwner, episodes, 'pod.example');
+  assert.ok(!xml.includes('<itunes:owner>'));
+  assert.ok(!xml.includes('<managingEditor>'));
+  assert.ok(xml.includes('<podcast:locked>yes</podcast:locked>'));
+  assert.ok(!/\n\s*\n/.test(xml), 'no blank lines left by empty tags');
 });

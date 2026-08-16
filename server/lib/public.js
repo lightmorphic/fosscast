@@ -355,6 +355,7 @@ function personTags(show) {
 
 function feed(show, episodes, domain, liveInfo = null) {
   const base = `https://${domain}`;
+  const owner = show.ownerEmail || '';
   const items = visible(episodes).map((episode) => `
     <item>
       <title>${escXml(episode.title)}</title>
@@ -385,17 +386,26 @@ function feed(show, episodes, domain, liveInfo = null) {
     <language>${escXml(show.language || 'en')}</language>
     <podcast:guid>${escXml(show.podcastGuid || show.id)}</podcast:guid>
     ${show.author ? `<itunes:author>${escXml(show.author)}</itunes:author>` : ''}
+    ${owner ? `<itunes:owner>
+      <itunes:name>${escXml(show.ownerName || show.author || show.name)}</itunes:name>
+      <itunes:email>${escXml(owner)}</itunes:email>
+    </itunes:owner>
+    <managingEditor>${escXml(owner)}${show.ownerName ? ` (${escXml(show.ownerName)})` : ''}</managingEditor>` : ''}
+    <itunes:type>${show.serial ? 'serial' : 'episodic'}</itunes:type>
+    ${show.copyright ? `<copyright>${escXml(show.copyright)}</copyright>` : ''}
+    <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
+    <generator>FOSSCast</generator>
     ${show.artwork ? `<itunes:image href="${escXml(absolute(show.artwork, domain))}"/><image><url>${escXml(absolute(show.artwork, domain))}</url><title>${escXml(show.name)}</title><link>${escXml(`${base}/shows/${show.slug}`)}</link></image>` : ''}
     ${show.category ? `<itunes:category text="${escXml(show.category)}"/>` : ''}
     <itunes:explicit>${show.explicit ? 'true' : 'false'}</itunes:explicit>
-    <podcast:locked${show.lockedOwner ? ` owner="${escXml(show.lockedOwner)}"` : ''}>${show.locked ? 'yes' : 'no'}</podcast:locked>
+    <podcast:locked${owner ? ` owner="${escXml(owner)}"` : ''}>${show.locked ? 'yes' : 'no'}</podcast:locked>
     ${show.funding && show.funding.url ? `<podcast:funding url="${escXml(show.funding.url)}">${escXml(show.funding.label || 'Support the show')}</podcast:funding>` : ''}
     ${personTags(show)}
     ${liveItemTag(show, liveInfo, domain)}
     ${items}
   </channel>
 </rss>
-`;
+`.split('\n').filter((line) => line.trim() !== '').join('\n') + '\n';
 }
 
 // Minimal embeddable player page for one episode.
