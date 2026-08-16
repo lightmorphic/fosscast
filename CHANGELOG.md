@@ -4,6 +4,20 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Owner details in the feed: a show now carries an owner name and email
+  (`itunes:owner`, `managingEditor`, and the `podcast:locked` owner),
+  which Spotify and Apple both require and reject a feed without. The
+  address is separate from the login, since it is published in the
+  feed.
+- Feeds also declare `itunes:type` (episodic or serial), an optional
+  copyright line, a build date and a generator, and no longer leave
+  blank lines where an optional tag was skipped.
+- Durations are read for externally hosted episodes too, not only
+  uploads, so nothing reaches a directory without a length.
+- A feed check on the show page lists what Apple, Spotify and the rest
+  look for (title, description, artwork, owner email, category,
+  language, author, a published episode, file sizes, durations) and
+  says which are missing and what to do about each.
 - Moving a podcast in keeps its identity: importing an old feed now
   carries over its `podcast:guid` as well as every episode GUID, and
   the field can be set by hand, so directories treat the move as the
