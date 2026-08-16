@@ -550,3 +550,21 @@ body.embed .chat-panel { height: 100vh; border: none; border-radius: 0; box-shad
 .lightmorphic-badge img { display: block; height: 25px; width: auto; }
 .lightmorphic-badge .external-link-icon { display: block; width: 12px; height: 12px; opacity: 0.6; color: #9ca3af; }
 .lightmorphic-badge .external-link-icon svg { width: 100%; height: 100%; }
+
+/* ---------- Demo instance banner ---------- */
+.demo-bar {
+  background: var(--accent-container);
+  color: var(--on-accent-container);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.5rem 1rem;
+}
+.demo-creds {
+  background: var(--muted);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  margin: 0 0 1rem;
+}
+.demo-creds code { background: var(--panel); }

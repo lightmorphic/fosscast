@@ -134,6 +134,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <link rel="stylesheet" href="/css/site.css?v=0.1.0">
 </head>
 <body class="admin">
+${process.env.DEMO_MODE === '1' ? '<div class="demo-bar">Demo instance: you can look around, but nothing can be changed.</div>' : ''}
 <header class="top">
   <a class="wordmark" href="/admin" aria-label="FOSSCast admin">
     <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>

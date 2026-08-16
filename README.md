@@ -152,6 +152,16 @@ key. The show gets its public pages and RSS feed automatically.
 One instance hosts one podcast: your show, your site, your feed, your
 live stage, on your own hardware.
 
+### Running a public demo
+
+Set `DEMO_MODE=1` and the instance becomes completely read-only: no
+settings changes, uploads, publishing, moderation or chat posting, from
+the dashboard or the API. The login page shows the credentials and a
+banner explains the state, so the login can be handed to anyone
+without them being able to break it or leave something unpleasant for
+the next visitor. Everything else behaves normally, which is the point:
+people see the real product.
+
 ### Going live from a studio
 
 In FOSSStudio (or OBS, or anything that speaks RTMP), set:

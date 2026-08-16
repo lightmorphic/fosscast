@@ -19,6 +19,12 @@ const importer = require('./import');
 // This edition manages one podcast.
 const MAX_SHOWS = 1;
 
+// A public demo hands its login to strangers, so demo mode makes the
+// whole instance read-only: nothing can be changed, uploaded, posted
+// or published, and there is nothing for anyone to spoil for the next
+// visitor.
+const DEMO = process.env.DEMO_MODE === '1';
+
 // "HH:MM:SS Title" or "MM:SS Title", one per line -> chapter objects.
 function parseChapters(text) {
   const chapters = [];
@@ -214,6 +220,10 @@ function createAdminRouter(ctx) {
       authed: false,
       body: `<section class="panel narrow">
         <h1 class="page-title">Log in</h1>
+        ${DEMO ? `<p class="demo-creds">This is the demo: log in with
+        <code>${esc(process.env.ADMIN_EMAIL || '')}</code> and
+        <code>${esc(process.env.ADMIN_PASSWORD || '')}</code>.
+        Everything is read-only.</p>` : ''}
         ${message ? `<p class="form-error">${esc(message)}</p>` : ''}
         <form method="post" action="/admin/login">
           <label for="email">Email</label>
@@ -619,6 +629,22 @@ function createAdminRouter(ctx) {
     // Everything below needs a signed-in user.
     const user = currentUser(req);
     if (!user) { redirect(res, '/admin/login'); return true; }
+
+    // Read-only demo: every state-changing request stops here.
+    if (DEMO && req.method !== 'GET' && p !== '/admin/logout') {
+      html(res, adminPage({
+        title: 'Demo mode',
+        body: `<section class="panel narrow">
+          <h1 class="page-title">Nothing to see broken here</h1>
+          <p>This is a demonstration instance, so it is read-only:
+          settings, episodes, uploads and moderation are all disabled.
+          Everything else works exactly as it would on your own
+          instance.</p>
+          <p><a class="btn-primary" href="/admin">Back to the dashboard</a></p>
+        </section>`,
+      }), 403);
+      return true;
+    }
 
     if (p === '/admin' && req.method === 'GET') { html(res, dashboard(user)); return true; }
     if (p === '/admin/shows' && req.method === 'GET') { html(res, showsPage()); return true; }
