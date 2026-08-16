@@ -436,10 +436,16 @@ function createAdminRouter(ctx) {
   }
 
   function streamPage(domain) {
+    // Ingest is raw RTMP, so it cannot ride an HTTP tunnel or a proxied
+    // DNS record: INGEST_HOST points studios straight at this server
+    // when DOMAIN does not.
+    const ingestHost = (process.env.INGEST_HOST || '').trim() || domain;
+    const rtmpPort = (process.env.RTMP_PORT || '1935').trim();
+    const ingestUrl = `rtmp://${ingestHost}${rtmpPort === '1935' ? '' : `:${rtmpPort}`}/live`;
     const cards = shows().map((show) => `<section class="panel">
       <h2>${esc(show.name)}</h2>
       <p class="hint">In the studio, set the stream URL to
-      <code>rtmp://${esc(domain)}/live</code> and use this stream key:</p>
+      <code>${esc(ingestUrl)}</code> and use this stream key:</p>
       ${keyField(`key-${esc(show.id)}`, show.streamKey, { regenerateAction: `/admin/shows/${esc(show.slug)}/regenerate-key` })}
     </section>`).join('');
     return adminPage({
