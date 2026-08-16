@@ -4,6 +4,15 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- One-command install: `scripts/install.sh <domain>` sets up an
+  instance on a server in one go (data dir, generated secrets and admin
+  login, firewall rule, the right compose stack, a site file for a
+  Caddy already on the box, health check). Ports are options, so
+  several instances can share a machine.
+- A marketing site for the project lives in `site/`: what FOSSCast is,
+  the live-with-chat difference, how to self-host, and a way to ask
+  about managed hosting. Static files, same house style, no third-party
+  anything.
 - Front it with anything: a new `docker-compose.byo-proxy.yml` runs the
   stack without the bundled Caddy, `BIND_HOST` chooses the address the
   app and HLS ports are published on (a Tailscale IP, or 0.0.0.0 for a
