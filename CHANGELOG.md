@@ -4,6 +4,17 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Front it with anything: a new `docker-compose.byo-proxy.yml` runs the
+  stack without the bundled Caddy, `BIND_HOST` chooses the address the
+  app and HLS ports are published on (a Tailscale IP, or 0.0.0.0 for a
+  proxy elsewhere), and `INGEST_HOST` points studios at an address that
+  can actually carry RTMP when the site sits behind a tunnel or proxied
+  DNS. The README documents what a non-Caddy front must handle itself,
+  with a working nginx example: forwarded client IPs (chat bans, rate
+  limiting and download stats all read them), 4 GB upload bodies, no
+  buffering on the chat event stream, and TLS. Cloudflare Tunnel and
+  Tailscale setups are documented too, including the parts that cannot
+  change: RTMP ingest is not HTTP and never rides a tunnel.
 - Security hardening pass: the VPS deploy key is forced-command
   restricted server-side to exactly the deploy verbs (upload, activate,
   start, health-check, prune, rollback, status, logs) via
