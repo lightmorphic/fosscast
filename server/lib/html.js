@@ -76,6 +76,16 @@ document.getElementById('theme-toggle').addEventListener('click', function () {
   root.setAttribute('data-theme', next);
   try { localStorage.setItem('fosscast-theme', next); } catch (e) {}
 });
+document.addEventListener('click', function (e) {
+  var copy = e.target.closest('[data-copy-feed]');
+  if (!copy) return;
+  navigator.clipboard.writeText(copy.getAttribute('data-copy-feed')).then(function () {
+    var span = copy.querySelector('span');
+    var was = span.textContent;
+    span.textContent = 'Copied';
+    setTimeout(function () { span.textContent = was; }, 1500);
+  });
+});
 </script>
 </body>
 </html>

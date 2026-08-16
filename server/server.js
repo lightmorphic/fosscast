@@ -345,6 +345,18 @@ const server = http.createServer((req, res) => {
     return sendHtml(res, publicSite.embedPage(show, episode));
   }
 
+  // An episode's own page: what podcast apps link to from the feed.
+  const episodeMatch = p.match(/^\/shows\/([a-z0-9-]+)\/([a-z0-9][a-z0-9-]*)$/);
+  if (episodeMatch && episodeMatch[2] !== 'feed.xml') {
+    const show = store.load('shows', []).find((s) => s.slug === episodeMatch[1]);
+    if (!show) return send(res, 404, 'not found');
+    const wanted = episodeMatch[2];
+    const episode = publicSite.visible(store.load('episodes', []).filter((e) => e.showId === show.id))
+      .find((e) => publicSite.episodeSlug(e) === wanted || e.id === wanted);
+    if (!episode) return send(res, 404, 'not found');
+    return sendHtml(res, publicSite.episodePage(show, episode, DOMAIN));
+  }
+
   const liveMatch = p.match(/^\/live\/([a-z0-9-]+)$/);
   if (liveMatch) {
     const show = store.load('shows', []).find((s) => s.slug === liveMatch[1]);
