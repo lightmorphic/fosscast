@@ -4,6 +4,13 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Demo mode (`DEMO_MODE=1`): makes an instance completely read-only so
+  its login can be handed to strangers. Settings, episodes, uploads,
+  moderation, the publish API and chat posting are all refused; looking
+  around works normally. The login page shows the credentials and a
+  banner explains the state. Six tests cover it, including that nothing
+  reaches disk and that nobody can leave a message for the next
+  visitor.
 - One-command install: `scripts/install.sh <domain>` sets up an
   instance on a server in one go (data dir, generated secrets and admin
   login, firewall rule, the right compose stack, a site file for a
