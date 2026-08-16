@@ -15,6 +15,7 @@ const auth = require('./auth');
 const CATEGORIES = require('./categories');
 const { probeDuration } = require('./media');
 const importer = require('./import');
+const { sendMail, configured: mailConfigured } = require('./mailer');
 
 // This edition manages one podcast.
 const MAX_SHOWS = 1;
@@ -232,8 +233,56 @@ function createAdminRouter(ctx) {
           <input id="password" name="password" type="password" autocomplete="current-password" required>
           <button class="btn-primary" type="submit">Log in</button>
         </form>
+        ${DEMO ? '' : '<p class="hint"><a href="/admin/forgot">Forgotten your password?</a></p>'}
       </section>`,
     });
+  }
+
+  function forgotPage(message = '', sent = false) {
+    return adminPage({
+      title: 'Reset your password',
+      authed: false,
+      body: `<section class="panel narrow">
+        <h1 class="page-title">Reset your password</h1>
+        ${sent
+          ? `<p class="form-ok">If that address has an account here, a link
+             is on its way. It works once and expires in an hour.</p>
+             <p><a href="/admin/login">Back to logging in</a></p>`
+          : `${message ? `<p class="form-error">${esc(message)}</p>` : ''}
+             <p class="hint">We will email you a link to set a new one.</p>
+             <form method="post" action="/admin/forgot">
+               <label for="email">Email</label>
+               <input id="email" name="email" type="email" autocomplete="username" required>
+               <button class="btn-primary" type="submit">Send the link</button>
+             </form>
+             <p class="hint"><a href="/admin/login">Back to logging in</a></p>`}
+      </section>`,
+    });
+  }
+
+  function resetPage(token, error = '') {
+    return adminPage({
+      title: 'Choose a new password',
+      authed: false,
+      body: `<section class="panel narrow">
+        <h1 class="page-title">Choose a new password</h1>
+        ${error ? `<p class="form-error">${esc(error)}</p>` : ''}
+        <form method="post" action="/admin/reset">
+          <input type="hidden" name="token" value="${esc(token)}">
+          <label for="next">New password (12 characters or more)</label>
+          <input id="next" name="next" type="password" autocomplete="new-password" minlength="12" required>
+          <label for="again">New password again</label>
+          <input id="again" name="again" type="password" autocomplete="new-password" minlength="12" required>
+          <button class="btn-primary" type="submit">Save and log in</button>
+        </form>
+      </section>`,
+    });
+  }
+
+  // Reset links are single use and short lived; only their hash is kept.
+  function resets() { return store.load('resets', []); }
+  function hashToken(token) {
+    return crypto.createHash('sha256').update(String(token)).digest('hex');
   }
 
   function dashboard(user) {
@@ -617,6 +666,69 @@ function createAdminRouter(ctx) {
         limiter.ok(ip);
         const token = auth.signSession(user.id, settings().secret);
         redirect(res, '/admin', { 'Set-Cookie': sessionCookie(req, token, 7 * 24 * 3600) });
+        return true;
+      }
+    }
+
+    if (p === '/admin/forgot' && !DEMO) {
+      if (req.method === 'GET') { html(res, forgotPage()); return true; }
+      if (req.method === 'POST') {
+        const ip = clientIp(req);
+        if (limiter.blocked(ip)) { html(res, forgotPage('Too many attempts. Try again later.'), 429); return true; }
+        limiter.fail(ip);
+        const form = await formBody(req, readBody);
+        const email = String(form.get('email') || '').trim().toLowerCase();
+        const user = users().find((u) => u.email === email);
+        if (user && mailConfigured()) {
+          const token = crypto.randomBytes(32).toString('base64url');
+          const list = resets().filter((r) => r.userId !== user.id);
+          list.push({
+            userId: user.id,
+            tokenHash: hashToken(token),
+            expires: Date.now() + 3600 * 1000,
+          });
+          store.save('resets', list);
+          const link = `https://${domain}/admin/reset?token=${encodeURIComponent(token)}`;
+          await sendMail({
+            to: user.email,
+            subject: 'Reset your dashboard password',
+            text: `Someone asked to reset the password for your podcast dashboard at ${domain}.\n\nOpen this link to choose a new one:\n${link}\n\nIt works once and expires in an hour. If this was not you, ignore this email: nothing has changed.\n`,
+          });
+        }
+        // The same answer either way: never reveal who has an account.
+        html(res, forgotPage('', true));
+        return true;
+      }
+    }
+
+    if (p === '/admin/reset' && !DEMO) {
+      const token = req.method === 'GET'
+        ? (url.searchParams.get('token') || '')
+        : '';
+      if (req.method === 'GET') {
+        const entry = resets().find((r) => r.tokenHash === hashToken(token) && r.expires > Date.now());
+        if (!entry) { html(res, forgotPage('That link has expired or has already been used.'), 400); return true; }
+        html(res, resetPage(token));
+        return true;
+      }
+      if (req.method === 'POST') {
+        const form = await formBody(req, readBody);
+        const given = String(form.get('token') || '');
+        const next = String(form.get('next') || '');
+        const entry = resets().find((r) => r.tokenHash === hashToken(given) && r.expires > Date.now());
+        if (!entry) { html(res, forgotPage('That link has expired or has already been used.'), 400); return true; }
+        if (next.length < 12 || next !== String(form.get('again') || '')) {
+          html(res, resetPage(given, 'The passwords must match and be at least 12 characters.'), 400);
+          return true;
+        }
+        const list = users();
+        const user = list.find((u) => u.id === entry.userId);
+        if (!user) { html(res, forgotPage('That account no longer exists.'), 400); return true; }
+        user.hash = auth.hashPassword(next);
+        store.save('users', list);
+        store.save('resets', resets().filter((r) => r.userId !== entry.userId));
+        const session = auth.signSession(user.id, settings().secret);
+        redirect(res, '/admin', { 'Set-Cookie': sessionCookie(req, session, 7 * 24 * 3600) });
         return true;
       }
     }

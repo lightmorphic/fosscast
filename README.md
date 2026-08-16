@@ -152,6 +152,22 @@ key. The show gets its public pages and RSS feed automatically.
 One instance hosts one podcast: your show, your site, your feed, your
 live stage, on your own hardware.
 
+### Forgotten passwords
+
+The login page offers a reset link, emailed to the account address, if
+SMTP is configured in `.env`. The link works once and expires in an
+hour, and the reply is the same whether or not the address has an
+account here.
+
+With no email configured, or nobody able to receive it, reset from the
+server instead:
+
+```bash
+docker compose exec -T app node reset-password.js
+```
+
+It prints the account and a new password, once.
+
 ### Running a public demo
 
 Set `DEMO_MODE=1` and the instance becomes completely read-only: no

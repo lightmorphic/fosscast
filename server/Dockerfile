@@ -10,7 +10,7 @@ WORKDIR /app
 # recordings into episodes and probing durations (never transcoding).
 RUN apk update && apk upgrade --no-cache && apk add --no-cache ffmpeg
 
-COPY package.json server.js ./
+COPY package.json server.js reset-password.js ./
 COPY lib ./lib
 
 # The recordings volume is written by MediaMTX (root) and read by us;

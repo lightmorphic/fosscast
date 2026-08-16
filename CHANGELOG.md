@@ -4,6 +4,12 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Forgotten passwords: the login page can email a reset link (single
+  use, expires in an hour, only its hash is stored, and the reply never
+  reveals whether an address has an account). Where no email is
+  configured, `docker compose exec -T app node reset-password.js` sets
+  a fresh one from the server and prints it once. Both are off in demo
+  mode.
 - Demo mode (`DEMO_MODE=1`): makes an instance completely read-only so
   its login can be handed to strangers. Settings, episodes, uploads,
   moderation, the publish API and chat posting are all refused; looking
