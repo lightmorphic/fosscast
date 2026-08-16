@@ -108,6 +108,10 @@ function clientIp(req) {
   return req.socket.remoteAddress || 'unknown';
 }
 
+// Demo instances are read-only everywhere, not just in the dashboard:
+// no uploads, no publishing, no chat for anyone to spoil.
+const DEMO = process.env.DEMO_MODE === '1';
+
 function publisherAuthed(req) {
   const token = (admin.settings().publisherToken || '').trim();
   const given = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
@@ -182,6 +186,7 @@ const server = http.createServer((req, res) => {
   }
 
   if (req.method === 'PUT' && p === '/admin/api/upload') {
+    if (DEMO) return sendJson(res, 403, { error: 'demo instance is read-only' });
     if (!admin.currentUser(req)) return sendJson(res, 401, { error: 'not signed in' });
     media.saveUpload(req, MEDIA_DIR, url.searchParams.get('show') || 'show', url.searchParams.get('filename') || 'file')
       .then((result) => sendJson(res, 200, result))
@@ -213,6 +218,7 @@ const server = http.createServer((req, res) => {
   // Publisher API: token-authenticated, used by studios to push
   // episodes. Two steps: PUT the media, then POST the episode.
   if (p === '/api/v1/media' && req.method === 'PUT') {
+    if (DEMO) return sendJson(res, 403, { error: 'demo instance is read-only' });
     if (!publisherAuthed(req)) return sendJson(res, 401, { error: 'bad token' });
     const show = store.load('shows', [])[0];
     if (!show) return sendJson(res, 409, { error: 'no show configured yet' });
@@ -222,6 +228,7 @@ const server = http.createServer((req, res) => {
     return;
   }
   if (p === '/api/v1/episodes' && req.method === 'POST') {
+    if (DEMO) return sendJson(res, 403, { error: 'demo instance is read-only' });
     if (!publisherAuthed(req)) return sendJson(res, 401, { error: 'bad token' });
     readBody(req).then((raw) => {
       let body;
@@ -269,6 +276,7 @@ const server = http.createServer((req, res) => {
       return sendJson(res, 200, { messages: chat.recent(show.id) });
     }
     if (endpoint === 'chat/messages' && req.method === 'POST') {
+      if (DEMO) return sendJson(res, 403, { error: 'chat is disabled on this demo' });
       readBody(req).then((raw) => {
         let body;
         try { body = JSON.parse(raw.toString() || '{}'); } catch {
