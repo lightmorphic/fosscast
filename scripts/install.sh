@@ -46,7 +46,10 @@ ADMIN_EMAIL="${ADMIN_EMAIL:-admin@$DOMAIN}"
 [ "$CADDY_SITES_SET" = 1 ] || { [ -d /opt/caddy/sites ] && CADDY_SITES=/opt/caddy/sites; }
 
 echo "== Data directory =="
-mkdir -p "$BASE/data"
+# Create every directory the containers bind-mount before they start:
+# Docker creates missing mount sources itself, as root, which leaves the
+# app unable to write and crash-looping on EACCES.
+mkdir -p "$BASE/data" "$BASE/data/recordings" "$BASE/data/media"
 # The containers run as uid 1000 and must own what they write.
 chown -R 1000:1000 "$BASE/data"
 
@@ -101,6 +104,9 @@ EOF
 else
   DATA_PATH="$BASE/data" docker compose -p "$PROJECT" up -d --build
 fi
+
+# Docker may still have created a mount source as root during startup.
+chown -R 1000:1000 "$BASE/data"
 
 echo "== Health check =="
 sleep 4
