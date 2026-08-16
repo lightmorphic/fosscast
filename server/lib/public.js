@@ -383,7 +383,7 @@ function feed(show, episodes, domain, liveInfo = null) {
     <atom:link href="${escXml(`${base}/shows/${show.slug}/feed.xml`)}" rel="self" type="application/rss+xml"/>
     <description>${escXml(show.description)}</description>
     <language>${escXml(show.language || 'en')}</language>
-    <podcast:guid>${escXml(show.id)}</podcast:guid>
+    <podcast:guid>${escXml(show.podcastGuid || show.id)}</podcast:guid>
     ${show.author ? `<itunes:author>${escXml(show.author)}</itunes:author>` : ''}
     ${show.artwork ? `<itunes:image href="${escXml(absolute(show.artwork, domain))}"/><image><url>${escXml(absolute(show.artwork, domain))}</url><title>${escXml(show.name)}</title><link>${escXml(`${base}/shows/${show.slug}`)}</link></image>` : ''}
     ${show.category ? `<itunes:category text="${escXml(show.category)}"/>` : ''}
