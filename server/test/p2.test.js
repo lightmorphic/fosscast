@@ -56,3 +56,16 @@ test('chapters json follows the namespace format', () => {
 test('slugify stays safe', () => {
   assert.strictEqual(slugify('  My Great Show!  '), 'my-great-show');
 });
+
+test('every episode carries artwork, its own or the show\'s', () => {
+  const { artFor } = require('../lib/public');
+  const own = { artwork: '/media/my-show/ep1.jpg' };
+  assert.strictEqual(artFor(own, show), '/media/my-show/ep1.jpg');
+  assert.strictEqual(artFor({}, show), '/media/my-show/art.jpg');
+  assert.strictEqual(artFor({}, { }), '');
+
+  const xml = feed(show, [{ ...episodes[0], artwork: '/media/my-show/ep1.jpg' }], 'pod.example');
+  assert.ok(xml.includes('<itunes:image href="https://pod.example/media/my-show/ep1.jpg"/>'));
+  const inherited = feed(show, episodes, 'pod.example');
+  assert.ok(inherited.includes('<itunes:image href="https://pod.example/media/my-show/art.jpg"/>'));
+});
