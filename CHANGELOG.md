@@ -4,6 +4,17 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Every episode has its own page (`/shows/<show>/<episode>`), with its
+  artwork, player, chapters, transcript link and share card. The feed
+  links each item to it, which is what podcast apps open from their
+  "visit episode page" button, and titles on the show page link there
+  too.
+- Listen-on buttons: paste your show's address on Apple Podcasts,
+  Spotify, YouTube Music, Amazon Music, Pocket Casts, Overcast or
+  Podcast Index in the dashboard and a button appears on the show and
+  episode pages. RSS and a copy-the-feed button are always there, so
+  listeners are never waiting on a directory approval. Icons are drawn
+  inline; nothing is fetched from any of those companies.
 - Light and dark, chosen by the visitor: a toggle in the header on the
   public site and in the dashboard, remembered per browser, following
   the operating system until someone picks. No flash of the wrong
