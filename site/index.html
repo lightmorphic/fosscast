@@ -1,0 +1,144 @@
+<!doctype html>
+<html lang="en" data-accent="deep_orange">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOSSCast - self-hosted podcast platform with live streaming and chat</title>
+<meta name="description" content="Free, self-hosted podcast hosting: your own website, RSS feeds any app can subscribe to, and live video streaming with an audience chat room beside it.">
+<link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+<link rel="stylesheet" href="/css/site.css">
+<link rel="stylesheet" href="/css/marketing.css">
+<meta property="og:title" content="FOSSCast">
+<meta property="og:description" content="Self-hosted podcast hosting with live streaming and audience chat. Free and open source.">
+<meta property="og:type" content="website">
+</head>
+<body>
+
+<header class="top">
+  <a class="wordmark" href="/" aria-label="FOSSCast home">
+    <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span>FOSSCast</span>
+  </a>
+  <nav class="top-nav">
+    <a class="top-link" href="#features">Features</a>
+    <a class="top-link" href="#self-host">Self-host</a>
+    <a class="top-link" href="#hosted">Hosted</a>
+    <a class="top-link" href="https://github.com/lightmorphic/fosscast">GitHub</a>
+  </nav>
+</header>
+
+<main class="wrap">
+
+  <section class="panel hero mkt-hero">
+    <p class="status"><span aria-hidden="true">&#9679;</span> Free and open source, GPL v3</p>
+    <h1>Your podcast, your server,<br>your audience.</h1>
+    <p class="lede">FOSSCast gives your show a proper website, RSS feeds
+    every podcast app understands, and something the others do not: a
+    live video stage with an open chat room beside it. Run it yourself
+    on any Linux box, for nothing, forever.</p>
+    <div class="cta-row">
+      <a class="btn-primary" href="#self-host">Run it yourself</a>
+      <a class="btn-secondary" href="#hosted">Have us host it</a>
+    </div>
+  </section>
+
+  <section class="grid" id="features">
+    <div class="panel wide feature-lead">
+      <span class="eyebrow">The part nobody else does</span>
+      <h2>Go live, with the room in it</h2>
+      <p>Point your studio at FOSSCast and your show streams straight to
+      your own site. Viewers press play, pick a nickname and talk to you
+      while it happens. No account, no app, no third party in the middle.
+      When you stop, the recording is waiting in your dashboard: one
+      click turns it into a published episode.</p>
+      <ul class="ticks">
+        <li>Live page that switches itself on the moment you start</li>
+        <li>Chat with IP bans and a word filter you control</li>
+        <li>The chat is readable from your studio while you present</li>
+        <li>Your feed announces the stream to podcast apps that support it</li>
+      </ul>
+    </div>
+
+    <div class="panel">
+      <h2>A real podcast host</h2>
+      <p>Episode pages, players, artwork, seasons, drafts and scheduled
+      publishing, with feeds built to the specification Apple, Spotify
+      and Podcast Index actually want.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Bring your back catalogue</h2>
+      <p>Paste your current RSS feed and every episode comes across with
+      its metadata. Leaving is just as easy: your data is plain files you
+      can take with you.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Media anywhere</h2>
+      <p>Upload episodes to your own server, or point at files hosted
+      elsewhere, including archive.org. Both are first-class.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Podcasting 2.0</h2>
+      <p>Transcripts, chapters, people, funding links and live items.
+      Modern apps get the richer experience; everything else still just
+      works.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Nothing phones home</h2>
+      <p>No trackers, no third-party fonts or scripts, no cookies for
+      listeners. Download counts are worked out on your own server
+      without following anybody around.</p>
+    </div>
+  </section>
+
+  <section class="panel" id="self-host">
+    <span class="eyebrow">Self-hosting</span>
+    <h2>Up in about five minutes</h2>
+    <p>You need a Linux machine with Docker, a domain pointed at it, and
+    ports 80, 443 and 1935 reachable. That is the whole shopping list.</p>
+<pre><code>git clone https://github.com/lightmorphic/fosscast.git
+cd fosscast
+cp .env.example .env   # fill it in, every value is explained
+docker compose up -d --build</code></pre>
+    <p>HTTPS certificates arrive by themselves. Already running nginx or
+    a tunnel? There is a stack without the bundled proxy, and the README
+    covers Cloudflare Tunnel and Tailscale too.</p>
+    <p class="hint">One instance runs one podcast, on purpose: it keeps
+    the whole thing small enough to understand and to trust.</p>
+  </section>
+
+  <section class="panel hosted-panel" id="hosted">
+    <span class="eyebrow">Hosted</span>
+    <h2>Or let us run it for you</h2>
+    <p>Same software, none of the server work. You get your own machine,
+    your own domain, updates and backups looked after, and someone to
+    ask when a show is about to start and something looks wrong. Your
+    audio and video stay yours, and you can take the whole thing with
+    you whenever you like.</p>
+    <p>Tell us about your show and we will come back with what it would
+    cost.</p>
+    <p><a class="btn-primary" href="mailto:hello@fosscast.org?subject=Hosting%20my%20podcast%20on%20FOSSCast">Ask about hosting</a></p>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <a class="lightmorphic-badge" href="https://lightmorphic.co.uk" target="_blank" rel="noopener noreferrer" translate="no">
+    <span>Created by</span>
+    <img src="/img/lightmorphic-dark-tb-250x50-sq.webp" alt="Lightmorphic" width="125" height="25" loading="lazy">
+    <span class="external-link-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        <path d="M15 3h6v6"/>
+        <line x1="10" y1="14" x2="21" y2="3"/>
+      </svg>
+    </span>
+  </a>
+  <div class="foot-line">FOSSCast &middot; <a href="https://github.com/lightmorphic/fosscast">GitHub</a> &middot; free software under the <a href="https://github.com/lightmorphic/fosscast/blob/main/LICENSE">GNU GPL v3</a> &middot; built for podcasters who want to own their stack</div>
+</footer>
+
+</body>
+</html>
