@@ -31,6 +31,12 @@ function absolute(url, domain) {
   return url.startsWith('/') ? `https://${domain}${url}` : url;
 }
 
+// Every episode shows artwork: its own where it has some, the show's
+// otherwise, so a feed or a page is never left with a blank square.
+function artFor(episode, show) {
+  return episode.artwork || show.artwork || '';
+}
+
 function player(episode) {
   const type = mediaType(episode.mediaUrl);
   const tag = type.startsWith('video/') ? 'video' : 'audio';
@@ -160,25 +166,38 @@ function showPage(show, allEpisodes, domain, live = false) {
       </a>`
     : '';
   const items = episodes.length
-    ? episodes.map((episode) => `
+    ? episodes.map((episode) => {
+        const art = artFor(episode, show);
+        return `
       <article class="panel episode">
-        <h2>${esc(episode.title)}</h2>
-        <p class="hint">${esc(episode.date)}</p>
+        <div class="episode-head">
+          ${art ? `<img class="episode-art" src="${esc(art)}" alt="" width="96" height="96" loading="lazy">` : ''}
+          <div class="episode-meta">
+            <h2>${esc(episode.title)}</h2>
+            <p class="hint">${esc(episode.date)}${episode.episode ? ` &middot; episode ${Number(episode.episode)}` : ''}${episode.duration ? ` &middot; ${Math.round(episode.duration / 60)} min` : ''}</p>
+          </div>
+        </div>
         ${episode.description ? `<p>${esc(episode.description)}</p>` : ''}
         ${player(episode)}
-      </article>`).join('')
+      </article>`;
+      }).join('')
     : '<div class="panel"><p class="hint">No episodes published yet.</p></div>';
   return publicPage({
     title: `${show.name} - FOSSCast`,
     description: show.description,
+    image: show.banner || show.artwork || '',
     body: `
+  ${show.banner ? `<div class="show-banner"><img src="${esc(show.banner)}" alt=""></div>` : ''}
   ${liveBanner}
-  <section class="panel hero">
+  <section class="panel hero show-hero">
+    ${show.artwork ? `<img class="show-art" src="${esc(show.artwork)}" alt="${esc(show.name)} artwork" width="160" height="160">` : ''}
+    <div class="show-hero-text">
     <h1>${esc(show.name)}</h1>
     <p class="lede">${esc(show.description)}</p>
     <p class="feed-line"><a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
     for any podcast app: <code>https://${esc(domain)}/shows/${esc(show.slug)}/feed.xml</code>
     &middot; <a href="/live/${esc(show.slug)}">live page</a></p>
+    </div>
   </section>
   <section class="episodes">${items}</section>`,
   });
@@ -256,6 +275,7 @@ function feed(show, episodes, domain, liveInfo = null) {
       <itunes:episodeType>${escXml(episode.type || 'full')}</itunes:episodeType>
       ${itunesDuration(episode.duration)}
       <itunes:explicit>${show.explicit ? 'true' : 'false'}</itunes:explicit>
+      ${artFor(episode, show) ? `<itunes:image href="${escXml(absolute(artFor(episode, show), domain))}"/>` : ''}
       ${transcriptTag(episode, domain)}
       ${chaptersTag(episode, domain)}
     </item>`).join('');
@@ -297,7 +317,7 @@ function embedPage(show, episode) {
 </head>
 <body class="embed">
 <div class="embed-player">
-  ${show.artwork ? `<img class="embed-art" src="${esc(show.artwork)}" alt="">` : ''}
+  ${artFor(episode, show) ? `<img class="embed-art" src="${esc(artFor(episode, show))}" alt="">` : ''}
   <div class="embed-meta">
     <strong>${esc(episode.title)}</strong>
     <span class="hint">${esc(show.name)}</span>
@@ -309,4 +329,4 @@ function embedPage(show, episode) {
 `;
 }
 
-module.exports = { landing, showsIndex, showPage, livePage, feed, embedPage, chaptersJson, mediaType, visible };
+module.exports = { landing, showsIndex, showPage, livePage, feed, embedPage, chaptersJson, mediaType, visible, artFor };

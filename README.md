@@ -152,6 +152,17 @@ key. The show gets its public pages and RSS feed automatically.
 One instance hosts one podcast: your show, your site, your feed, your
 live stage, on your own hardware.
 
+### Artwork sizes
+
+| What | Size | Notes |
+|---|---|---|
+| Podcast artwork | **3000 x 3000** square | JPG or PNG, RGB. Apple accepts 1400 x 1400 upwards; 3000 is the safe maximum every directory takes. Keep it under about 500 KB. |
+| Episode cover art | **3000 x 3000** square | Optional per episode. Apps that support per-episode art show it; the rest fall back to the podcast artwork, and so does this site. |
+| Website banner | **2560 x 640** (4:1) | JPG, PNG or WebP. 1920 x 480 is fine. Edges crop on narrow screens, so keep anything important central. |
+
+Every episode always displays artwork: its own if it has some, the
+show's otherwise, on the site, in the embedded player and in the feed.
+
 ### Forgotten passwords
 
 The login page offers a reset link, emailed to the account address, if
