@@ -44,14 +44,101 @@ cp .env.example .env   # then fill it in (each value is explained)
 docker compose up -d --build
 ```
 
-The bundled Caddy fetches HTTPS certificates automatically. If the
-machine already runs its own reverse proxy on ports 80/443, start only
-the app and the ingest instead, and point your proxy at
-`127.0.0.1:3100`:
+The bundled Caddy fetches HTTPS certificates automatically.
+
+### Bring your own reverse proxy (nginx, Apache, a tunnel)
+
+Already running nginx or another proxy? Use the byo-proxy stack, which
+is the same thing minus Caddy:
 
 ```bash
-docker compose up -d --build app mediamtx
+docker compose -f docker-compose.byo-proxy.yml up -d --build
 ```
+
+The app stays bound to `127.0.0.1:3100` (change with `BIND_HOST` and
+`HTTP_PORT`), and your proxy points there. Four things Caddy does for
+us that another front must handle itself:
+
+1. **Forwarded client IPs.** FOSSCast reads `X-Forwarded-For` for chat
+   rate limiting, chat bans and download counting. Without it every
+   viewer looks like one person: one troll's ban would silence
+   everybody, and your stats would read a single download per day.
+2. **Upload size.** Episode uploads go up to 4 GB. nginx defaults to
+   1 MB, so set `client_max_body_size` (and ideally turn request
+   buffering off so big files stream straight through).
+3. **No buffering on the chat stream.** Live chat is Server-Sent
+   Events; a buffering proxy holds messages back until the buffer
+   fills. The app already sends `X-Accel-Buffering: no`, which nginx
+   honours, but any other proxy needs buffering disabled for
+   `/api/v1/shows/*/chat/stream`.
+4. **TLS.** Browsers need HTTPS for the clipboard and media features,
+   and session cookies are `Secure`-only, so terminate TLS at your
+   proxy.
+
+```nginx
+server {
+    listen 443 ssl http2;
+    server_name pod.example.com;
+
+    ssl_certificate     /etc/letsencrypt/live/pod.example.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/pod.example.com/privkey.pem;
+
+    add_header Strict-Transport-Security "max-age=31536000" always;
+
+    client_max_body_size 4G;
+    proxy_request_buffering off;
+
+    location / {
+        proxy_pass http://127.0.0.1:3100;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+    }
+
+    # Live chat is SSE: never buffer it, never time it out early.
+    location ~ ^/api/v1/shows/.+/chat/stream$ {
+        proxy_pass http://127.0.0.1:3100;
+        proxy_http_version 1.1;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 1h;
+    }
+}
+
+server {
+    listen 80;
+    server_name pod.example.com;
+    return 301 https://$host$request_uri;
+}
+```
+
+### Cloudflare Tunnel
+
+The website, players and HLS playback all work through a tunnel
+(`cloudflared` pointing at `http://127.0.0.1:3100`). Two things cannot
+change:
+
+- **RTMP ingest is not HTTP**, so it can never ride the tunnel. Port
+  1935 must reach the server directly. Set `INGEST_HOST` to an
+  unproxied hostname or the raw IP so the dashboard shows studios the
+  address that actually works.
+- **Upload limits.** Cloudflare caps request bodies (100 MB on free
+  plans), which stops large episode uploads through the tunnel. Either
+  publish media by external URL (archive.org and anything else works
+  as a first-class option), or upload over a direct route.
+
+### Tailscale
+
+Set `BIND_HOST` to the machine's tailnet address and the whole
+instance is private to your tailnet: nothing is exposed publicly and
+no TLS setup is needed if you use Tailscale Serve in front. Studios on
+the tailnet can stream to it normally. Worth knowing: a podcast this
+private cannot be reached by public podcast apps, so this suits
+internal, member-only or staging instances rather than a public show.
 
 ### Managing your instance
 
