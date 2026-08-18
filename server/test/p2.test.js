@@ -43,14 +43,6 @@ test('feed carries the Podcasting 2.0 and iTunes tags', () => {
     '<podcast:transcript url="https://pod.example/media/my-show/ep1.vtt" type="text/vtt"/>',
     '<podcast:chapters url="https://pod.example/api/v1/episodes/ep-1/chapters.json" type="application/json+chapters"/>',
   ]) assert.ok(xml.includes(expected), `missing: ${expected}`);
-  assert.ok(!xml.includes('liveItem'));
-});
-
-test('feed announces liveItem while streaming', () => {
-  const xml = feed(show, episodes, 'pod.example', { live: true, since: '2026-01-01T10:00:00Z' });
-  assert.ok(xml.includes('<podcast:liveItem status="live" start="2026-01-01T10:00:00Z">'));
-  assert.ok(xml.includes('https://pod.example/hls/my-show/index.m3u8'));
-  assert.ok(xml.includes('<podcast:contentLink href="https://pod.example/live/my-show">'));
 });
 
 test('chapters json follows the namespace format', () => {

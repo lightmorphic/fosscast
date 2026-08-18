@@ -3,13 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>FOSSCast - self-hosted podcast platform with live streaming and chat</title>
-<meta name="description" content="Free, self-hosted podcast hosting: your own website, RSS feeds any app can subscribe to, and live video streaming with an audience chat room beside it.">
+<title>FOSSCast - self-hosted podcast hosting, done properly</title>
+<meta name="description" content="Free, self-hosted podcast hosting: your own website, episode pages, and RSS feeds built to what Apple, Spotify and Podcast Index actually want.">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/site.css">
 <link rel="stylesheet" href="/css/marketing.css">
 <meta property="og:title" content="FOSSCast">
-<meta property="og:description" content="Self-hosted podcast hosting with live streaming and audience chat. Free and open source.">
+<meta property="og:description" content="Self-hosted podcast hosting, done properly. Free and open source.">
 <meta property="og:type" content="website">
 </head>
 <body>
@@ -32,10 +32,10 @@
   <section class="panel hero mkt-hero">
     <p class="status"><span aria-hidden="true">&#9679;</span> Free and open source, GPL v3</p>
     <h1>Your podcast, your server,<br>your audience.</h1>
-    <p class="lede">FOSSCast gives your show a proper website, RSS feeds
-    every podcast app understands, and something the others do not: a
-    live video stage with an open chat room beside it. Run it yourself
-    on any Linux box, for nothing, forever.</p>
+    <p class="lede">FOSSCast gives your show a proper website: a page
+    per episode with artwork, players, chapters and transcripts, and
+    RSS feeds every podcast app understands. Run it yourself on any
+    Linux box, for nothing, forever.</p>
     <div class="cta-row">
       <a class="btn-primary" href="#self-host">Run it yourself</a>
       <a class="btn-secondary" href="#hosted">Have us host it</a>
@@ -44,18 +44,19 @@
 
   <section class="grid" id="features">
     <div class="panel wide feature-lead">
-      <span class="eyebrow">The part nobody else does</span>
-      <h2>Go live, with the room in it</h2>
-      <p>Point your studio at FOSSCast and your show streams straight to
-      your own site. Viewers press play, pick a nickname and talk to you
-      while it happens. No account, no app, no third party in the middle.
-      When you stop, the recording is waiting in your dashboard: one
-      click turns it into a published episode.</p>
+      <span class="eyebrow">Built for the directories</span>
+      <h2>Feeds that get accepted first time</h2>
+      <p>Full iTunes namespace, Podcasting 2.0 transcripts, chapters,
+      people and funding tags, real file sizes and durations, and a
+      feed check in the dashboard that lists exactly what Apple,
+      Spotify and the rest look for. Bring a back catalogue with you:
+      import keeps every episode identity, so a move never looks like
+      a new show.</p>
       <ul class="ticks">
-        <li>Live page that switches itself on the moment you start</li>
-        <li>Chat with IP bans and a word filter you control</li>
-        <li>The chat is readable from your studio while you present</li>
-        <li>Your feed announces the stream to podcast apps that support it</li>
+        <li>A page per episode, linked from the feed, with share cards</li>
+        <li>Listen-on buttons for the major apps, drawn inline</li>
+        <li>Banners, cover art per episode, light and dark</li>
+        <li>Download stats without tracking anybody</li>
       </ul>
     </div>
 
@@ -81,9 +82,8 @@
 
     <div class="panel">
       <h2>Podcasting 2.0</h2>
-      <p>Transcripts, chapters, people, funding links and live items.
-      Modern apps get the richer experience; everything else still just
-      works.</p>
+      <p>Transcripts, chapters, people and funding links. Modern apps
+      get the richer experience; everything else still just works.</p>
     </div>
 
     <div class="panel">
@@ -98,7 +98,7 @@
     <span class="eyebrow">Self-hosting</span>
     <h2>Up in about five minutes</h2>
     <p>You need a Linux machine with Docker, a domain pointed at it, and
-    ports 80, 443 and 1935 reachable. That is the whole shopping list.</p>
+    ports 80 and 443 reachable. That is the whole shopping list.</p>
 <pre><code>git clone https://github.com/lightmorphic/fosscast.git
 cd fosscast
 cp .env.example .env   # fill it in, every value is explained
@@ -115,9 +115,8 @@ docker compose up -d --build</code></pre>
     <h2>Or let us run it for you</h2>
     <p>Same software, none of the server work. You get your own machine,
     your own domain, updates and backups looked after, and someone to
-    ask when a show is about to start and something looks wrong. Your
-    audio and video stay yours, and you can take the whole thing with
-    you whenever you like.</p>
+    ask when something looks wrong. Your audio and video stay yours,
+    and you can take the whole thing with you whenever you like.</p>
     <p>Tell us about your show and we will come back with what it would
     cost.</p>
     <p><a class="btn-primary" href="mailto:hello@fosscast.org?subject=Hosting%20my%20podcast%20on%20FOSSCast">Ask about hosting</a></p>

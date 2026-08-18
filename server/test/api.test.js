@@ -25,7 +25,7 @@ before(async () => {
   // Pre-seed a show and settings so the API has something to publish to.
   fs.writeFileSync(path.join(DATA, 'shows.json'), JSON.stringify([{
     id: 'show-1', slug: 'test-show', name: 'Test Show', description: '',
-    streamKey: 'k'.repeat(32), createdAt: 'x',
+    createdAt: 'x',
   }]));
   token = 'tok-' + 'a'.repeat(60);
   fs.writeFileSync(path.join(DATA, 'settings.json'), JSON.stringify({

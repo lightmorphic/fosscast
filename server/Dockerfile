@@ -6,8 +6,8 @@ FROM node:22.23.2-alpine
 
 WORKDIR /app
 
-# Patch OS packages at build time. ffmpeg: concatenating live
-# recordings into episodes and probing durations (never transcoding).
+# Patch OS packages at build time. ffmpeg: probing episode durations
+# for the feed (ffprobe; nothing is ever transcoded).
 RUN apk update && apk upgrade --no-cache && apk add --no-cache ffmpeg
 
 COPY package.json server.js reset-password.js ./

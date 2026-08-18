@@ -17,30 +17,17 @@ self-hosted: run the newest version.
 
 For self-hosters assessing the project:
 
-- **Streaming ingest**: every RTMP publish attempt is authorised by the
-  app before MediaMTX accepts it; without a valid stream key nothing
-  can go live. Playback is deliberately public. RTSP, WebRTC, SRT and
-  MoQ are disabled outright, as are MediaMTX's API, metrics and pprof
-  endpoints.
 - **Network surface**: the only public ports are 80/443 (the reverse
-  proxy) and 1935 (RTMP ingest). The app and the HLS output bind to
-  loopback and are only reachable through the proxy.
+  proxy). The app binds to loopback and is only reachable through the
+  proxy.
 - **Admin authentication**: scrypt password hashing, HMAC-signed
   HttpOnly session cookies (`Secure` behind HTTPS, `SameSite=Lax`),
   per-IP login rate limiting with lockout. The first admin account
   bootstraps from the environment only while no accounts exist. Viewers
   never need accounts, so the app stores no viewer data.
-- **Stream keys** are per show, generated server-side (128-bit random),
-  shown only inside the authenticated dashboard, and revocable per show
-  with one regenerate click.
-- **Chat**: anonymous by design; the server stores no viewer identity
-  beyond the message history kept in memory. Posting is rate-limited
-  per IP; moderation is per-IP bans and a word filter. Viewer IPs are
-  used server-side only and are never exposed through any endpoint or
-  page. The HLS playback proxy keeps stream keys out of viewer-facing
-  URLs.
-- **App**: plain Node with zero runtime npm dependencies (one vendored
-  client library, hls.js, served from the instance itself), so the
+- **App**: plain Node with zero runtime npm dependencies, so the
   server supply chain is Node itself. The container runs as a non-root
-  user with the npm CLI removed from the image.
-- **Publish API** (under construction) will be token-authenticated.
+  user with the npm CLI removed from the image, read-only filesystem,
+  all capabilities dropped.
+- **Publish API**: token-authenticated (constant-time comparison);
+  pushed episodes arrive as drafts for review.

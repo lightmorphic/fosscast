@@ -1,6 +1,6 @@
 'use strict';
 // A demo instance hands its login to strangers, so nothing anywhere
-// may be changed: not settings, not episodes, not uploads, not chat.
+// may be changed: not settings, not episodes, not uploads.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
 const { spawn } = require('node:child_process');
@@ -36,7 +36,7 @@ before(async () => {
   // A show already exists, as it would on a real demo.
   fs.writeFileSync(path.join(DATA, 'shows.json'), JSON.stringify([{
     id: 'show-1', slug: 'demo-show', name: 'Demo Show', description: 'Look around.',
-    streamKey: 'k'.repeat(32), createdAt: 'x',
+    createdAt: 'x',
   }]));
   child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
     env: {
@@ -66,7 +66,7 @@ after(() => {
 });
 
 test('looking around still works', async () => {
-  for (const p of ['/admin', '/admin/shows', '/admin/stream', '/admin/chat', '/admin/stats']) {
+  for (const p of ['/admin', '/admin/shows', '/admin/stats']) {
     const res = await fetch(`${BASE}${p}`, { headers: { cookie } });
     assert.strictEqual(res.status, 200, `${p} should be readable`);
   }
@@ -79,8 +79,6 @@ test('no setting, episode or moderation change is accepted', async () => {
     ['/admin/shows/demo-show/settings', { name: 'Hacked', description: 'rude words' }],
     ['/admin/shows/demo-show/episodes', { title: 'Rude', date: '2026-01-01', mediaUrl: 'https://x.example/a.mp3' }],
     ['/admin/shows/demo-show/delete', {}],
-    ['/admin/shows/demo-show/regenerate-key', {}],
-    ['/admin/chat/words', { words: 'nonsense' }],
     ['/admin/account/password', { current: PASSWORD, next: 'brand new password', again: 'brand new password' }],
   ];
   for (const [p, data] of attempts) {
@@ -90,7 +88,6 @@ test('no setting, episode or moderation change is accepted', async () => {
   // Nothing was written: the show is untouched and no episode exists.
   const shows = JSON.parse(fs.readFileSync(path.join(DATA, 'shows.json'), 'utf8'));
   assert.strictEqual(shows[0].name, 'Demo Show');
-  assert.strictEqual(shows[0].streamKey, 'k'.repeat(32));
   assert.ok(!fs.existsSync(path.join(DATA, 'episodes.json')));
 });
 
@@ -99,17 +96,6 @@ test('uploads are refused, so no stranger can put files on the server', async ()
     method: 'PUT', headers: { cookie }, body: Buffer.from('not welcome'),
   });
   assert.strictEqual(res.status, 403);
-});
-
-test('chat cannot be posted to, so nobody greets the next visitor', async () => {
-  const res = await fetch(`${BASE}/api/v1/shows/demo-show/chat/messages`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ name: 'troll', text: 'something rude' }),
-  });
-  assert.strictEqual(res.status, 403);
-  const messages = await (await fetch(`${BASE}/api/v1/shows/demo-show/chat/messages`)).json();
-  assert.deepStrictEqual(messages.messages, []);
 });
 
 test('the publish API is closed too', async () => {

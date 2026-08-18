@@ -34,35 +34,11 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  mediamtx:
-    image: bluenviron/mediamtx:1
-    restart: unless-stopped
-    # Same user as the app so recordings can be published and cleaned up.
-    user: "1000:1000"
-    ports:
-      # RTMP ingest from studios: the one deliberately public port.
-      - "${RTMP_PORT:-1935}:1935"
-      # HLS out, loopback only; the reverse proxy or app fronts it.
-      - "${BIND_HOST:-127.0.0.1}:${HLS_PORT:-8888}:8888"
-    volumes:
-      - ./mediamtx.yml:/mediamtx.yml:ro
-      - ${DATA_PATH:-./data}/recordings:/recordings
-    depends_on:
-      - app
-    # MediaMTX only ever writes recordings.
-    read_only: true
-    tmpfs:
-      - /tmp
-    cap_drop: [ALL]
-    security_opt:
-      - no-new-privileges:true
-    pids_limit: 256
-    logging: *log
 
   # Bundled reverse proxy with automatic HTTPS certificates. A plain
   # `docker compose up -d` gives a complete public site; hosts whose
-  # machine already runs its own proxy on 80/443 start only the other
-  # two services instead: `docker compose up -d app mediamtx`.
+  # machine already runs its own proxy on 80/443 use
+  # docker-compose.byo-proxy.yml instead.
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped

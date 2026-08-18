@@ -117,30 +117,6 @@ test('a second show is refused (this edition manages one podcast)', async () => 
   assert.strictEqual(shows.length, 1);
 });
 
-test('stream auth accepts the show key and refuses others', async () => {
-  const shows = JSON.parse(fs.readFileSync(path.join(DATA, 'shows.json'), 'utf8'));
-  const key = shows[0].streamKey;
-  assert.ok(key.length >= 32);
-
-  const good = await fetch(`${BASE}/api/internal/mediamtx-auth`, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'publish', path: `live/${key}`, protocol: 'rtmp' }),
-  });
-  assert.strictEqual(good.status, 200);
-
-  const bad = await fetch(`${BASE}/api/internal/mediamtx-auth`, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'publish', path: 'live/nope', protocol: 'rtmp' }),
-  });
-  assert.strictEqual(bad.status, 401);
-
-  const read = await fetch(`${BASE}/api/internal/mediamtx-auth`, {
-    method: 'POST',
-    body: JSON.stringify({ action: 'read', path: `live/${key}` }),
-  });
-  assert.strictEqual(read.status, 200);
-});
-
 test('login rate limiting locks out after repeated failures', async () => {
   for (let i = 0; i < 10; i++) {
     await fetch(`${BASE}/admin/login`, form({ email: 'admin@test.example', password: 'no' }));

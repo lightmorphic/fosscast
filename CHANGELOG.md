@@ -4,6 +4,14 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Live streaming and chat are gone from FOSSCast: they move to
+  FOSSStudio, where the show is made. Out with them: MediaMTX and RTMP
+  ingest, the live pages and HLS player, the chat room and its
+  moderation, live DVR recordings and their reminders, stream keys,
+  the liveItem feed announcement and podping. What that layer did, as
+  built and proven, is inventoried in docs/live-handover.md for
+  FOSSStudio to take on. FOSSCast is now purely a podcast host, and
+  its only public ports are 80 and 443.
 - Owner details in the feed: a show now carries an owner name and email
   (`itunes:owner`, `managingEditor`, and the `podcast:locked` owner),
   which Spotify and Apple both require and reject a feed without. The

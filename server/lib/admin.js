@@ -1,6 +1,6 @@
 'use strict';
-// The admin area: login, dashboard, shows and episodes management,
-// per-show stream keys, account settings.
+// The admin area: login, dashboard, show and episode management,
+// account settings.
 //
 // Roles, from day one: 'admin' runs the instance and sees everything;
 // 'owner' (coming next) manages only their own podcasts. That is the
@@ -94,23 +94,6 @@ async function formBody(req, readBody) {
   return new URLSearchParams(raw);
 }
 
-function keyField(id, value, { regenerateAction } = {}) {
-  return `<div class="key-field">
-    <input id="${id}" type="password" readonly value="${esc(value)}" aria-label="Stream key">
-    <button class="btn-icon btn-reveal" type="button" data-for="${id}" data-tip="Show or hide" aria-label="Show or hide">
-      <span class="icon-a">${ICONS.eye}</span><span class="icon-b">${ICONS.eyeOff}</span>
-    </button>
-    <button class="btn-icon btn-copy" type="button" data-for="${id}" data-tip="Copy" aria-label="Copy">
-      <span class="icon-a">${ICONS.copy}</span><span class="icon-b">${ICONS.tick}</span>
-    </button>
-    ${regenerateAction ? `<form method="post" action="${regenerateAction}" class="inline-form">
-      <button class="btn-icon btn-confirm danger" type="submit" data-tip="Regenerate (old key stops working)" aria-label="Regenerate stream key">
-        <span class="icon-a">${ICONS.refresh}</span><span class="icon-b">${ICONS.tick}</span>
-      </button>
-    </form>` : ''}
-  </div>`;
-}
-
 function deleteButton(action, label) {
   return `<form method="post" action="${action}" class="inline-form">
     <button class="btn-icon btn-confirm danger" type="submit" data-tip="${esc(label)}" aria-label="${esc(label)}">
@@ -136,7 +119,7 @@ function createAdminRouter(ctx) {
     return slug;
   }
 
-  const { store, readBody, chat, recordings, mediaDir, dataDir, stats } = ctx;
+  const { store, readBody, mediaDir, dataDir, stats } = ctx;
 
   function statsPage() {
     const episodeList = episodes();
@@ -335,7 +318,6 @@ function createAdminRouter(ctx) {
       <section class="grid">
         <a class="panel stat" href="${show ? `/admin/shows/${esc(show.slug)}` : '/admin/shows'}"><span class="stat-n">${episodeList.length - drafts}</span><span>published episode${episodeList.length - drafts === 1 ? '' : 's'}</span></a>
         <a class="panel stat" href="${show ? `/admin/shows/${esc(show.slug)}` : '/admin/shows'}"><span class="stat-n">${drafts}</span><span>draft${drafts === 1 ? '' : 's'}</span></a>
-        <a class="panel stat" href="/admin/recordings"><span class="stat-n">${show && recordings ? recordings.sessions(show.streamKey).length : 0}</span><span>live recording${show && recordings && recordings.sessions(show.streamKey).length === 1 ? '' : 's'} waiting</span></a>
         <a class="panel stat" href="/admin/stats"><span class="stat-n">${stats ? Object.values(stats.data().totals).reduce((a, b) => a + b, 0) : 0}</span><span>downloads all time</span></a>
       </section>
       <p class="hint">Signed in as ${esc(user.email)}.</p>`,
@@ -576,163 +558,6 @@ function createAdminRouter(ctx) {
     ];
   }
 
-  function recordingsPage(domain) {
-    const cards = shows().map((show) => {
-      const sessions = recordings ? recordings.sessions(show.streamKey) : [];
-      const rows = sessions.map((s) => `<tr>
-        <td>${esc(new Date(s.end).toISOString().slice(0, 16).replace('T', ' '))}</td>
-        <td>${(s.bytes / 1048576).toFixed(0)} MB (${s.files.length} part${s.files.length === 1 ? '' : 's'})</td>
-        <td class="actions">
-          <form method="post" action="/admin/recordings/${esc(show.slug)}/publish" class="inline-form">
-            <input type="hidden" name="sessionId" value="${esc(s.id)}">
-            <button class="btn-primary btn-small" type="submit">Publish as episode</button>
-          </form>
-          ${(() => deleteButton(`/admin/recordings/${esc(show.slug)}/discard?sessionId=${encodeURIComponent(s.id)}`, 'Discard recording'))()}
-        </td>
-      </tr>`).join('');
-      return `<section class="panel">
-        <h2>${esc(show.name)}</h2>
-        ${rows ? `<table><thead><tr><th>Recorded</th><th>Size</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
-          : '<p class="hint">No live recordings waiting. Go live and the recording appears here.</p>'}
-      </section>`;
-    }).join('');
-    return adminPage({
-      title: 'Recordings',
-      active: 'recordings',
-      body: `<h1 class="page-title">Live recordings</h1>
-      <p class="hint">Every live stream is recorded automatically.
-      Publish one as an episode (no re-encoding, instant) or discard it.
-      Unpublished recordings are deleted after 7 days, with an email
-      reminder on day 5.</p>
-      ${cards || '<section class="panel"><p class="hint">No shows yet.</p></section>'}`,
-    });
-  }
-
-  function streamPage(domain) {
-    // Ingest is raw RTMP, so it cannot ride an HTTP tunnel or a proxied
-    // DNS record: INGEST_HOST points studios straight at this server
-    // when DOMAIN does not.
-    const ingestHost = (process.env.INGEST_HOST || '').trim() || domain;
-    const rtmpPort = (process.env.RTMP_PORT || '1935').trim();
-    const ingestUrl = `rtmp://${ingestHost}${rtmpPort === '1935' ? '' : `:${rtmpPort}`}/live`;
-    const cards = shows().map((show) => `<section class="panel">
-      <h2>${esc(show.name)}</h2>
-      <p class="hint">In the studio, set the stream URL to
-      <code>${esc(ingestUrl)}</code> and use this stream key:</p>
-      ${keyField(`key-${esc(show.id)}`, show.streamKey, { regenerateAction: `/admin/shows/${esc(show.slug)}/regenerate-key` })}
-    </section>`).join('');
-    return adminPage({
-      title: 'Stream',
-      active: 'stream',
-      body: `<h1 class="page-title">Stream</h1>
-      <p class="hint">Every show has its own stream key. Publishing without
-      a valid key is refused; playback is public.</p>
-      ${cards || '<section class="panel"><p class="hint">No shows yet: create one under Shows and its stream key appears here.</p></section>'}`,
-    });
-  }
-
-  function chatPage() {
-    const rooms = shows().map((show) => {
-      const messages = chat ? chat.recent(show.id, 30) : [];
-      const withIps = chat ? chat.room(show.id).messages.slice(-30) : [];
-      const rows = withIps.map((m) => `<tr>
-        <td class="chat-when">${esc(m.at.slice(11, 16))}</td>
-        <td><strong>${esc(m.name)}</strong></td>
-        <td>${esc(m.text)}</td>
-        <td class="actions">
-          <form method="post" action="/admin/chat/${esc(show.id)}/ban" class="inline-form">
-            <input type="hidden" name="messageId" value="${esc(m.id)}">
-            <button class="btn-icon btn-confirm danger" type="submit" data-tip="Ban this IP and remove their messages" aria-label="Ban sender">
-              <span class="icon-a">${ICONS.trash}</span><span class="icon-b">${ICONS.tick}</span>
-            </button>
-          </form>
-        </td>
-      </tr>`).join('');
-      return `<section class="panel">
-        <h2>${esc(show.name)}</h2>
-        ${messages.length
-          ? `<table><thead><tr><th>Time</th><th>Name</th><th>Message</th><th></th></tr></thead><tbody>${rows}</tbody></table>`
-          : '<p class="hint">No recent messages.</p>'}
-      </section>`;
-    }).join('');
-
-    const bans = (chat ? chat.bannedIps() : []).map((ban) => `<tr>
-      <td><code>${esc(ban.ip)}</code></td>
-      <td class="hint">${esc(ban.at.slice(0, 16).replace('T', ' '))}</td>
-      <td class="actions">
-        <form method="post" action="/admin/chat/unban" class="inline-form">
-          <input type="hidden" name="ip" value="${esc(ban.ip)}">
-          <button class="btn-icon btn-confirm" type="submit" data-tip="Unban" aria-label="Unban">
-            <span class="icon-a">${ICONS.refresh}</span><span class="icon-b">${ICONS.tick}</span>
-          </button>
-        </form>
-      </td>
-    </tr>`).join('');
-
-    return adminPage({
-      title: 'Chat',
-      active: 'chat',
-      body: `<h1 class="page-title">Chat</h1>
-      ${rooms || '<section class="panel"><p class="hint">No shows yet.</p></section>'}
-      <section class="panel">
-        <h2>Banned IPs</h2>
-        ${bans ? `<table><thead><tr><th>IP</th><th>Since</th><th></th></tr></thead><tbody>${bans}</tbody></table>` : '<p class="hint">Nobody is banned.</p>'}
-      </section>
-      <section class="panel narrow">
-        <h2>Filtered words</h2>
-        <p class="hint">One per line. Matches are star-masked in chat
-        (first and last letter kept) instead of dropping the message.</p>
-        <form method="post" action="/admin/chat/words">
-          <textarea name="words" rows="6">${esc((chat ? chat.bannedWords() : []).join('\n'))}</textarea>
-          <button class="btn-primary" type="submit">Save list</button>
-        </form>
-      </section>`,
-    });
-  }
-
-  function episodeEditPage(episode, show) {
-    return adminPage({
-      title: episode.title,
-      active: 'shows',
-      body: `<h1 class="page-title">Edit episode</h1>
-      <p class="hint"><a href="/admin/shows/${esc(show.slug)}">&larr; ${esc(show.name)}</a></p>
-      <section class="panel">
-        <form method="post" action="/admin/episodes/${esc(episode.id)}">
-          <label for="title">Title</label>
-          <input id="title" name="title" required maxlength="200" value="${esc(episode.title)}">
-          <div class="field-row">
-            <div><label for="date">Date</label>
-            <input id="date" name="date" type="date" required value="${esc(episode.date)}"></div>
-            <div><label for="epnum">Episode #</label>
-            <input id="epnum" name="episode" type="number" min="1" value="${episode.episode || ''}"></div>
-            <div><label for="season">Season</label>
-            <input id="season" name="season" type="number" min="1" value="${episode.season || ''}"></div>
-            <div><label for="eptype">Type</label>
-            <select id="eptype" name="type">${['full', 'trailer', 'bonus'].map((t) => `<option value="${t}"${(episode.type || 'full') === t ? ' selected' : ''}>${t[0].toUpperCase()}${t.slice(1)}</option>`).join('')}</select></div>
-          </div>
-          <label for="mediaUrl">Media URL</label>
-          <input id="mediaUrl" name="mediaUrl" maxlength="1000" value="${esc(episode.mediaUrl)}">
-          <label for="epDescription">Description</label>
-          <textarea id="epDescription" name="description" rows="4" maxlength="4000">${esc(episode.description)}</textarea>
-          <label for="epArt">Episode cover art (optional)</label>
-          <p class="hint">Square, <strong>3000 x 3000</strong> pixels. Empty
-          means the show's artwork is used.</p>
-          <input id="epArt" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="epArtwork" data-status="epart-status">
-          <p class="hint" id="epart-status">${episode.artwork ? `Current: ${esc(episode.artwork)}` : "Using the show's artwork."}</p>
-          <input type="hidden" id="epArtwork" name="artwork" value="${esc(episode.artwork || '')}">
-          ${episode.artwork ? `<img class="art-preview" src="${esc(episode.artwork)}" alt="Episode artwork" width="120" height="120">` : ''}
-          <label for="transcriptFile">Transcript (.vtt, .srt, .txt or .json; podcast apps show it)</label>
-          <input id="transcriptFile" type="file" accept=".vtt,.srt,.txt,.json,.html" data-upload data-show="${esc(show.slug)}" data-target="transcript" data-status="tr-status">
-          <p class="hint" id="tr-status">${episode.transcript ? `Current: ${esc(episode.transcript)}` : 'None yet.'}</p>
-          <input type="hidden" id="transcript" name="transcript" value="${esc(episode.transcript || '')}">
-          <label for="chapters">Chapters (one per line: HH:MM:SS Title)</label>
-          <textarea id="chapters" name="chapters" rows="5" placeholder="00:00 Intro&#10;05:30 The main topic">${esc(formatChapters(episode.chapters))}</textarea>
-          <label class="check-label"><input type="checkbox" name="draft" value="1" class="check"${episode.draft ? ' checked' : ''}> Draft (hidden from the public site and feed)</label>
-          <button class="btn-primary" type="submit">Save episode</button>
-        </form>
-      </section>`,
-    });
-  }
 
   function accountPage(user, message = '', error = '') {
     return adminPage({
@@ -881,68 +706,8 @@ function createAdminRouter(ctx) {
 
     if (p === '/admin' && req.method === 'GET') { html(res, dashboard(user)); return true; }
     if (p === '/admin/shows' && req.method === 'GET') { html(res, showsPage()); return true; }
-    if (p === '/admin/stream' && req.method === 'GET') { html(res, streamPage(domain)); return true; }
-    if (p === '/admin/chat' && req.method === 'GET') { html(res, chatPage()); return true; }
-    if (p === '/admin/recordings' && req.method === 'GET') { html(res, recordingsPage(domain)); return true; }
     if (p === '/admin/stats' && req.method === 'GET') { html(res, statsPage()); return true; }
     if (p === '/admin/account' && req.method === 'GET') { html(res, accountPage(user)); return true; }
-
-    const recMatch = p.match(/^\/admin\/recordings\/([a-z0-9-]+)\/(publish|discard)$/);
-    if (recMatch && req.method === 'POST' && recordings) {
-      const show = shows().find((s) => s.slug === recMatch[1]);
-      if (!show) { redirect(res, '/admin/recordings'); return true; }
-      const form = await formBody(req, readBody);
-      const sessionId = String(form.get('sessionId') || url.searchParams.get('sessionId') || '');
-      if (recMatch[2] === 'discard') {
-        recordings.discard(show.streamKey, sessionId);
-        redirect(res, '/admin/recordings');
-        return true;
-      }
-      const outName = await recordings.publish(show.streamKey, sessionId, mediaDir, show.slug);
-      if (outName) {
-        const list = episodes();
-        const episode = {
-          id: crypto.randomUUID(),
-          showId: show.id,
-          title: `Live show, ${sessionId.slice(0, 10)}`,
-          date: new Date().toISOString().slice(0, 10),
-          mediaUrl: `/media/${show.slug}/${outName}`,
-          description: '',
-          type: 'full',
-          draft: true,
-          createdAt: new Date().toISOString(),
-        };
-        list.push(episode);
-        store.save('episodes', list);
-        measure(episode.id);
-        redirect(res, `/admin/shows/${show.slug}`);
-      } else {
-        redirect(res, '/admin/recordings');
-      }
-      return true;
-    }
-
-    if (p === '/admin/chat/words' && req.method === 'POST') {
-      const form = await formBody(req, readBody);
-      if (chat) chat.saveBannedWords(String(form.get('words') || '').split('\n'));
-      redirect(res, '/admin/chat');
-      return true;
-    }
-
-    if (p === '/admin/chat/unban' && req.method === 'POST') {
-      const form = await formBody(req, readBody);
-      if (chat) chat.unbanIp(String(form.get('ip') || ''));
-      redirect(res, '/admin/chat');
-      return true;
-    }
-
-    const banMatch = p.match(/^\/admin\/chat\/([a-f0-9-]+)\/ban$/);
-    if (banMatch && req.method === 'POST') {
-      const form = await formBody(req, readBody);
-      if (chat) chat.banBySender(banMatch[1], String(form.get('messageId') || ''), `by ${user.email}`);
-      redirect(res, '/admin/chat');
-      return true;
-    }
 
     if (p === '/admin/shows' && req.method === 'POST') {
       const form = await formBody(req, readBody);
@@ -959,7 +724,6 @@ function createAdminRouter(ctx) {
         name,
         description,
         ownerId: user.id,
-        streamKey: crypto.randomBytes(16).toString('hex'),
         createdAt: new Date().toISOString(),
       });
       store.save('shows', list);
@@ -988,7 +752,7 @@ function createAdminRouter(ctx) {
       return true;
     }
 
-    const showMatch = p.match(/^\/admin\/shows\/([a-z0-9-]+)(\/episodes|\/delete|\/regenerate-key|\/settings|\/import)?$/);
+    const showMatch = p.match(/^\/admin\/shows\/([a-z0-9-]+)(\/episodes|\/delete|\/settings|\/import)?$/);
     if (showMatch) {
       const show = shows().find((s) => s.slug === showMatch[1]);
       if (!show) { html(res, adminPage({ title: 'Not found', body: '<p>Show not found.</p>' }), 404); return true; }
@@ -1000,14 +764,6 @@ function createAdminRouter(ctx) {
         store.save('shows', shows().filter((s) => s.id !== show.id));
         store.save('episodes', episodes().filter((e) => e.showId !== show.id));
         redirect(res, '/admin/shows');
-        return true;
-      }
-
-      if (action === '/regenerate-key' && req.method === 'POST') {
-        const list = shows();
-        list.find((s) => s.id === show.id).streamKey = crypto.randomBytes(16).toString('hex');
-        store.save('shows', list);
-        redirect(res, '/admin/stream');
         return true;
       }
 
