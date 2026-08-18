@@ -6,9 +6,8 @@
 #   docker compose -f docker-compose.byo-proxy.yml up -d --build
 #
 # Your proxy points at ${BIND_HOST}:${HTTP_PORT} (127.0.0.1:3100 by
-# default). See the README for the four things a non-Caddy front must
-# handle: forwarded client IPs, upload size, SSE buffering, and RTMP
-# ingest not being HTTP.
+# default). See the README for what a non-Caddy front must handle:
+# forwarded client IPs, upload size, and TLS.
 services:
   app:
     image: ghcr.io/lightmorphic/fosscast:latest
@@ -36,29 +35,9 @@ services:
       interval: 30s
       timeout: 5s
       retries: 3
-    logging: &log
+    logging:
       driver: json-file
       options:
         max-size: "10m"
         max-file: "3"
 
-  mediamtx:
-    image: bluenviron/mediamtx:1
-    restart: unless-stopped
-    user: "1000:1000"
-    ports:
-      - "${RTMP_PORT:-1935}:1935"
-      - "${BIND_HOST:-127.0.0.1}:${HLS_PORT:-8888}:8888"
-    volumes:
-      - ./mediamtx.yml:/mediamtx.yml:ro
-      - ${DATA_PATH:-./data}/recordings:/recordings
-    depends_on:
-      - app
-    read_only: true
-    tmpfs:
-      - /tmp
-    cap_drop: [ALL]
-    security_opt:
-      - no-new-privileges:true
-    pids_limit: 256
-    logging: *log

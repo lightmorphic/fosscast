@@ -153,7 +153,7 @@ document.addEventListener('click', (e) => {
 function adminPage({ title, body, active = '', authed = true }) {
   const nav = authed
     ? `<nav class="admin-nav">
-        ${[['', 'Dashboard'], ['shows', 'Shows'], ['stream', 'Stream'], ['recordings', 'Recordings'], ['chat', 'Chat'], ['stats', 'Stats'], ['account', 'Account']]
+        ${[['', 'Dashboard'], ['shows', 'Shows'], ['stats', 'Stats'], ['account', 'Account']]
           .map(([slug, label]) => `<a class="admin-link${active === (slug || 'dashboard') || (active === '' && slug === '') ? ' current' : ''}" href="/admin${slug ? '/' + slug : ''}">${label}</a>`)
           .join('')}
         <button class="btn-icon theme-toggle" type="button" id="theme-toggle" data-tip="Light or dark" aria-label="Switch between light and dark">

@@ -8,9 +8,6 @@ const path = require('path');
 
 const { Store } = require('./lib/store');
 const { createAdminRouter } = require('./lib/admin');
-const { ChatHub } = require('./lib/chat');
-const { LiveStatus } = require('./lib/live');
-const { Recordings } = require('./lib/recordings');
 const { Stats } = require('./lib/stats');
 const media = require('./lib/media');
 const publicSite = require('./lib/public');
@@ -67,40 +64,9 @@ function readBody(req, limit = 64 * 1024) {
   });
 }
 
-const chat = new ChatHub(store);
-const liveStatus = new LiveStatus({
-  onChange(streamKey, isLive) {
-    const show = store.load('shows', []).find((s) => s.streamKey === streamKey);
-    if (!show) return;
-    chat.broadcast(show.id, { type: 'status', live: isLive });
-    // Podping tells Podcasting 2.0 apps the feed changed (live started
-    // or ended), so liveItem consumers re-fetch promptly. Optional.
-    const token = (process.env.PODPING_TOKEN || '').trim();
-    if (token) {
-      const feedUrl = encodeURIComponent(`https://${DOMAIN}/shows/${show.slug}/feed.xml`);
-      fetch(`https://podping.cloud/?url=${feedUrl}&reason=${isLive ? 'live' : 'liveEnd'}`, {
-        headers: { Authorization: token, 'User-Agent': 'FOSSCast' },
-        signal: AbortSignal.timeout(10000),
-      }).catch(() => {});
-    }
-  },
-});
 const MEDIA_DIR = path.join(DATA_DIR, 'media');
-const recordings = new Recordings({ dataDir: DATA_DIR, store });
 const stats = new Stats(store);
-const admin = createAdminRouter({ store, readBody, chat, recordings, mediaDir: MEDIA_DIR, dataDir: DATA_DIR, stats });
-
-// Reminder/cleanup sweep for unpublished live recordings, daily.
-const sweep = () => recordings.sweep({
-  adminEmails: store.load('users', []).map((u) => u.email),
-  showForKey: (key) => store.load('shows', []).find((s) => s.streamKey === key) || null,
-  domain: DOMAIN,
-}).catch(() => {});
-const sweepTimer = setInterval(sweep, 24 * 3600 * 1000);
-sweepTimer.unref();
-setTimeout(sweep, 60 * 1000).unref();
-
-const MEDIAMTX_HLS = process.env.MEDIAMTX_HLS || 'http://mediamtx:8888';
+const admin = createAdminRouter({ store, readBody, mediaDir: MEDIA_DIR, dataDir: DATA_DIR, stats });
 
 function clientIp(req) {
   const xff = req.headers['x-forwarded-for'];
@@ -120,45 +86,6 @@ function publisherAuthed(req) {
 }
 const crypto = require('crypto');
 
-// Public HLS playback is proxied per show slug so stream keys never
-// appear in viewer-facing URLs.
-function proxyHls(req, res, show, rest, search) {
-  if (!/^[a-zA-Z0-9._-]*$/.test(rest)) return send(res, 404, 'not found');
-  const target = new URL(`${MEDIAMTX_HLS}/live/${show.streamKey}/${rest}${search}`);
-  const upstream = http.request(target, { method: 'GET' }, (up) => {
-    const headers = { 'Cache-Control': 'no-store' };
-    if (up.headers['content-type']) headers['Content-Type'] = up.headers['content-type'];
-    res.writeHead(up.statusCode, headers);
-    up.pipe(res);
-  });
-  upstream.on('error', () => send(res, 502, 'stream unavailable'));
-  upstream.end();
-}
-
-// MediaMTX asks us to authorise every publish and every play attempt.
-// Publishing needs a show's stream key (the path is live/<key>);
-// playback is public. Everything else (api, metrics, pprof) is denied.
-async function mediamtxAuth(req, res) {
-  let body;
-  try {
-    body = JSON.parse((await readBody(req)).toString() || '{}');
-  } catch {
-    return sendJson(res, 400, { error: 'bad request' });
-  }
-  const action = body.action;
-  const streamPath = body.path;
-  if (action === 'read' || action === 'playback') return send(res, 200, 'ok');
-  if (action === 'publish') {
-    const key = typeof streamPath === 'string' && streamPath.startsWith('live/')
-      ? streamPath.slice('live/'.length)
-      : '';
-    if (key && admin.shows().some((show) => show.streamKey === key)) {
-      return send(res, 200, 'ok');
-    }
-    return sendJson(res, 401, { error: 'invalid stream key' });
-  }
-  return sendJson(res, 401, { error: 'forbidden' });
-}
 
 function serveStatic(res, urlPath) {
   const file = path.resolve(path.join(WEB_DIR, urlPath));
@@ -179,11 +106,6 @@ function serveStatic(res, urlPath) {
 const server = http.createServer((req, res) => {
   const url = new URL(req.url, 'http://localhost');
   const p = url.pathname;
-
-  if (req.method === 'POST' && p === '/api/internal/mediamtx-auth') {
-    mediamtxAuth(req, res).catch(() => sendJson(res, 500, { error: 'auth error' }));
-    return;
-  }
 
   if (req.method === 'PUT' && p === '/admin/api/upload') {
     if (DEMO) return sendJson(res, 403, { error: 'demo instance is read-only' });
@@ -263,42 +185,6 @@ const server = http.createServer((req, res) => {
     return;
   }
 
-  // Chat API: SSE out, POST in, recent messages as JSON.
-  const chatMatch = p.match(/^\/api\/v1\/shows\/([a-z0-9-]+)\/(chat\/stream|chat\/messages|live)$/);
-  if (chatMatch) {
-    const show = store.load('shows', []).find((s) => s.slug === chatMatch[1]);
-    if (!show) return sendJson(res, 404, { error: 'unknown show' });
-    const endpoint = chatMatch[2];
-    if (endpoint === 'chat/stream' && req.method === 'GET') {
-      return chat.join(show.id, res);
-    }
-    if (endpoint === 'chat/messages' && req.method === 'GET') {
-      return sendJson(res, 200, { messages: chat.recent(show.id) });
-    }
-    if (endpoint === 'chat/messages' && req.method === 'POST') {
-      if (DEMO) return sendJson(res, 403, { error: 'chat is disabled on this demo' });
-      readBody(req).then((raw) => {
-        let body;
-        try { body = JSON.parse(raw.toString() || '{}'); } catch {
-          return sendJson(res, 400, { error: 'bad json' });
-        }
-        const result = chat.post(show.id, {
-          name: body.name, text: body.text, ip: clientIp(req),
-        });
-        if (result.error) return sendJson(res, result.status, { error: result.error });
-        sendJson(res, 200, { ok: true, id: result.id });
-      }).catch(() => sendJson(res, 400, { error: 'bad request' }));
-      return;
-    }
-    if (endpoint === 'live' && req.method === 'GET') {
-      return sendJson(res, 200, {
-        live: liveStatus.isLive(show.streamKey),
-        since: liveStatus.since(show.streamKey),
-      });
-    }
-    return send(res, 405, 'method not allowed');
-  }
-
   if (req.method !== 'GET' && req.method !== 'HEAD') {
     return send(res, 405, 'method not allowed');
   }
@@ -322,12 +208,11 @@ const server = http.createServer((req, res) => {
       .filter((e) => e.showId === show.id)
       .sort((a, b) => (a.date < b.date ? 1 : -1));
     if (showMatch[2]) {
-      const liveInfo = { live: liveStatus.isLive(show.streamKey), since: liveStatus.since(show.streamKey) };
-      return send(res, 200, publicSite.feed(show, items, DOMAIN, liveInfo), {
+      return send(res, 200, publicSite.feed(show, items, DOMAIN), {
         'Content-Type': 'application/rss+xml; charset=utf-8',
       });
     }
-    return sendHtml(res, publicSite.showPage(show, items, DOMAIN, liveStatus.isLive(show.streamKey)));
+    return sendHtml(res, publicSite.showPage(show, items, DOMAIN));
   }
 
   const chaptersMatch = p.match(/^\/api\/v1\/episodes\/([a-f0-9-]+)\/chapters\.json$/);
@@ -355,23 +240,6 @@ const server = http.createServer((req, res) => {
       .find((e) => publicSite.episodeSlug(e) === wanted || e.id === wanted);
     if (!episode) return send(res, 404, 'not found');
     return sendHtml(res, publicSite.episodePage(show, episode, DOMAIN));
-  }
-
-  const liveMatch = p.match(/^\/live\/([a-z0-9-]+)$/);
-  if (liveMatch) {
-    const show = store.load('shows', []).find((s) => s.slug === liveMatch[1]);
-    if (!show) return send(res, 404, 'not found');
-    return sendHtml(res, publicSite.livePage(show, {
-      live: liveStatus.isLive(show.streamKey),
-      embed: url.searchParams.get('embed') === '1',
-    }));
-  }
-
-  const hlsMatch = p.match(/^\/hls\/([a-z0-9-]+)\/(.*)$/);
-  if (hlsMatch) {
-    const show = store.load('shows', []).find((s) => s.slug === hlsMatch[1]);
-    if (!show) return send(res, 404, 'not found');
-    return proxyHls(req, res, show, hlsMatch[2], url.search);
   }
 
   if (p.startsWith('/css/') || p.startsWith('/fonts/') || p.startsWith('/img/') || p.startsWith('/js/')) {

@@ -1,21 +1,15 @@
 # FOSSCast roadmap
 
-Where this is going: the best free podcast platform anywhere, and the
-only one that treats live streaming with audience chat as a native
-part of podcasting rather than an afterthought. Everything below ships
-in the one open codebase; a self-hoster gets it all.
+Where this is going: the best free podcast platform anywhere.
+Everything below ships in the one open codebase; a self-hoster gets it
+all.
 
 ## The gap FOSSCast fills
 
-Surveying the field (August 2026): open-source podcast hosts do feeds
-and websites but none do live streaming. Paid hosts do polished
-hosting, analytics and marketing tools, a few do live shows with chat,
-but all of them are closed, metered and rented. Podcast apps have a
-standard for native live streams (the Podcasting 2.0 `liveItem` tag
-with podping notifications) with almost zero real-world adoption
-because barely any host can originate a live stream. FOSSCast already
-has the ingest pipeline. Owning that intersection (self-hosted, open,
-live-first) is the plan.
+A genuinely self-hostable podcast host that treats the feed as a
+craft: directory-grade from day one, Podcasting 2.0 throughout, no
+database, no framework, no tracking, and no lock-in in either
+direction. Live streaming moved to FOSSStudio in August 2026.
 
 ## Phase A: hosting parity (the must-haves)
 
@@ -48,22 +42,6 @@ Cheap to implement on top of our feed generation, and almost nobody
 does them all: `transcript`, `chapters`, `person`, `funding`,
 `locked`, `soundbite`, `podroll`, `license`, `location`.
 
-The big one: **`liveItem` + podping**. When a show goes live on
-FOSSCast, its RSS feed announces the live stream and podcast apps that
-support it tune in natively. FOSSCast can be the reference
-implementation the ecosystem is missing, because we actually originate
-the stream.
-
-## Phase C: live, the unique part
-
-- **Live player page** per show with the HLS stream and the nickname
-  chat room beside it; a read view of chat for the studio.
-- **Live DVR to episode**: record the incoming stream server-side, and
-  after the show ends offer "publish as episode" with one click. Live
-  show becomes catalogue automatically.
-- **Schedules**: announce upcoming live shows (page, countdown,
-  calendar file, email reminder), so live becomes an audience habit.
-- **Chat replay** alongside the published recording, time-synced.
 
 ## Phase D: analytics without surveillance
 
@@ -96,7 +74,7 @@ everywhere they land.
 ## Phase G: community and reach
 
 - **Email notifications**: follow a show by email, get new episodes
-  and live announcements. SMTP only, no third-party service.
+  by email. SMTP only, no third-party service.
 - **Funding and memberships**: the `funding` tag everywhere; later,
   private feeds with per-subscriber tokenized URLs for member-only
   shows (early access, bonus feeds), revocable per subscriber.

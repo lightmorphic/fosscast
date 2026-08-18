@@ -95,28 +95,27 @@ function player(episode) {
 function landing() {
   return publicPage({
     title: 'FOSSCast',
-    description: 'The public home of independent shows: live video streams with open chat, and an episode archive you can subscribe to anywhere.',
+    description: 'A home for an independent show: every published episode, playable in the browser and subscribable anywhere podcasts go.',
     body: `
   <section class="panel hero">
     <p class="status"><span aria-hidden="true">&#9679;</span> Being built in the open. First shows soon.</p>
-    <h1>Watch it live. Keep it forever.</h1>
-    <p class="lede">FOSSCast is the public home of independent shows: live video
-    streams with an open chat room while the show happens, and a growing
-    archive of every published episode, playable here and subscribable
-    anywhere podcasts go.</p>
+    <h1>Your show, kept properly.</h1>
+    <p class="lede">FOSSCast is the public home of an independent show:
+    every published episode on its own page, playable here and
+    subscribable anywhere podcasts go, served from hardware you
+    control.</p>
   </section>
   <section class="grid">
     <div class="panel wide">
-      <h2>Live, with the room in it</h2>
-      <p>When a show goes on air it streams right here. No account, no
-      app, just press play, and a chat room sits beside every stream:
-      pick a nickname and join in while the hosts watch from their
-      studio.</p>
+      <h2>A website worth linking to</h2>
+      <p>Every episode gets its own page with artwork, player, chapters
+      and transcript, and the feed points podcast apps straight at it.
+      Banners, cover art and light or dark, as the visitor prefers.</p>
     </div>
     <div class="panel">
       <h2>Episodes</h2>
-      <p>Missed it? Every episode stays: video and audio, playable
-      here.</p>
+      <p>Video and audio, hosted here or anywhere else, archive.org
+      included.</p>
     </div>
     <div class="panel">
       <h2>Subscribe anywhere</h2>
@@ -145,75 +144,8 @@ function showsIndex(shows, episodes) {
   });
 }
 
-function livePage(show, { live, embed }) {
-  const chatPanel = `
-  <aside class="panel chat-panel" id="chat">
-    <div class="chat-head">
-      <span class="live-badge${live ? ' on' : ''}" id="live-badge"><span class="dot"></span><span id="live-label">${live ? 'LIVE' : 'OFFLINE'}</span></span>
-      <span class="hint" id="viewers"></span>
-    </div>
-    <div class="chat-log" id="chat-log" aria-live="polite"></div>
-    <form id="nick-form" class="chat-form">
-      <input id="nick" maxlength="24" placeholder="Pick a nickname to chat" aria-label="Nickname" required>
-      <button class="btn-primary" type="submit">Join</button>
-    </form>
-    <form id="msg-form" class="chat-form" hidden>
-      <input id="msg" maxlength="500" placeholder="Say something" aria-label="Message" autocomplete="off" required>
-      <button class="btn-primary" type="submit">Send</button>
-    </form>
-  </aside>`;
-
-  if (embed) {
-    return `<!doctype html>
-<html lang="en" data-accent="deep_orange">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(show.name)} chat</title>
-<meta name="robots" content="noindex">
-<link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.1.0">
-</head>
-<body class="embed" data-slug="${esc(show.slug)}" data-live="${live ? '1' : ''}">
-${chatPanel}
-<script src="/js/live.js?v=0.1.0"></script>
-</body>
-</html>
-`;
-  }
-
-  return publicPage({
-    title: `${show.name} live - FOSSCast`,
-    description: `Watch ${show.name} live.`,
-    body: `
-  <div class="live-layout" data-slug="${esc(show.slug)}" data-live="${live ? '1' : ''}" id="live-root">
-    <section class="panel player-panel">
-      <div class="player-frame">
-        <video id="player" controls autoplay playsinline ${live ? '' : 'hidden'}></video>
-        <div id="offline" class="offline-state" ${live ? 'hidden' : ''}>
-          <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-          <p><strong>${esc(show.name)}</strong> is not live right now.</p>
-          <p class="hint">This page comes alive the moment the show starts. Leave it open.</p>
-        </div>
-      </div>
-      <h1 class="live-title">${esc(show.name)}</h1>
-      <p class="hint"><a href="/shows/${esc(show.slug)}">Episodes and RSS feed</a></p>
-    </section>
-    ${chatPanel}
-  </div>
-  <script src="/js/hls.min.js?v=0.1.0"></script>
-  <script src="/js/live.js?v=0.1.0"></script>`,
-  });
-}
-
-function showPage(show, allEpisodes, domain, live = false) {
+function showPage(show, allEpisodes, domain) {
   const episodes = visible(allEpisodes);
-  const liveBanner = live
-    ? `<a class="panel live-banner" href="/live/${esc(show.slug)}">
-        <span class="live-badge on"><span class="dot"></span>LIVE</span>
-        <span>${esc(show.name)} is live right now. Watch and join the chat.</span>
-      </a>`
-    : '';
   const items = episodes.length
     ? episodes.map((episode) => {
         const art = artFor(episode, show);
@@ -237,15 +169,13 @@ function showPage(show, allEpisodes, domain, live = false) {
     image: show.banner || show.artwork || '',
     body: `
   ${show.banner ? `<div class="show-banner"><img src="${esc(show.banner)}" alt=""></div>` : ''}
-  ${liveBanner}
   <section class="panel hero show-hero">
     ${show.artwork ? `<img class="show-art" src="${esc(show.artwork)}" alt="${esc(show.name)} artwork" width="160" height="160">` : ''}
     <div class="show-hero-text">
     <h1>${esc(show.name)}</h1>
     <p class="lede">${esc(show.description)}</p>
     ${subscribeRow(show, domain)}
-    <p class="feed-line"><a href="/live/${esc(show.slug)}">Live page</a>
-    &middot; paste this into any app: <code>https://${esc(domain)}/shows/${esc(show.slug)}/feed.xml</code></p>
+    <p class="feed-line">Paste this into any app: <code>https://${esc(domain)}/shows/${esc(show.slug)}/feed.xml</code></p>
     </div>
   </section>
   <section class="episodes">${items}</section>`,
@@ -332,28 +262,13 @@ function chaptersJson(episode) {
   };
 }
 
-// The Podcasting 2.0 live announcement: apps that support liveItem see
-// the stream natively while the show is on air.
-function liveItemTag(show, liveInfo, domain) {
-  if (!liveInfo || !liveInfo.live) return '';
-  const base = `https://${domain}`;
-  const start = liveInfo.since || new Date().toISOString();
-  return `
-    <podcast:liveItem status="live" start="${escXml(start)}">
-      <title>LIVE: ${escXml(show.name)}</title>
-      <guid isPermaLink="false">live-${escXml(show.id)}-${escXml(start)}</guid>
-      <enclosure url="${escXml(`${base}/hls/${show.slug}/index.m3u8`)}" type="application/x-mpegURL" length="0"/>
-      <podcast:contentLink href="${escXml(`${base}/live/${show.slug}`)}">Watch and chat live</podcast:contentLink>
-    </podcast:liveItem>`;
-}
-
 function personTags(show) {
   return (show.persons || [])
     .map((p) => `<podcast:person${p.role ? ` role="${escXml(p.role)}"` : ''}>${escXml(p.name)}</podcast:person>`)
     .join('\n    ');
 }
 
-function feed(show, episodes, domain, liveInfo = null) {
+function feed(show, episodes, domain) {
   const base = `https://${domain}`;
   const owner = show.ownerEmail || '';
   const items = visible(episodes).map((episode) => `
@@ -401,7 +316,6 @@ function feed(show, episodes, domain, liveInfo = null) {
     <podcast:locked${owner ? ` owner="${escXml(owner)}"` : ''}>${show.locked ? 'yes' : 'no'}</podcast:locked>
     ${show.funding && show.funding.url ? `<podcast:funding url="${escXml(show.funding.url)}">${escXml(show.funding.label || 'Support the show')}</podcast:funding>` : ''}
     ${personTags(show)}
-    ${liveItemTag(show, liveInfo, domain)}
     ${items}
   </channel>
 </rss>
@@ -432,4 +346,4 @@ function embedPage(show, episode) {
 `;
 }
 
-module.exports = { landing, showsIndex, showPage, livePage, episodePage, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, APPS };
+module.exports = { landing, showsIndex, showPage, episodePage, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, APPS };
