@@ -7,8 +7,8 @@
 # The deploy key is forced-command restricted on the server to exactly
 # the verbs this script sends (see scripts/deploy-wrapper.sh) - upload,
 # activate, start, health-check, prune, roll back - with no shell
-# access. Only `app` and `mediamtx` are started; boxes with their own
-# proxy on 80/443 never start the bundled caddy this way.
+# access. Only `app` is started; boxes with their own proxy on 80/443
+# never start the bundled caddy this way.
 #
 # Usage: scripts/deploy.sh   (uses $FOSSCAST_HOST, e.g. root@1.2.3.4)
 set -euo pipefail

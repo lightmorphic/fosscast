@@ -1,41 +1,39 @@
 # FOSSCast
 
-The public home of independent shows: live video streams with an open
-chat room while the show happens, and an archive of every published
-episode, playable in the browser and subscribable by RSS in any podcast
+A self-hosted home for a podcast: every published episode on its own
+page, playable in the browser and subscribable by RSS in any podcast
 app.
 
 FOSSCast is the audience-facing companion to
 [FOSSStudio](https://github.com/lightmorphic/fossstudio), the
-self-hosted studio hosts record and stream from. The two are separate
-apps that talk through small, stable interfaces; neither needs the
-other to run.
+self-hosted studio shows are recorded in. The two are separate apps
+that talk through one small, stable interface (the publish API);
+neither needs the other to run. Live streaming and audience chat are
+FOSSStudio's territory, not this app's.
 
 **Status: early development, moving fast.** Working today: the public
-site with episode pages, players and directory-grade RSS; live pages
-with an HLS player and nickname chat (IP bans, word masking); live DVR
-with one-click publish-as-episode; media uploads with byte-range
-serving; one-click import from an existing feed; drafts and
-future-dated scheduling; an embeddable episode player; and the admin
-dashboard tying it all together. Still to come: Podcasting 2.0 tags
-(transcripts, chapters, liveItem), analytics, theming.
+site with episode pages, players and directory-grade RSS (Podcasting
+2.0 tags included); media uploads with byte-range serving; one-click
+import from an existing feed; drafts and future-dated scheduling; an
+embeddable episode player; privacy-first download stats; and the
+dashboard tying it all together.
 
-## What it will do
+## What it does
 
-- **Episode website**: each show gets clean pages for its episodes,
-  video and audio players, and an RSS feed podcast apps can subscribe
-  to. Media files can live on FOSSCast's own storage or anywhere else
-  reachable by URL, including archive.org.
-- **Live streaming**: a studio pushes RTMP to FOSSCast, which converts
-  to HLS for playback in the browser. No transcoding, so a small server
-  copes fine: the studio already sends browser-ready H.264/AAC.
-- **Chat**: a live room beside every stream. Viewers pick a nickname
-  and join in; no accounts. Hosts can watch the room from their studio.
+- **Episode website**: the show gets clean pages for its episodes,
+  video and audio players, artwork and banners, and an RSS feed
+  podcast apps can subscribe to. Media files can live on FOSSCast's
+  own storage or anywhere else reachable by URL, including
+  archive.org.
+- **Directory-grade feeds**: full iTunes namespace plus Podcasting 2.0
+  transcripts, chapters, people and funding tags.
+- **Publish API**: a studio pushes finished recordings straight in as
+  draft episodes.
 
 ## Self-hosting
 
 Requirements: a Linux box with Docker, a domain pointing at it, and
-ports 80, 443 and 1935 reachable.
+ports 80 and 443 reachable.
 
 ```bash
 git clone https://github.com/lightmorphic/fosscast.git
@@ -56,22 +54,17 @@ docker compose -f docker-compose.byo-proxy.yml up -d --build
 ```
 
 The app stays bound to `127.0.0.1:3100` (change with `BIND_HOST` and
-`HTTP_PORT`), and your proxy points there. Four things Caddy does for
+`HTTP_PORT`), and your proxy points there. Three things Caddy does for
 us that another front must handle itself:
 
-1. **Forwarded client IPs.** FOSSCast reads `X-Forwarded-For` for chat
-   rate limiting, chat bans and download counting. Without it every
-   viewer looks like one person: one troll's ban would silence
-   everybody, and your stats would read a single download per day.
+1. **Forwarded client IPs.** FOSSCast reads `X-Forwarded-For` for
+   login rate limiting and download counting. Without it every
+   listener looks like one person, so your stats would read a single
+   download per day.
 2. **Upload size.** Episode uploads go up to 4 GB. nginx defaults to
    1 MB, so set `client_max_body_size` (and ideally turn request
    buffering off so big files stream straight through).
-3. **No buffering on the chat stream.** Live chat is Server-Sent
-   Events; a buffering proxy holds messages back until the buffer
-   fills. The app already sends `X-Accel-Buffering: no`, which nginx
-   honours, but any other proxy needs buffering disabled for
-   `/api/v1/shows/*/chat/stream`.
-4. **TLS.** Browsers need HTTPS for the clipboard and media features,
+3. **TLS.** Browsers need HTTPS for the clipboard and media features,
    and session cookies are `Secure`-only, so terminate TLS at your
    proxy.
 
@@ -97,16 +90,6 @@ server {
         proxy_set_header X-Forwarded-Proto $scheme;
     }
 
-    # Live chat is SSE: never buffer it, never time it out early.
-    location ~ ^/api/v1/shows/.+/chat/stream$ {
-        proxy_pass http://127.0.0.1:3100;
-        proxy_http_version 1.1;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_buffering off;
-        proxy_cache off;
-        proxy_read_timeout 1h;
-    }
 }
 
 server {
@@ -118,25 +101,16 @@ server {
 
 ### Cloudflare Tunnel
 
-The website, players and HLS playback all work through a tunnel
-(`cloudflared` pointing at `http://127.0.0.1:3100`). Two things cannot
-change:
-
-- **RTMP ingest is not HTTP**, so it can never ride the tunnel. Port
-  1935 must reach the server directly. Set `INGEST_HOST` to an
-  unproxied hostname or the raw IP so the dashboard shows studios the
-  address that actually works.
-- **Upload limits.** Cloudflare caps request bodies (100 MB on free
-  plans), which stops large episode uploads through the tunnel. Either
-  publish media by external URL (archive.org and anything else works
-  as a first-class option), or upload over a direct route.
+The site, players and feed all work through a tunnel (`cloudflared`
+pointing at `http://127.0.0.1:3100`). One thing to know: Cloudflare
+caps request bodies (100 MB on free plans), which stops large episode
+uploads through the tunnel. Publish media by external URL, or upload
+over a direct route.
 
 ### Tailscale
 
 Set `BIND_HOST` to the machine's tailnet address and the whole
-instance is private to your tailnet: nothing is exposed publicly and
-no TLS setup is needed if you use Tailscale Serve in front. Studios on
-the tailnet can stream to it normally. Worth knowing: a podcast this
+instance is private to your tailnet. Worth knowing: a podcast this
 private cannot be reached by public podcast apps, so this suits
 internal, member-only or staging instances rather than a public show.
 
@@ -145,12 +119,12 @@ internal, member-only or staging instances rather than a public show.
 The dashboard lives at `/admin`. The first admin account comes from
 `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env` (created on first start;
 change the password from the Account page after logging in). From the
-dashboard you create your show, publish episodes (media by URL: your
-own storage, archive.org, anywhere reachable) and manage the stream
-key. The show gets its public pages and RSS feed automatically.
+dashboard you create your show and publish episodes (media by upload
+or URL: your own storage, archive.org, anywhere reachable). The show
+gets its public pages and RSS feed automatically.
 
-One instance hosts one podcast: your show, your site, your feed, your
-live stage, on your own hardware.
+One instance hosts one podcast: your show, your site, your feed, on
+your own hardware.
 
 ### Moving a podcast here from another host
 
@@ -201,21 +175,12 @@ It prints the account and a new password, once.
 ### Running a public demo
 
 Set `DEMO_MODE=1` and the instance becomes completely read-only: no
-settings changes, uploads, publishing, moderation or chat posting, from
-the dashboard or the API. The login page shows the credentials and a
+settings changes, uploads or publishing, from the dashboard or the
+API. The login page shows the credentials and a
 banner explains the state, so the login can be handed to anyone
 without them being able to break it or leave something unpleasant for
 the next visitor. Everything else behaves normally, which is the point:
 people see the real product.
-
-### Going live from a studio
-
-In FOSSStudio (or OBS, or anything that speaks RTMP), set:
-
-- Stream URL: `rtmp://<your-domain>/live`
-- Stream key: the show's key from the dashboard's Stream page
-
-Publishing without a valid key is refused; playback is public.
 
 ### Data
 

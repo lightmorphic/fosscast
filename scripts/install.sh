@@ -7,8 +7,6 @@
 #
 # Options:
 #   --port N          app port on the host      (default 3100)
-#   --rtmp-port N     RTMP ingest port          (default 1935)
-#   --hls-port N      HLS port on the host      (default 8888)
 #   --admin-email X   first admin login         (default admin@<domain>)
 #   --caddy-sites D   folder of .caddy site files served by an existing
 #                     Caddy on this box (default /opt/caddy/sites when
@@ -16,15 +14,13 @@
 #                     own proxy and drops a site file there instead.
 #
 # Several instances can share a machine: give each one its own copy of
-# the repo, its own domain and its own three ports.
+# the repo, its own domain and its own port.
 set -euo pipefail
 
 DOMAIN="${1:?usage: install.sh <domain> [options]}"
 shift || true
 
 PORT=3100
-RTMP_PORT=1935
-HLS_PORT=8888
 ADMIN_EMAIL=""
 CADDY_SITES=""
 CADDY_SITES_SET=0
@@ -32,8 +28,6 @@ CADDY_SITES_SET=0
 while [ $# -gt 0 ]; do
   case "$1" in
     --port) PORT="${2:?}"; shift 2 ;;
-    --rtmp-port) RTMP_PORT="${2:?}"; shift 2 ;;
-    --hls-port) HLS_PORT="${2:?}"; shift 2 ;;
     --admin-email) ADMIN_EMAIL="${2:?}"; shift 2 ;;
     --caddy-sites) CADDY_SITES="${2:?}"; CADDY_SITES_SET=1; shift 2 ;;
     *) echo "unknown option: $1" >&2; exit 1 ;;
@@ -49,7 +43,7 @@ echo "== Data directory =="
 # Create every directory the containers bind-mount before they start:
 # Docker creates missing mount sources itself, as root, which leaves the
 # app unable to write and crash-looping on EACCES.
-mkdir -p "$BASE/data" "$BASE/data/recordings" "$BASE/data/media"
+mkdir -p "$BASE/data" "$BASE/data/media"
 # The containers run as uid 1000 and must own what they write.
 chown -R 1000:1000 "$BASE/data"
 
@@ -59,8 +53,6 @@ if [ ! -f "$BASE/.env" ]; then
   {
     echo "DOMAIN=$DOMAIN"
     echo "HTTP_PORT=$PORT"
-    echo "RTMP_PORT=$RTMP_PORT"
-    echo "HLS_PORT=$HLS_PORT"
     echo "ADMIN_EMAIL=$ADMIN_EMAIL"
     echo "ADMIN_PASSWORD=$ADMIN_PASS"
     echo "PUBLISHER_TOKEN=$(openssl rand -hex 32)"
@@ -70,11 +62,6 @@ if [ ! -f "$BASE/.env" ]; then
 else
   echo "== Existing .env kept =="
   NEW_INSTALL=0
-fi
-
-if command -v ufw >/dev/null && ufw status 2>/dev/null | grep -q "Status: active"; then
-  echo "== Firewall =="
-  ufw allow "$RTMP_PORT/tcp" comment "FOSSCast RTMP $DOMAIN" >/dev/null && echo "opened $RTMP_PORT/tcp"
 fi
 
 echo "== Starting the stack =="

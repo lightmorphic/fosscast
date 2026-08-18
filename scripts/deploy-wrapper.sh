@@ -42,24 +42,15 @@ case "$VERB" in
     [ -d "$BASE/releases/$ARG" ] || { echo "no such release" >&2; exit 1; }
     ln -sfn "$BASE/.env" "$BASE/releases/$ARG/.env"
     ln -sfn "$BASE/releases/$ARG" "$BASE/current"
-    # The app and mediamtx containers run as uid 1000 and must own the
-    # data directory (media, recordings, JSON files).
+    # The app container runs as uid 1000 and must own the data
+    # directory (media and JSON files).
     chown -R 1000:1000 "$BASE/data"
     ;;
   start-release)
     require_release
     [ -d "$BASE/releases/$ARG" ] || { echo "no such release" >&2; exit 1; }
     cd "$BASE/releases/$ARG"
-    # Refresh upstream images so security fixes land on every deploy.
-    DATA_PATH="$BASE/data" docker compose -p "$PROJECT" pull -q mediamtx || true
-    DATA_PATH="$BASE/data" docker compose -p "$PROJECT" up -d --build app mediamtx
-    # MediaMTX reads its config once at start and never sees the
-    # symlink flip, so recreate it when the config really changed.
-    if ! cmp -s mediamtx.yml "$BASE/.mediamtx.last" 2>/dev/null; then
-      echo "mediamtx config changed, recreating"
-      DATA_PATH="$BASE/data" docker compose -p "$PROJECT" up -d --force-recreate mediamtx
-    fi
-    cp mediamtx.yml "$BASE/.mediamtx.last"
+    DATA_PATH="$BASE/data" docker compose -p "$PROJECT" up -d --build --remove-orphans app
     ;;
   healthcheck)
     curl -fsS "http://127.0.0.1:${FOSSCAST_HTTP_PORT:-3100}/healthz"
@@ -75,14 +66,13 @@ case "$VERB" in
     echo "Rolling back: $current -> $previous"
     ln -sfn "$BASE/releases/$previous" "$BASE/current"
     cd "$BASE/releases/$previous"
-    DATA_PATH="$BASE/data" docker compose -p "$PROJECT" up -d --build app mediamtx
-    cp mediamtx.yml "$BASE/.mediamtx.last" 2>/dev/null || true
+    DATA_PATH="$BASE/data" docker compose -p "$PROJECT" up -d --build --remove-orphans app
     ;;
   status)
     docker ps --filter "name=$PROJECT" --format '{{.Names}} {{.Status}}'
     ;;
   logs)
-    [[ "$ARG" == app || "$ARG" == mediamtx ]] || { echo "logs app|mediamtx" >&2; exit 1; }
+    [[ "$ARG" == app ]] || { echo "logs app" >&2; exit 1; }
     docker logs --tail 50 "$PROJECT-$ARG-1" 2>&1
     ;;
   *)
