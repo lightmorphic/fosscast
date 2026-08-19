@@ -192,7 +192,19 @@ const server = http.createServer((req, res) => {
     return sendJson(res, 200, { ok: true, uptime: Math.round(process.uptime()) });
   }
   if (p === '/version') return sendJson(res, 200, { version: VERSION });
-  if (p === '/') return sendHtml(res, publicSite.landing());
+  if (p === '/') {
+    // One instance is one podcast, so the front page is that show, not a
+    // generic landing. The landing only shows before a show exists.
+    const shows = store.load('shows', []);
+    if (shows.length) {
+      const show = shows[0];
+      const items = store.load('episodes', [])
+        .filter((e) => e.showId === show.id)
+        .sort((a, b) => (a.date < b.date ? 1 : -1));
+      return sendHtml(res, publicSite.showPage(show, items, DOMAIN));
+    }
+    return sendHtml(res, publicSite.landing());
+  }
 
   if (p === '/shows') {
     return sendHtml(res, publicSite.showsIndex(
