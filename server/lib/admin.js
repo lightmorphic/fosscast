@@ -406,8 +406,7 @@ function createAdminRouter(ctx) {
       body: `<h1 class="page-title">${esc(show.name)}</h1>
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
       <p class="hint">Public page: <a href="/shows/${esc(show.slug)}">/shows/${esc(show.slug)}</a>
-      &middot; RSS: <a href="/shows/${esc(show.slug)}/feed.xml">/shows/${esc(show.slug)}/feed.xml</a>
-      &middot; <a href="/live/${esc(show.slug)}">live page</a></p>
+      &middot; RSS: <a href="/shows/${esc(show.slug)}/feed.xml">/shows/${esc(show.slug)}/feed.xml</a></p>
       <div class="cols">
       <div>
       ${(() => {
@@ -470,9 +469,9 @@ function createAdminRouter(ctx) {
       </section>
       </div>
       <div>
-      <section class="panel">
-        <h2>Show settings</h2>
-        <form method="post" action="/admin/shows/${esc(show.slug)}/settings">
+      <form method="post" action="/admin/shows/${esc(show.slug)}/settings">
+        <section class="panel">
+          <h2>Basics</h2>
           <label for="sname">Name</label>
           <input id="sname" name="name" required maxlength="120" value="${esc(show.name)}">
           <label for="sdesc">Description</label>
@@ -486,17 +485,6 @@ function createAdminRouter(ctx) {
             <select id="scat" name="category">${CATEGORIES.map((c) => `<option${show.category === c ? ' selected' : ''}>${esc(c)}</option>`).join('')}</select></div>
           </div>
           <div class="field-row">
-            <div><label for="sowner">Owner name</label>
-            <input id="sowner" name="ownerName" maxlength="120" value="${esc(show.ownerName || '')}"></div>
-            <div><label for="sowneremail">Owner email</label>
-            <input id="sowneremail" name="ownerEmail" type="email" maxlength="200" value="${esc(show.ownerEmail || '')}"></div>
-          </div>
-          <p class="hint">Directories require an owner email in the feed
-          and use it to verify you own the show: Spotify and Apple both
-          reject a feed without one. It appears in the feed, which is
-          public, so use an address you are happy to publish. It does
-          not have to be the address you log in with.</p>
-          <div class="field-row">
             <div><label for="stype">Type</label>
             <select id="stype" name="serial">
               <option value="">Episodic (newest first, the usual)</option>
@@ -505,51 +493,81 @@ function createAdminRouter(ctx) {
             <div><label for="scopyright">Copyright (optional)</label>
             <input id="scopyright" name="copyright" maxlength="200" value="${esc(show.copyright || '')}" placeholder="2026 Your Name"></div>
           </div>
+        </section>
+
+        <section class="panel">
+          <h2>Ownership</h2>
+          <div class="field-row">
+            <div><label for="sowner">Owner name</label>
+            <input id="sowner" name="ownerName" maxlength="120" value="${esc(show.ownerName || '')}"></div>
+            <div><label for="sowneremail">Owner email</label>
+            <input id="sowneremail" name="ownerEmail" type="email" maxlength="200" value="${esc(show.ownerEmail || '')}"></div>
+          </div>
+          <p class="hint">Directories require an owner email in the feed
+          and use it to verify you own the show: Spotify and Apple both
+          reject a feed without one. It is published in the feed, so use an
+          address you are happy to make public. It does not have to be the
+          address you log in with.</p>
+          <label class="check-label"><input type="checkbox" name="explicit" value="1" class="check"${show.explicit ? ' checked' : ''}> Explicit content</label>
+          <label class="check-label"><input type="checkbox" name="locked" value="1" class="check"${show.locked ? ' checked' : ''}> Lock the feed (tells other hosts not to import it without permission)</label>
+        </section>
+
+        <section class="panel">
+          <h2>Artwork &amp; banner</h2>
           <label for="sart">Podcast artwork</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels (Apple
-          accepts 1400 x 1400 upwards). JPG or PNG, RGB, under about 500 KB.
-          Every directory and app shows this, and every episode uses it
-          unless the episode has its own.</p>
-          <input id="sart" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="artwork" data-status="art-status">
-          <p class="hint" id="art-status">${show.artwork ? `Current: ${esc(show.artwork)}` : 'None yet. Directories will not list a show without it.'}</p>
+          accepts 1400 x 1400 upwards). JPG or PNG. The server makes a small
+          fast copy for the website by itself.</p>
+          <input id="sart" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="artwork" data-status="art-status" data-preview="art-preview-img">
+          <p class="hint" id="art-status">${show.artwork ? 'Uploaded.' : 'None yet. Directories will not list a show without it.'}</p>
           <input type="hidden" id="artwork" name="artwork" value="${esc(show.artwork || '')}">
-          ${show.artwork ? `<img class="art-preview" src="${esc(show.artwork)}" alt="Current artwork" width="120" height="120">` : ''}
+          <img class="art-preview" id="art-preview-img" alt="" src="${show.artwork ? esc(show.artworkWeb || show.artwork) : ''}"${show.artwork ? '' : ' style="display:none"'}>
           <label for="sbanner">Website banner</label>
           <p class="hint">Wide strip across the top of your site.
-          <strong>2560 x 640</strong> pixels (4:1) keeps it sharp on large
-          screens; anything from 1920 x 480 works. JPG, PNG or WebP. Keep
-          the important part central: the edges crop on phones.</p>
-          <input id="sbanner" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="banner" data-status="banner-status">
-          <p class="hint" id="banner-status">${show.banner ? `Current: ${esc(show.banner)}` : 'None yet, so the page starts at the title.'}</p>
+          <strong>2560 x 640</strong> pixels (4:1) keeps it sharp; anything
+          from 1920 x 480 works. Keep the important part central: the edges
+          crop on phones.</p>
+          <input id="sbanner" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="banner" data-status="banner-status" data-preview="banner-preview-img">
+          <p class="hint" id="banner-status">${show.banner ? 'Uploaded.' : 'None yet, so the page starts at the title.'}</p>
           <input type="hidden" id="banner" name="banner" value="${esc(show.banner || '')}">
-          <label class="check-label"><input type="checkbox" name="explicit" value="1" class="check"${show.explicit ? ' checked' : ''}> Explicit content</label>
+          <img class="banner-preview" id="banner-preview-img" alt="" src="${show.banner ? esc(show.bannerWeb || show.banner) : ''}"${show.banner ? '' : ' style="display:none"'}>
+        </section>
+
+        <section class="panel">
+          <h2>Funding &amp; people</h2>
           <div class="field-row">
             <div><label for="sfundurl">Funding URL (donations, memberships)</label>
             <input id="sfundurl" name="fundingUrl" type="url" maxlength="500" value="${esc(show.funding?.url || '')}"></div>
             <div><label for="sfundlabel">Funding label</label>
             <input id="sfundlabel" name="fundingLabel" maxlength="120" value="${esc(show.funding?.label || '')}" placeholder="Support the show"></div>
           </div>
-          <label for="sguid">Feed GUID (only when moving from another host)</label>
-          <p class="hint">Directories identify a podcast by this rather
-          than by its address. Copy the <code>podcast:guid</code> from
-          your old feed and the move is treated as the same show.
-          Importing an old feed fills this in by itself. Leave it empty
-          for a new podcast.</p>
-          <input id="sguid" name="podcastGuid" maxlength="60" value="${esc(show.podcastGuid || '')}" placeholder="">
           <label for="spersons">People (one per line: Name | role, e.g. "Sam Smith | host")</label>
           <textarea id="spersons" name="persons" rows="3">${esc((show.persons || []).map((p) => p.role ? `${p.name} | ${p.role}` : p.name).join('\n'))}</textarea>
-          <h2 style="margin-top:1.5rem">Listen on</h2>
+        </section>
+
+        <section class="panel">
+          <h2>Listen on</h2>
           <p class="hint">Paste the address of your show on each platform
           and its button appears on your pages. You get these after
-          submitting your RSS feed to them, which usually takes a few
-          days. RSS is always offered, so listeners are never stuck
-          waiting for approvals.</p>
+          submitting your RSS feed to them, which usually takes a few days.
+          RSS is always offered, so listeners never wait on an approval.</p>
           ${APPS.map(([key, label]) => `<label for="link-${key}">${esc(label)}</label>
           <input id="link-${key}" name="link_${key}" type="url" maxlength="500" value="${esc((show.links || {})[key] || '')}" placeholder="https://">`).join('')}
-          <label class="check-label"><input type="checkbox" name="locked" value="1" class="check"${show.locked ? ' checked' : ''}> Lock the feed (tells other hosts not to import it without permission)</label>
-          <button class="btn-primary" type="submit">Save settings</button>
-        </form>
-      </section>
+        </section>
+
+        <section class="panel">
+          <h2>Moving from another host</h2>
+          <label for="sguid">Feed GUID</label>
+          <p class="hint">Only when moving from another host. Directories
+          identify a podcast by this rather than by its address. Copy the
+          <code>podcast:guid</code> from your old feed and the move is
+          treated as the same show. Importing an old feed fills this in by
+          itself. Leave it empty for a new podcast.</p>
+          <input id="sguid" name="podcastGuid" maxlength="60" value="${esc(show.podcastGuid || '')}" placeholder="">
+        </section>
+
+        <button class="btn-primary" type="submit">Save settings</button>
+      </form>
       <section class="panel">
         <h2>Import from an existing feed</h2>
         <p class="hint">Paste a podcast's RSS URL: every episode comes in
