@@ -53,6 +53,34 @@ function verifySession(token, secret) {
   return userId;
 }
 
+// A short-lived, single-use sign-in link. Minted on the box (only
+// something that can exec in the app container can create one) and
+// consumed once by the /admin/session route. Distinct payload prefix so
+// it can never be replayed as an ordinary session cookie.
+function signLoginLink(userId, secret, ttlMs = 10 * 60 * 1000) {
+  const exp = Date.now() + ttlMs;
+  const jti = crypto.randomBytes(9).toString('base64url');
+  const payload = `login.${userId}.${exp}.${jti}`;
+  const mac = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
+  return `${payload}.${mac}`;
+}
+
+function verifyLoginLink(token, secret) {
+  if (typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 5 || parts[0] !== 'login') return null;
+  const [, userId, expStr, jti, mac] = parts;
+  const expect = crypto
+    .createHmac('sha256', secret)
+    .update(`login.${userId}.${expStr}.${jti}`)
+    .digest('base64url');
+  const a = Buffer.from(mac);
+  const b = Buffer.from(expect);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  if (!/^\d+$/.test(expStr) || Date.now() > Number(expStr)) return null;
+  return { userId, jti };
+}
+
 // Too many failed logins from one IP locks that IP out for a while;
 // any successful login clears it.
 class RateLimiter {
@@ -88,4 +116,4 @@ class RateLimiter {
   }
 }
 
-module.exports = { hashPassword, verifyPassword, signSession, verifySession, RateLimiter };
+module.exports = { hashPassword, verifyPassword, signSession, verifySession, signLoginLink, verifyLoginLink, RateLimiter };

@@ -126,3 +126,23 @@ test('login rate limiting locks out after repeated failures', async () => {
   }));
   assert.strictEqual(res.status, 429);
 });
+
+test('a one-time sign-in link logs in and cannot be reused', async () => {
+  const auth = require('../lib/auth');
+  const settings = JSON.parse(fs.readFileSync(path.join(DATA, 'settings.json'), 'utf8'));
+  const users = JSON.parse(fs.readFileSync(path.join(DATA, 'users.json'), 'utf8'));
+  const token = auth.signLoginLink(users[0].id, settings.secret, 60000);
+
+  const first = await fetch(`${BASE}/admin/session?token=${encodeURIComponent(token)}`, { redirect: 'manual' });
+  assert.strictEqual(first.status, 303);
+  assert.strictEqual(first.headers.get('location'), '/admin');
+  assert.ok(first.headers.get('set-cookie').includes('fosscast_admin='));
+
+  // Same link a second time is refused.
+  const second = await fetch(`${BASE}/admin/session?token=${encodeURIComponent(token)}`, { redirect: 'manual' });
+  assert.strictEqual(second.status, 400);
+
+  // A garbage token is refused.
+  const bad = await fetch(`${BASE}/admin/session?token=nonsense`, { redirect: 'manual' });
+  assert.strictEqual(bad.status, 400);
+});

@@ -10,7 +10,7 @@ WORKDIR /app
 # for the feed (ffprobe; nothing is ever transcoded).
 RUN apk update && apk upgrade --no-cache && apk add --no-cache ffmpeg
 
-COPY package.json server.js reset-password.js ./
+COPY package.json server.js reset-password.js admin-login-link.js ./
 COPY lib ./lib
 
 # The recordings volume is written by MediaMTX (root) and read by us;
