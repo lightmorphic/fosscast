@@ -95,6 +95,11 @@ document.addEventListener('change', (e) => {
   const file = input.files[0];
   const status = document.getElementById(input.dataset.status);
   const target = document.getElementById(input.dataset.target);
+  // Show the picked image straight away, before the upload even finishes.
+  if (input.dataset.preview && file.type.indexOf('image/') === 0) {
+    const preview = document.getElementById(input.dataset.preview);
+    if (preview) { preview.src = URL.createObjectURL(file); preview.style.display = 'block'; }
+  }
   status.textContent = 'Uploading ' + file.name + ' (' + (file.size / 1048576).toFixed(1) + ' MB)...';
   fetch('/admin/api/upload?show=' + encodeURIComponent(input.dataset.show) + '&filename=' + encodeURIComponent(file.name), {
     method: 'PUT', body: file,
@@ -157,7 +162,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.3.0">
+<link rel="stylesheet" href="/css/site.css?v=0.4.0">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">
