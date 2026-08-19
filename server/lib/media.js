@@ -110,4 +110,39 @@ function probeDuration(file) {
   });
 }
 
-module.exports = { saveUpload, serveMedia, typeFor, safeName, probeDuration, MEDIA_TYPES };
+const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp']);
+
+// The web copy of an uploaded image: a small, fast version for pages.
+// Lives next to the original as "<name>.web.jpg". The original (which
+// may be 3000x3000 for the directories) is kept for the RSS feed.
+function webPathFor(urlPath) {
+  return `${urlPath}.web.jpg`;
+}
+
+// Make the small web copy if it does not exist yet. Longest side capped
+// so a huge upload becomes a light, quick-loading image. Returns the web
+// url path when one is available, else null. Never throws.
+function ensureWebImage(dataDir, urlPath) {
+  return new Promise((resolve) => {
+    if (typeof urlPath !== 'string' || !urlPath.startsWith('/media/')) return resolve(null);
+    const ext = path.extname(urlPath).toLowerCase();
+    if (!IMAGE_EXTS.has(ext)) return resolve(null);
+    const file = path.join(dataDir, decodeURIComponent(urlPath.slice(1)));
+    const out = `${file}.web.jpg`;
+    if (fs.existsSync(out)) return resolve(webPathFor(urlPath));
+    if (!fs.existsSync(file)) return resolve(null);
+    // Fit within 1024x1024, only shrinking (never enlarging a small one).
+    const p = spawn('ffmpeg', [
+      '-y', '-i', file,
+      '-vf', "scale='min(1024,iw)':'min(1024,ih)':force_original_aspect_ratio=decrease",
+      '-q:v', '4', out,
+    ], { stdio: 'ignore' });
+    p.on('error', () => resolve(null));
+    p.on('close', (code) => resolve(code === 0 && fs.existsSync(out) ? webPathFor(urlPath) : null));
+  });
+}
+
+module.exports = {
+  saveUpload, serveMedia, typeFor, safeName, probeDuration,
+  ensureWebImage, webPathFor, MEDIA_TYPES,
+};

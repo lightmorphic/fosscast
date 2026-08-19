@@ -33,7 +33,7 @@ function publicPage({ title, description, body, image }) {
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.2.0">
+<link rel="stylesheet" href="/css/site.css?v=0.3.0">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body>
@@ -173,7 +173,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.2.0">
+<link rel="stylesheet" href="/css/site.css?v=0.3.0">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">

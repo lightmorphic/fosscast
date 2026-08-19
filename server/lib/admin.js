@@ -13,7 +13,7 @@ const fs = require('fs');
 const { esc, adminPage, ICONS } = require('./html');
 const auth = require('./auth');
 const CATEGORIES = require('./categories');
-const { probeDuration } = require('./media');
+const { probeDuration, ensureWebImage } = require('./media');
 const importer = require('./import');
 const { sendMail, configured: mailConfigured } = require('./mailer');
 const { APPS } = require('./public');
@@ -171,6 +171,31 @@ function createAdminRouter(ctx) {
       store.save('episodes', list);
     } catch { /* sizes stay unknown */ }
   }
+  // Make sure every uploaded image has a small, fast web copy, and record
+  // its path on the show/episode. Runs at startup (to catch images that
+  // were uploaded before this existed) and after any image is saved.
+  async function refreshWebImages() {
+    const showList = shows();
+    let showsChanged = false;
+    for (const show of showList) {
+      for (const field of ['artwork', 'banner']) {
+        if (!show[field]) { if (show[`${field}Web`]) { delete show[`${field}Web`]; showsChanged = true; } continue; }
+        const web = await ensureWebImage(dataDir, show[field]);
+        if (web && show[`${field}Web`] !== web) { show[`${field}Web`] = web; showsChanged = true; }
+      }
+    }
+    if (showsChanged) store.save('shows', showList);
+
+    const episodeList = episodes();
+    let epChanged = false;
+    for (const ep of episodeList) {
+      if (!ep.artwork) { if (ep.artworkWeb) { delete ep.artworkWeb; epChanged = true; } continue; }
+      const web = await ensureWebImage(dataDir, ep.artwork);
+      if (web && ep.artworkWeb !== web) { ep.artworkWeb = web; epChanged = true; }
+    }
+    if (epChanged) store.save('episodes', episodeList);
+  }
+
   const limiter = new auth.RateLimiter();
 
   function settings() {
@@ -860,6 +885,7 @@ function createAdminRouter(ctx) {
           list.push(episode);
           store.save('episodes', list);
           measure(episode.id);
+          refreshWebImages().catch(() => {});
         }
         redirect(res, `/admin/shows/${show.slug}`);
         return true;
@@ -899,12 +925,14 @@ function createAdminRouter(ctx) {
         if (/^\/media\/[^/]+\/[^/]+$/.test(artwork)) entry.artwork = artwork;
         const banner = String(form.get('banner') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(banner)) entry.banner = banner;
+        // web copies of the new artwork/banner are made just after save
         entry.links = {};
         for (const [key] of APPS) {
           const url = String(form.get(`link_${key}`) || '').trim().slice(0, 500);
           if (/^https?:\/\//.test(url)) entry.links[key] = url;
         }
         store.save('shows', list);
+        refreshWebImages().catch(() => {});
         redirect(res, `/admin/shows/${show.slug}`);
         return true;
       }
@@ -998,6 +1026,7 @@ function createAdminRouter(ctx) {
         entry.chapters = parseChapters(form.get('chapters') || '');
         store.save('episodes', list);
         measure(entry.id);
+        refreshWebImages().catch(() => {});
         redirect(res, `/admin/shows/${show.slug}`);
         return true;
       }
@@ -1008,6 +1037,7 @@ function createAdminRouter(ctx) {
   }
 
   bootstrap();
+  refreshWebImages().catch(() => {});
   return { handle, settings, shows, users, currentUser, measureEpisode: measure };
 }
 
