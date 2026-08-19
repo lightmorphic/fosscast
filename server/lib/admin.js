@@ -174,14 +174,17 @@ function createAdminRouter(ctx) {
   const limiter = new auth.RateLimiter();
 
   function settings() {
-    const value = store.load('settings', () => ({
-      secret: crypto.randomBytes(32).toString('hex'),
-      publisherToken: (process.env.PUBLISHER_TOKEN || '').trim() || crypto.randomBytes(32).toString('hex'),
-    }));
-    if (!value.secret) {
-      value.secret = crypto.randomBytes(32).toString('hex');
-      store.save('settings', value);
+    const value = store.load('settings', () => ({}));
+    // Persist on first creation, so the cookie secret and publisher
+    // token stay stable across restarts rather than logging everyone
+    // out and rotating the token on every deploy.
+    let changed = false;
+    if (!value.secret) { value.secret = crypto.randomBytes(32).toString('hex'); changed = true; }
+    if (!value.publisherToken) {
+      value.publisherToken = (process.env.PUBLISHER_TOKEN || '').trim() || crypto.randomBytes(32).toString('hex');
+      changed = true;
     }
+    if (changed) store.save('settings', value);
     return value;
   }
 
@@ -587,6 +590,23 @@ function createAdminRouter(ctx) {
     const p = url.pathname;
     if (!p.startsWith('/admin')) return false;
     const domain = (process.env.DOMAIN || 'localhost').trim();
+
+    // One-time sign-in link (from the fleet panel's auto-login). The
+    // token is minted on the box and used once; consuming it burns the
+    // nonce so the link cannot be replayed.
+    if (p === '/admin/session' && req.method === 'GET') {
+      const parsed = auth.verifyLoginLink(url.searchParams.get('token') || '', settings().secret);
+      const used = store.load('login-nonces', []).filter((n) => n.exp > Date.now());
+      if (!parsed || used.some((n) => n.jti === parsed.jti) || !users().some((u) => u.id === parsed.userId)) {
+        html(res, loginPage('That sign-in link has expired or has already been used.'), 400);
+        return true;
+      }
+      used.push({ jti: parsed.jti, exp: Date.now() + 20 * 60 * 1000 });
+      store.save('login-nonces', used);
+      const session = auth.signSession(parsed.userId, settings().secret);
+      redirect(res, '/admin', { 'Set-Cookie': sessionCookie(req, session, 7 * 24 * 3600) });
+      return true;
+    }
 
     if (p === '/admin/login') {
       if (req.method === 'GET') {

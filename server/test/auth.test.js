@@ -39,3 +39,21 @@ test('rate limiter locks after max failures and clears on success', () => {
   limiter.ok(ip);
   assert.ok(!limiter.blocked(ip));
 });
+
+test('login-link tokens verify once and reject tampering', () => {
+  const secret = 'panel secret';
+  const token = auth.signLoginLink('user-7', secret, 60000);
+  const ok = auth.verifyLoginLink(token, secret);
+  assert.strictEqual(ok.userId, 'user-7');
+  assert.ok(ok.jti);
+  assert.strictEqual(auth.verifyLoginLink(token, 'other'), null);
+  assert.strictEqual(auth.verifyLoginLink(token.replace('user-7', 'user-8'), secret), null);
+  // a normal session token must not pass as a login link, nor the reverse
+  assert.strictEqual(auth.verifyLoginLink(auth.signSession('user-7', secret), secret), null);
+  assert.strictEqual(auth.verifySession(token, secret), null);
+});
+
+test('login-link tokens expire', () => {
+  const secret = 's';
+  assert.strictEqual(auth.verifyLoginLink(auth.signLoginLink('u', secret, -1000), secret), null);
+});
