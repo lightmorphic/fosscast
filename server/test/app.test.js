@@ -88,7 +88,7 @@ test('create a show, publish an episode, see both publicly', async () => {
     name: 'Test Show', description: 'A show about tests.',
   }));
   assert.strictEqual(res.status, 303);
-  assert.strictEqual(res.headers.get('location'), '/admin/shows/test-show');
+  assert.strictEqual(res.headers.get('location'), '/admin/podcast');
 
   res = await fetch(`${BASE}/admin/shows/test-show/episodes`, form({
     title: 'Episode One',
