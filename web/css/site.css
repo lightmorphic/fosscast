@@ -554,8 +554,17 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
 .art-preview {
   display: block;
   margin-top: 0.75rem;
-  width: 7.5rem;
-  height: 7.5rem;
+  width: 9rem;
+  height: 9rem;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.banner-preview {
+  display: block;
+  margin-top: 0.75rem;
+  width: 100%;
+  aspect-ratio: 4 / 1;
   object-fit: cover;
   border-radius: var(--radius);
   border: 1px solid var(--border);
