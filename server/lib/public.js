@@ -51,9 +51,22 @@ function episodeUrl(show, episode, domain) {
   return `${base}/shows/${show.slug}/${episodeSlug(episode)}`;
 }
 
+// For display on the site: prefer the small web copy so pages load fast,
+// falling back to the full image, then to the show's, so an episode
+// without its own cover still shows the podcast art.
 function artFor(episode, show) {
+  return episode.artworkWeb || episode.artwork
+    || show.artworkWeb || show.artwork || '';
+}
+
+// For the RSS feed and directories: the full-size original only.
+function artForFeed(episode, show) {
   return episode.artwork || show.artwork || '';
 }
+
+// The small web copy of the show's own artwork / banner, for the site.
+function showArtWeb(show) { return show.artworkWeb || show.artwork || ''; }
+function showBannerWeb(show) { return show.bannerWeb || show.banner || ''; }
 
 // Where people can subscribe. RSS always works; the rest appear once
 // the show has a listing on them, since those need a catalogue URL the
@@ -151,15 +164,13 @@ function showPage(show, allEpisodes, domain) {
         const art = artFor(episode, show);
         return `
       <article class="panel episode">
-        <div class="episode-head">
-          ${art ? `<img class="episode-art" src="${esc(art)}" alt="" width="96" height="96" loading="lazy">` : ''}
-          <div class="episode-meta">
-            <h2><a href="${esc(episodeUrl(show, episode, ''))}">${esc(episode.title)}</a></h2>
-            <p class="hint">${esc(episode.date)}${episode.episode ? ` &middot; episode ${Number(episode.episode)}` : ''}${episode.duration ? ` &middot; ${Math.round(episode.duration / 60)} min` : ''}</p>
-          </div>
+        ${art ? `<a class="episode-art-link" href="${esc(episodeUrl(show, episode, ''))}"><img class="episode-art" src="${esc(art)}" alt="" width="200" height="200" loading="lazy"></a>` : ''}
+        <div class="episode-body">
+          <h2><a href="${esc(episodeUrl(show, episode, ''))}">${esc(episode.title)}</a></h2>
+          <p class="hint">${esc(episode.date)}${episode.episode ? ` &middot; episode ${Number(episode.episode)}` : ''}${episode.duration ? ` &middot; ${Math.round(episode.duration / 60)} min` : ''}</p>
+          ${episode.description ? `<p>${esc(episode.description)}</p>` : ''}
+          ${player(episode)}
         </div>
-        ${episode.description ? `<p>${esc(episode.description)}</p>` : ''}
-        ${player(episode)}
       </article>`;
       }).join('')
     : '<div class="panel"><p class="hint">No episodes published yet.</p></div>';
@@ -168,9 +179,9 @@ function showPage(show, allEpisodes, domain) {
     description: show.description,
     image: show.banner || show.artwork || '',
     body: `
-  ${show.banner ? `<div class="show-banner"><img src="${esc(show.banner)}" alt=""></div>` : ''}
+  ${show.banner ? `<div class="show-banner"><img src="${esc(showBannerWeb(show))}" alt=""></div>` : ''}
   <section class="panel hero show-hero">
-    ${show.artwork ? `<img class="show-art" src="${esc(show.artwork)}" alt="${esc(show.name)} artwork" width="160" height="160">` : ''}
+    ${show.artwork ? `<img class="show-art" src="${esc(showArtWeb(show))}" alt="${esc(show.name)} artwork" width="160" height="160">` : ''}
     <div class="show-hero-text">
     <h1>${esc(show.name)}</h1>
     <p class="lede">${esc(show.description)}</p>
@@ -284,7 +295,7 @@ function feed(show, episodes, domain) {
       <itunes:episodeType>${escXml(episode.type || 'full')}</itunes:episodeType>
       ${itunesDuration(episode.duration)}
       <itunes:explicit>${show.explicit ? 'true' : 'false'}</itunes:explicit>
-      ${artFor(episode, show) ? `<itunes:image href="${escXml(absolute(artFor(episode, show), domain))}"/>` : ''}
+      ${artForFeed(episode, show) ? `<itunes:image href="${escXml(absolute(artForFeed(episode, show), domain))}"/>` : ''}
       ${transcriptTag(episode, domain)}
       ${chaptersTag(episode, domain)}
     </item>`).join('');
@@ -330,7 +341,7 @@ function embedPage(show, episode) {
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${esc(episode.title)} - ${esc(show.name)}</title>
-<link rel="stylesheet" href="/css/site.css?v=0.1.0">
+<link rel="stylesheet" href="/css/site.css?v=0.3.0">
 </head>
 <body class="embed">
 <div class="embed-player">
