@@ -326,25 +326,25 @@ function createAdminRouter(ctx) {
       ? `<section class="panel hero">
         <p class="status"><span aria-hidden="true">&#9679;</span> Your podcast</p>
         <h1>${esc(show.name)}</h1>
-        <p class="lede">${esc(show.description || 'No description yet: add one in the show settings.')}</p>
+        <p class="lede">${esc(show.description || 'No description yet: add one on the podcast page.')}</p>
         <p class="hint"><a href="/shows/${esc(show.slug)}">Public page</a>
-        &middot; <a href="/live/${esc(show.slug)}">live page</a>
         &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
-        &middot; <a href="/admin/shows/${esc(show.slug)}">manage</a></p>
+        &middot; <a href="/admin/podcast">podcast</a>
+        &middot; <a href="/admin/episodes">shows</a></p>
       </section>`
       : `<section class="panel hero">
         <h1>Welcome to FOSSCast</h1>
-        <p class="lede">One thing to do first: create your show. Its
-        public pages, RSS feed, stream key and live stage all follow
-        from it.</p>
-        <p><a class="btn-primary" href="/admin/shows">Create your show</a></p>
+        <p class="lede">One thing to do first: create your podcast. Its
+        public pages and RSS feed all follow from it, and then you add as
+        many shows (episodes) as you like.</p>
+        <p><a class="btn-primary" href="/admin/podcast">Create your podcast</a></p>
       </section>`;
     return adminPage({
       title: 'Dashboard',
       active: 'dashboard',
       body: `${hero}
       <section class="grid">
-        <a class="panel stat" href="/admin/episodes"><span class="stat-n">${episodeList.length - drafts}</span><span>published episode${episodeList.length - drafts === 1 ? '' : 's'}</span></a>
+        <a class="panel stat" href="/admin/episodes"><span class="stat-n">${episodeList.length - drafts}</span><span>published show${episodeList.length - drafts === 1 ? '' : 's'}</span></a>
         <a class="panel stat" href="/admin/episodes"><span class="stat-n">${drafts}</span><span>draft${drafts === 1 ? '' : 's'}</span></a>
         <a class="panel stat" href="/admin/stats"><span class="stat-n">${stats ? Object.values(stats.data().totals).reduce((a, b) => a + b, 0) : 0}</span><span>downloads all time</span></a>
       </section>
@@ -352,7 +352,8 @@ function createAdminRouter(ctx) {
     });
   }
 
-  // The Episodes page: the day-to-day work of adding and editing episodes.
+  // The Shows page: the day-to-day work of adding and editing shows
+  // (episodes) of the podcast.
   function episodesPage(show, notice = '') {
     const items = episodes()
       .filter((e) => e.showId === show.id)
@@ -362,44 +363,30 @@ function createAdminRouter(ctx) {
       <td><a href="/admin/episodes/${esc(episode.id)}">${esc(episode.title)}</a>${episode.draft ? ' <span class="tag">draft</span>' : ''}</td>
       <td>${esc(episode.date)}</td>
       <td class="media-cell"><a href="/shows/${esc(show.slug)}/${esc(episode.slug || episode.id)}">page</a> &middot; <a href="/embed/${esc(episode.id)}">embed</a></td>
-      <td class="actions">${deleteButton(`/admin/episodes/${esc(episode.id)}/delete`, 'Delete episode')}</td>
+      <td class="actions">${deleteButton(`/admin/episodes/${esc(episode.id)}/delete`, 'Delete show')}</td>
     </tr>`).join('');
-    const checks = feedChecks(show, items);
-    const failed = checks.filter(([, ok]) => !ok);
     return adminPage({
-      title: 'Episodes',
+      title: 'Shows',
       active: 'episodes',
-      body: `<h1 class="page-title">Episodes</h1>
+      body: `<h1 class="page-title">Shows</h1>
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
       <p class="hint">${esc(show.name)} &middot; <a href="/shows/${esc(show.slug)}">public page</a>
       &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
       &middot; <a href="/admin/podcast">podcast details</a></p>
 
-      ${failed.length ? `<section class="panel">
-        <h2>Feed check</h2>
-        <p class="hint">What Apple, Spotify and the rest look for before they accept a podcast.</p>
-        <ul class="checks">
-          ${checks.map(([label, ok, fix]) => `<li class="${ok ? 'check-ok' : 'check-bad'}">
-            <span aria-hidden="true">${ok ? '&#10003;' : '!'}</span>
-            <span>${esc(label)}${ok ? '' : ` &mdash; ${esc(fix)}`}</span>
-          </li>`).join('')}
-        </ul>
-        <p class="hint">${failed.length} to sort out before submitting to the directories.</p>
-      </section>` : ''}
-
       <section class="panel">
-        <h2>Episodes</h2>
+        <h2>All shows</h2>
         <table>
-          <caption class="sr-only">Episodes of ${esc(show.name)}</caption>
+          <caption class="sr-only">Shows of ${esc(show.name)}</caption>
           <thead><tr><th>Title</th><th>Date</th><th>Links</th><th></th></tr></thead>
-          <tbody>${rows || '<tr><td colspan="4" class="hint">No episodes yet.</td></tr>'}</tbody>
+          <tbody>${rows || '<tr><td colspan="4" class="hint">No shows yet.</td></tr>'}</tbody>
         </table>
       </section>
 
       <div class="cols">
       <div>
       <section class="panel">
-        <h2>New episode</h2>
+        <h2>New show</h2>
         <form method="post" action="/admin/shows/${esc(show.slug)}/episodes">
           <label for="title">Title</label>
           <input id="title" name="title" required maxlength="200">
@@ -418,9 +405,9 @@ function createAdminRouter(ctx) {
           <p class="hint" id="upload-status"></p>
           <label for="mediaUrl">Or media URL (your own storage, archive.org, anywhere reachable)</label>
           <input id="mediaUrl" name="mediaUrl" maxlength="1000" placeholder="https://archive.org/download/...">
-          <label for="epArt">Episode cover art (optional)</label>
+          <label for="epArt">Show cover art (optional)</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels. Leave it
-          empty and the episode uses the show's artwork.</p>
+          empty and the show uses the podcast's artwork.</p>
           <input id="epArt" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="epArtwork" data-status="epart-status" data-preview="epart-preview-img">
           <p class="hint" id="epart-status"></p>
           <input type="hidden" id="epArtwork" name="artwork" value="">
@@ -428,20 +415,20 @@ function createAdminRouter(ctx) {
           <label for="epDescription">Description</label>
           <textarea id="epDescription" name="description" rows="4" maxlength="4000"></textarea>
           <label class="check-label"><input type="checkbox" name="draft" value="1" class="check"> Save as draft (hidden from the public site and feed)</label>
-          <button class="btn-primary" type="submit">Publish episode</button>
+          <button class="btn-primary" type="submit">Publish show</button>
         </form>
       </section>
       </div>
       <div>
       <section class="panel">
         <h2>Import from an existing feed</h2>
-        <p class="hint">Paste a podcast's RSS URL: every episode comes in
-        with its metadata (media stays at the old URLs until you
+        <p class="hint">Paste a podcast's RSS URL: every show (episode)
+        comes in with its metadata (media stays at the old URLs until you
         re-upload). Missing details are filled from the feed.</p>
         <form method="post" action="/admin/shows/${esc(show.slug)}/import">
           <label for="feedUrl">Feed URL</label>
           <input id="feedUrl" name="feedUrl" type="url" required maxlength="1000" placeholder="https://example.com/feed.xml">
-          <button class="btn-primary" type="submit">Import episodes</button>
+          <button class="btn-primary" type="submit">Import shows</button>
         </form>
       </section>
       </div>
@@ -449,68 +436,36 @@ function createAdminRouter(ctx) {
     });
   }
 
-  // The Podcast overview: large cards summarising the details, each
-  // opening the matching section of the edit page. The details are
-  // filled in once and rarely touched, so they live away from episodes.
-  function podcastPage(show) {
-    const links = show.links || {};
-    const linkNames = APPS.filter(([k]) => links[k]).map(([, label]) => label);
-    const card = (anchor, title, inner) => `<a class="panel detail-card" href="/admin/podcast/edit#sec-${anchor}">
-      <h2>${esc(title)}</h2>${inner}
-      <span class="detail-edit">Edit &rarr;</span>
-    </a>`;
-    const val = (v) => v ? esc(v) : '<span class="hint">not set</span>';
+  // The Podcast page: everything about the overall podcast on one page.
+  // The instance hosts a single podcast; its details are filled in once
+  // and rarely change, so they live here, apart from the shows
+  // (episodes). The feed check lives here too, since it is about the
+  // podcast as a whole.
+  function podcastPage(show, notice = '') {
+    const items = episodes().filter((e) => e.showId === show.id);
+    const checks = feedChecks(show, items);
+    const failed = checks.filter(([, ok]) => !ok);
     return adminPage({
       title: 'Podcast',
       active: 'podcast',
-      body: `<section class="panel hero show-hero">
-        ${show.artwork ? `<img class="show-art" src="${esc(show.artworkWeb || show.artwork)}" alt="" width="160" height="160">` : ''}
-        <div class="show-hero-text">
-          <h1>${esc(show.name)}</h1>
-          <p class="lede">${esc(show.description || 'No description yet.')}</p>
-          <p class="hint"><a href="/shows/${esc(show.slug)}">public page</a>
-          &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
-          &middot; <a href="/admin/episodes">episodes</a></p>
-        </div>
-      </section>
-      <section class="grid detail-grid">
-        ${card('basics', 'Basics', `<dl class="detail-list">
-          <div><dt>Category</dt><dd>${val(show.category)}</dd></div>
-          <div><dt>Language</dt><dd>${val(show.language)}</dd></div>
-          <div><dt>Type</dt><dd>${show.serial ? 'Serial' : 'Episodic'}</dd></div>
-        </dl>`)}
-        ${card('artwork', 'Artwork & banner', `<div class="detail-images">
-          ${show.artwork ? `<img src="${esc(show.artworkWeb || show.artwork)}" alt="" class="detail-thumb">` : '<span class="hint">No artwork</span>'}
-          ${show.banner ? `<img src="${esc(show.bannerWeb || show.banner)}" alt="" class="detail-thumb wide">` : '<span class="hint">No banner</span>'}
-        </div>`)}
-        ${card('ownership', 'Ownership', `<dl class="detail-list">
-          <div><dt>Owner</dt><dd>${val(show.ownerName)}</dd></div>
-          <div><dt>Email</dt><dd>${val(show.ownerEmail)}</dd></div>
-          <div><dt>Explicit</dt><dd>${show.explicit ? 'Yes' : 'No'}</dd></div>
-          <div><dt>Feed locked</dt><dd>${show.locked ? 'Yes' : 'No'}</dd></div>
-        </dl>`)}
-        ${card('listen', 'Listen on', linkNames.length
-          ? `<p>${linkNames.map((n) => esc(n)).join(', ')}</p>`
-          : '<p class="hint">RSS only so far. Add platform links after they list you.</p>')}
-        ${card('people', 'Funding & people', `<dl class="detail-list">
-          <div><dt>Funding</dt><dd>${val(show.funding && show.funding.label)}</dd></div>
-          <div><dt>People</dt><dd>${(show.persons || []).length || '<span class="hint">none</span>'}</dd></div>
-        </dl>`)}
-        ${card('guid', 'Feed identity', show.podcastGuid
-          ? '<p class="hint">Kept from an imported feed, so directories see the same show.</p>'
-          : '<p class="hint">New podcast. Set a feed GUID only when moving in from another host.</p>')}
-      </section>`,
-    });
-  }
-
-  // The Podcast edit page: the full form, grouped into the same cards.
-  function podcastEditPage(show, notice = '') {
-    return adminPage({
-      title: 'Edit podcast details',
-      active: 'podcast',
-      body: `<h1 class="page-title">Edit podcast details</h1>
-      <p class="hint"><a href="/admin/podcast">&larr; Back to overview</a></p>
+      body: `<h1 class="page-title">Podcast</h1>
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
+      <p class="hint">${esc(show.name)} &middot; <a href="/shows/${esc(show.slug)}">public page</a>
+      &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
+      &middot; <a href="/admin/episodes">shows</a></p>
+
+      <section class="panel">
+        <h2>Feed check</h2>
+        <p class="hint">What Apple, Spotify and the rest look for before
+        they accept a podcast. ${failed.length ? `<strong>${failed.length} still to sort out.</strong>` : 'All good.'}</p>
+        <ul class="checks">
+          ${checks.map(([label, ok, fix]) => `<li class="${ok ? 'check-ok' : 'check-bad'}">
+            <span aria-hidden="true">${ok ? '&#10003;' : '!'}</span>
+            <span>${esc(label)}${ok ? '' : ` &mdash; ${esc(fix)}`}</span>
+          </li>`).join('')}
+        </ul>
+      </section>
+
       <form method="post" action="/admin/shows/${esc(show.slug)}/settings">
         <section class="panel" id="sec-basics">
           <h2>Basics</h2>
@@ -640,18 +595,18 @@ function createAdminRouter(ctx) {
   function feedChecks(show, showEpisodes) {
     const published = showEpisodes.filter((e) => !e.draft);
     return [
-      ['Title', !!show.name, 'Set the show name.'],
+      ['Title', !!show.name, 'Set the podcast name.'],
       ['Description', (show.description || '').length > 20, 'Write a description of a sentence or two.'],
       ['Artwork', !!show.artwork, 'Upload square artwork, 3000 x 3000.'],
       ['Owner email', !!show.ownerEmail, 'Add an owner email: Spotify and Apple reject feeds without one.'],
       ['Category', !!show.category, 'Choose a category.'],
       ['Language', !!show.language, 'Set the language.'],
       ['Author', !!show.author, 'Add an author name.'],
-      ['A published episode', published.length > 0, 'Publish at least one episode before submitting.'],
+      ['A published show', published.length > 0, 'Publish at least one show before submitting.'],
       ['File sizes known', published.every((e) => Number(e.bytes) > 0),
-        'An episode has no file size in the feed. Re-save it so the size can be read.'],
+        'A show has no file size in the feed. Re-save it so the size can be read.'],
       ['Durations known', published.every((e) => Number(e.duration) > 0),
-        'An episode has no duration. Re-save it so the length can be read.'],
+        'A show has no duration. Re-save it so the length can be read.'],
     ];
   }
 
@@ -660,8 +615,8 @@ function createAdminRouter(ctx) {
     return adminPage({
       title: episode.title,
       active: 'episodes',
-      body: `<h1 class="page-title">Edit episode</h1>
-      <p class="hint"><a href="/admin/episodes">&larr; Episodes</a></p>
+      body: `<h1 class="page-title">Edit show</h1>
+      <p class="hint"><a href="/admin/episodes">&larr; Shows</a></p>
       <section class="panel">
         <form method="post" action="/admin/episodes/${esc(episode.id)}">
           <label for="title">Title</label>
@@ -680,11 +635,11 @@ function createAdminRouter(ctx) {
           <input id="mediaUrl" name="mediaUrl" maxlength="1000" value="${esc(episode.mediaUrl)}">
           <label for="epDescription">Description</label>
           <textarea id="epDescription" name="description" rows="4" maxlength="4000">${esc(episode.description)}</textarea>
-          <label for="epArt">Episode cover art (optional)</label>
+          <label for="epArt">Show cover art (optional)</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels. Empty
-          means the show's artwork is used.</p>
+          means the podcast's artwork is used.</p>
           <input id="epArt" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="epArtwork" data-status="epart-status">
-          <p class="hint" id="epart-status">${episode.artwork ? `Current: ${esc(episode.artwork)}` : "Using the show's artwork."}</p>
+          <p class="hint" id="epart-status">${episode.artwork ? `Current: ${esc(episode.artwork)}` : "Using the podcast's artwork."}</p>
           <input type="hidden" id="epArtwork" name="artwork" value="${esc(episode.artwork || '')}">
           ${episode.artwork ? `<img class="art-preview" src="${esc(episode.artwork)}" alt="Episode artwork" width="120" height="120">` : ''}
           <label for="transcriptFile">Transcript (.vtt, .srt, .txt or .json; podcast apps show it)</label>
@@ -694,7 +649,7 @@ function createAdminRouter(ctx) {
           <label for="chapters">Chapters (one per line: HH:MM:SS Title)</label>
           <textarea id="chapters" name="chapters" rows="5" placeholder="00:00 Intro&#10;05:30 The main topic">${esc(formatChapters(episode.chapters))}</textarea>
           <label class="check-label"><input type="checkbox" name="draft" value="1" class="check"${episode.draft ? ' checked' : ''}> Draft (hidden from the public site and feed)</label>
-          <button class="btn-primary" type="submit">Save episode</button>
+          <button class="btn-primary" type="submit">Save show</button>
         </form>
       </section>`,
     });
@@ -874,12 +829,8 @@ function createAdminRouter(ctx) {
       html(res, show ? podcastPage(show) : createPodcastPage());
       return true;
     }
-    if (p === '/admin/podcast/edit' && req.method === 'GET') {
-      const show = shows()[0];
-      if (!show) { redirect(res, '/admin/podcast'); return true; }
-      html(res, podcastEditPage(show));
-      return true;
-    }
+    // The edit form now lives on the podcast page itself.
+    if (p === '/admin/podcast/edit' && req.method === 'GET') { redirect(res, '/admin/podcast'); return true; }
     // Old links keep working.
     if (p === '/admin/shows' && req.method === 'GET') { redirect(res, '/admin/episodes'); return true; }
     if (p === '/admin/stats' && req.method === 'GET') { html(res, statsPage()); return true; }
@@ -1061,7 +1012,7 @@ function createAdminRouter(ctx) {
           // The old feed's identity moves with the episodes.
           if (!entry.podcastGuid && channel.podcastGuid) entry.podcastGuid = channel.podcastGuid;
           store.save('shows', showList);
-          html(res, episodesPage(entry, `Imported ${imported} episode${imported === 1 ? '' : 's'} from the feed.`));
+          html(res, episodesPage(entry, `Imported ${imported} show${imported === 1 ? '' : 's'} from the feed.`));
         } catch (err) {
           html(res, episodesPage(show, `Import failed: ${err.message}`));
         }
