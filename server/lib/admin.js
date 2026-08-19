@@ -344,52 +344,16 @@ function createAdminRouter(ctx) {
       active: 'dashboard',
       body: `${hero}
       <section class="grid">
-        <a class="panel stat" href="${show ? `/admin/shows/${esc(show.slug)}` : '/admin/shows'}"><span class="stat-n">${episodeList.length - drafts}</span><span>published episode${episodeList.length - drafts === 1 ? '' : 's'}</span></a>
-        <a class="panel stat" href="${show ? `/admin/shows/${esc(show.slug)}` : '/admin/shows'}"><span class="stat-n">${drafts}</span><span>draft${drafts === 1 ? '' : 's'}</span></a>
+        <a class="panel stat" href="/admin/episodes"><span class="stat-n">${episodeList.length - drafts}</span><span>published episode${episodeList.length - drafts === 1 ? '' : 's'}</span></a>
+        <a class="panel stat" href="/admin/episodes"><span class="stat-n">${drafts}</span><span>draft${drafts === 1 ? '' : 's'}</span></a>
         <a class="panel stat" href="/admin/stats"><span class="stat-n">${stats ? Object.values(stats.data().totals).reduce((a, b) => a + b, 0) : 0}</span><span>downloads all time</span></a>
       </section>
       <p class="hint">Signed in as ${esc(user.email)}.</p>`,
     });
   }
 
-  function showsPage() {
-    const episodeList = episodes();
-    const rows = shows().map((show) => {
-      const count = episodeList.filter((e) => e.showId === show.id).length;
-      return `<tr>
-        <td><a href="/admin/shows/${esc(show.slug)}">${esc(show.name)}</a></td>
-        <td><a href="/shows/${esc(show.slug)}">/shows/${esc(show.slug)}</a></td>
-        <td>${count}</td>
-        <td class="actions">${deleteButton(`/admin/shows/${esc(show.slug)}/delete`, 'Delete show and its episodes')}</td>
-      </tr>`;
-    }).join('');
-    return adminPage({
-      title: 'Shows',
-      active: 'shows',
-      body: `<h1 class="page-title">Shows</h1>
-      <section class="panel">
-        <table>
-          <caption class="sr-only">All shows</caption>
-          <thead><tr><th>Show</th><th>Public page</th><th>Episodes</th><th></th></tr></thead>
-          <tbody>${rows || '<tr><td colspan="4" class="hint">No shows yet. Create the first one below.</td></tr>'}</tbody>
-        </table>
-      </section>
-      ${shows().length >= MAX_SHOWS
-        ? '<section class="panel"><p class="hint">This edition manages one podcast. Delete the existing show to start over.</p></section>'
-        : `<section class="panel">
-        <h2>New show</h2>
-        <form method="post" action="/admin/shows">
-          <label for="name">Name</label>
-          <input id="name" name="name" required maxlength="120">
-          <label for="description">Description</label>
-          <textarea id="description" name="description" rows="4" maxlength="2000"></textarea>
-          <button class="btn-primary" type="submit">Create show</button>
-        </form>
-      </section>`}`,
-    });
-  }
-
-  function showDetail(show, notice = '') {
+  // The Episodes page: the day-to-day work of adding and editing episodes.
+  function episodesPage(show, notice = '') {
     const items = episodes()
       .filter((e) => e.showId === show.id)
       .sort((a, b) => (a.date < b.date ? 1 : -1));
@@ -400,31 +364,29 @@ function createAdminRouter(ctx) {
       <td class="media-cell"><a href="/shows/${esc(show.slug)}/${esc(episode.slug || episode.id)}">page</a> &middot; <a href="/embed/${esc(episode.id)}">embed</a></td>
       <td class="actions">${deleteButton(`/admin/episodes/${esc(episode.id)}/delete`, 'Delete episode')}</td>
     </tr>`).join('');
+    const checks = feedChecks(show, items);
+    const failed = checks.filter(([, ok]) => !ok);
     return adminPage({
-      title: show.name,
-      active: 'shows',
-      body: `<h1 class="page-title">${esc(show.name)}</h1>
+      title: 'Episodes',
+      active: 'episodes',
+      body: `<h1 class="page-title">Episodes</h1>
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
-      <p class="hint">Public page: <a href="/shows/${esc(show.slug)}">/shows/${esc(show.slug)}</a>
-      &middot; RSS: <a href="/shows/${esc(show.slug)}/feed.xml">/shows/${esc(show.slug)}/feed.xml</a></p>
-      <div class="cols">
-      <div>
-      ${(() => {
-        const checks = feedChecks(show, items);
-        const failed = checks.filter(([, ok]) => !ok);
-        return `<section class="panel">
+      <p class="hint">${esc(show.name)} &middot; <a href="/shows/${esc(show.slug)}">public page</a>
+      &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
+      &middot; <a href="/admin/podcast">podcast details</a></p>
+
+      ${failed.length ? `<section class="panel">
         <h2>Feed check</h2>
-        <p class="hint">What Apple, Spotify and the rest look for before
-        they accept a podcast.</p>
+        <p class="hint">What Apple, Spotify and the rest look for before they accept a podcast.</p>
         <ul class="checks">
           ${checks.map(([label, ok, fix]) => `<li class="${ok ? 'check-ok' : 'check-bad'}">
             <span aria-hidden="true">${ok ? '&#10003;' : '!'}</span>
             <span>${esc(label)}${ok ? '' : ` &mdash; ${esc(fix)}`}</span>
           </li>`).join('')}
         </ul>
-        <p class="hint">${failed.length ? `${failed.length} to sort out before submitting.` : 'Ready to submit to the directories.'}</p>
-      </section>`;
-      })()}
+        <p class="hint">${failed.length} to sort out before submitting to the directories.</p>
+      </section>` : ''}
+
       <section class="panel">
         <h2>Episodes</h2>
         <table>
@@ -433,6 +395,9 @@ function createAdminRouter(ctx) {
           <tbody>${rows || '<tr><td colspan="4" class="hint">No episodes yet.</td></tr>'}</tbody>
         </table>
       </section>
+
+      <div class="cols">
+      <div>
       <section class="panel">
         <h2>New episode</h2>
         <form method="post" action="/admin/shows/${esc(show.slug)}/episodes">
@@ -454,13 +419,12 @@ function createAdminRouter(ctx) {
           <label for="mediaUrl">Or media URL (your own storage, archive.org, anywhere reachable)</label>
           <input id="mediaUrl" name="mediaUrl" maxlength="1000" placeholder="https://archive.org/download/...">
           <label for="epArt">Episode cover art (optional)</label>
-          <p class="hint">Square, <strong>3000 x 3000</strong> pixels, same
-          rules as the show artwork. Leave it empty and the episode uses
-          the show's artwork; players that support per-episode art will
-          show whichever applies.</p>
-          <input id="epArt" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="epArtwork" data-status="epart-status">
+          <p class="hint">Square, <strong>3000 x 3000</strong> pixels. Leave it
+          empty and the episode uses the show's artwork.</p>
+          <input id="epArt" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="epArtwork" data-status="epart-status" data-preview="epart-preview-img">
           <p class="hint" id="epart-status"></p>
           <input type="hidden" id="epArtwork" name="artwork" value="">
+          <img class="art-preview" id="epart-preview-img" alt="" src="" style="display:none">
           <label for="epDescription">Description</label>
           <textarea id="epDescription" name="description" rows="4" maxlength="4000"></textarea>
           <label class="check-label"><input type="checkbox" name="draft" value="1" class="check"> Save as draft (hidden from the public site and feed)</label>
@@ -469,8 +433,86 @@ function createAdminRouter(ctx) {
       </section>
       </div>
       <div>
+      <section class="panel">
+        <h2>Import from an existing feed</h2>
+        <p class="hint">Paste a podcast's RSS URL: every episode comes in
+        with its metadata (media stays at the old URLs until you
+        re-upload). Missing details are filled from the feed.</p>
+        <form method="post" action="/admin/shows/${esc(show.slug)}/import">
+          <label for="feedUrl">Feed URL</label>
+          <input id="feedUrl" name="feedUrl" type="url" required maxlength="1000" placeholder="https://example.com/feed.xml">
+          <button class="btn-primary" type="submit">Import episodes</button>
+        </form>
+      </section>
+      </div>
+      </div>`,
+    });
+  }
+
+  // The Podcast overview: large cards summarising the details, each
+  // opening the matching section of the edit page. The details are
+  // filled in once and rarely touched, so they live away from episodes.
+  function podcastPage(show) {
+    const links = show.links || {};
+    const linkNames = APPS.filter(([k]) => links[k]).map(([, label]) => label);
+    const card = (anchor, title, inner) => `<a class="panel detail-card" href="/admin/podcast/edit#sec-${anchor}">
+      <h2>${esc(title)}</h2>${inner}
+      <span class="detail-edit">Edit &rarr;</span>
+    </a>`;
+    const val = (v) => v ? esc(v) : '<span class="hint">not set</span>';
+    return adminPage({
+      title: 'Podcast',
+      active: 'podcast',
+      body: `<section class="panel hero show-hero">
+        ${show.artwork ? `<img class="show-art" src="${esc(show.artworkWeb || show.artwork)}" alt="" width="160" height="160">` : ''}
+        <div class="show-hero-text">
+          <h1>${esc(show.name)}</h1>
+          <p class="lede">${esc(show.description || 'No description yet.')}</p>
+          <p class="hint"><a href="/shows/${esc(show.slug)}">public page</a>
+          &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
+          &middot; <a href="/admin/episodes">episodes</a></p>
+        </div>
+      </section>
+      <section class="grid detail-grid">
+        ${card('basics', 'Basics', `<dl class="detail-list">
+          <div><dt>Category</dt><dd>${val(show.category)}</dd></div>
+          <div><dt>Language</dt><dd>${val(show.language)}</dd></div>
+          <div><dt>Type</dt><dd>${show.serial ? 'Serial' : 'Episodic'}</dd></div>
+        </dl>`)}
+        ${card('artwork', 'Artwork & banner', `<div class="detail-images">
+          ${show.artwork ? `<img src="${esc(show.artworkWeb || show.artwork)}" alt="" class="detail-thumb">` : '<span class="hint">No artwork</span>'}
+          ${show.banner ? `<img src="${esc(show.bannerWeb || show.banner)}" alt="" class="detail-thumb wide">` : '<span class="hint">No banner</span>'}
+        </div>`)}
+        ${card('ownership', 'Ownership', `<dl class="detail-list">
+          <div><dt>Owner</dt><dd>${val(show.ownerName)}</dd></div>
+          <div><dt>Email</dt><dd>${val(show.ownerEmail)}</dd></div>
+          <div><dt>Explicit</dt><dd>${show.explicit ? 'Yes' : 'No'}</dd></div>
+          <div><dt>Feed locked</dt><dd>${show.locked ? 'Yes' : 'No'}</dd></div>
+        </dl>`)}
+        ${card('listen', 'Listen on', linkNames.length
+          ? `<p>${linkNames.map((n) => esc(n)).join(', ')}</p>`
+          : '<p class="hint">RSS only so far. Add platform links after they list you.</p>')}
+        ${card('people', 'Funding & people', `<dl class="detail-list">
+          <div><dt>Funding</dt><dd>${val(show.funding && show.funding.label)}</dd></div>
+          <div><dt>People</dt><dd>${(show.persons || []).length || '<span class="hint">none</span>'}</dd></div>
+        </dl>`)}
+        ${card('guid', 'Feed identity', show.podcastGuid
+          ? '<p class="hint">Kept from an imported feed, so directories see the same show.</p>'
+          : '<p class="hint">New podcast. Set a feed GUID only when moving in from another host.</p>')}
+      </section>`,
+    });
+  }
+
+  // The Podcast edit page: the full form, grouped into the same cards.
+  function podcastEditPage(show, notice = '') {
+    return adminPage({
+      title: 'Edit podcast details',
+      active: 'podcast',
+      body: `<h1 class="page-title">Edit podcast details</h1>
+      <p class="hint"><a href="/admin/podcast">&larr; Back to overview</a></p>
+      ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
       <form method="post" action="/admin/shows/${esc(show.slug)}/settings">
-        <section class="panel">
+        <section class="panel" id="sec-basics">
           <h2>Basics</h2>
           <label for="sname">Name</label>
           <input id="sname" name="name" required maxlength="120" value="${esc(show.name)}">
@@ -495,7 +537,7 @@ function createAdminRouter(ctx) {
           </div>
         </section>
 
-        <section class="panel">
+        <section class="panel" id="sec-ownership">
           <h2>Ownership</h2>
           <div class="field-row">
             <div><label for="sowner">Owner name</label>
@@ -512,7 +554,7 @@ function createAdminRouter(ctx) {
           <label class="check-label"><input type="checkbox" name="locked" value="1" class="check"${show.locked ? ' checked' : ''}> Lock the feed (tells other hosts not to import it without permission)</label>
         </section>
 
-        <section class="panel">
+        <section class="panel" id="sec-artwork">
           <h2>Artwork &amp; banner</h2>
           <label for="sart">Podcast artwork</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels (Apple
@@ -533,7 +575,7 @@ function createAdminRouter(ctx) {
           <img class="banner-preview" id="banner-preview-img" alt="" src="${show.banner ? esc(show.bannerWeb || show.banner) : ''}"${show.banner ? '' : ' style="display:none"'}>
         </section>
 
-        <section class="panel">
+        <section class="panel" id="sec-people">
           <h2>Funding &amp; people</h2>
           <div class="field-row">
             <div><label for="sfundurl">Funding URL (donations, memberships)</label>
@@ -545,7 +587,7 @@ function createAdminRouter(ctx) {
           <textarea id="spersons" name="persons" rows="3">${esc((show.persons || []).map((p) => p.role ? `${p.name} | ${p.role}` : p.name).join('\n'))}</textarea>
         </section>
 
-        <section class="panel">
+        <section class="panel" id="sec-listen">
           <h2>Listen on</h2>
           <p class="hint">Paste the address of your show on each platform
           and its button appears on your pages. You get these after
@@ -555,7 +597,7 @@ function createAdminRouter(ctx) {
           <input id="link-${key}" name="link_${key}" type="url" maxlength="500" value="${esc((show.links || {})[key] || '')}" placeholder="https://">`).join('')}
         </section>
 
-        <section class="panel">
+        <section class="panel" id="sec-guid">
           <h2>Moving from another host</h2>
           <label for="sguid">Feed GUID</label>
           <p class="hint">Only when moving from another host. Directories
@@ -566,21 +608,30 @@ function createAdminRouter(ctx) {
           <input id="sguid" name="podcastGuid" maxlength="60" value="${esc(show.podcastGuid || '')}" placeholder="">
         </section>
 
-        <button class="btn-primary" type="submit">Save settings</button>
-      </form>
-      <section class="panel">
-        <h2>Import from an existing feed</h2>
-        <p class="hint">Paste a podcast's RSS URL: every episode comes in
-        with its metadata (media stays at the old URLs until you
-        re-upload). Missing show settings are filled from the feed.</p>
-        <form method="post" action="/admin/shows/${esc(show.slug)}/import">
-          <label for="feedUrl">Feed URL</label>
-          <input id="feedUrl" name="feedUrl" type="url" required maxlength="1000" placeholder="https://example.com/feed.xml">
-          <button class="btn-primary" type="submit">Import episodes</button>
-        </form>
+        <button class="btn-primary" type="submit">Save details</button>
+      </form>`,
+    });
+  }
+
+  // Shown when no podcast exists yet: the one-time create form.
+  function createPodcastPage() {
+    return adminPage({
+      title: 'Create your podcast',
+      active: 'podcast',
+      body: `<section class="panel hero">
+        <h1>Create your podcast</h1>
+        <p class="lede">Give it a name and a description to begin. You can
+        add artwork, a banner and everything else straight after.</p>
       </section>
-      </div>
-      </div>`,
+      <section class="panel">
+        <form method="post" action="/admin/shows">
+          <label for="name">Name</label>
+          <input id="name" name="name" required maxlength="120">
+          <label for="description">Description</label>
+          <textarea id="description" name="description" rows="4" maxlength="2000"></textarea>
+          <button class="btn-primary" type="submit">Create podcast</button>
+        </form>
+      </section>`,
     });
   }
 
@@ -608,9 +659,9 @@ function createAdminRouter(ctx) {
   function episodeEditPage(episode, show) {
     return adminPage({
       title: episode.title,
-      active: 'shows',
+      active: 'episodes',
       body: `<h1 class="page-title">Edit episode</h1>
-      <p class="hint"><a href="/admin/shows/${esc(show.slug)}">&larr; ${esc(show.name)}</a></p>
+      <p class="hint"><a href="/admin/episodes">&larr; Episodes</a></p>
       <section class="panel">
         <form method="post" action="/admin/episodes/${esc(episode.id)}">
           <label for="title">Title</label>
@@ -812,7 +863,25 @@ function createAdminRouter(ctx) {
     }
 
     if (p === '/admin' && req.method === 'GET') { html(res, dashboard(user)); return true; }
-    if (p === '/admin/shows' && req.method === 'GET') { html(res, showsPage()); return true; }
+    if (p === '/admin/episodes' && req.method === 'GET') {
+      const show = shows()[0];
+      if (!show) { redirect(res, '/admin/podcast'); return true; }
+      html(res, episodesPage(show));
+      return true;
+    }
+    if (p === '/admin/podcast' && req.method === 'GET') {
+      const show = shows()[0];
+      html(res, show ? podcastPage(show) : createPodcastPage());
+      return true;
+    }
+    if (p === '/admin/podcast/edit' && req.method === 'GET') {
+      const show = shows()[0];
+      if (!show) { redirect(res, '/admin/podcast'); return true; }
+      html(res, podcastEditPage(show));
+      return true;
+    }
+    // Old links keep working.
+    if (p === '/admin/shows' && req.method === 'GET') { redirect(res, '/admin/episodes'); return true; }
     if (p === '/admin/stats' && req.method === 'GET') { html(res, statsPage()); return true; }
     if (p === '/admin/account' && req.method === 'GET') { html(res, accountPage(user)); return true; }
 
@@ -820,9 +889,9 @@ function createAdminRouter(ctx) {
       const form = await formBody(req, readBody);
       const name = String(form.get('name') || '').trim().slice(0, 120);
       const description = String(form.get('description') || '').trim().slice(0, 2000);
-      if (!name) { redirect(res, '/admin/shows'); return true; }
+      if (!name) { redirect(res, '/admin/podcast'); return true; }
       const list = shows();
-      if (list.length >= MAX_SHOWS) { redirect(res, '/admin/shows'); return true; }
+      if (list.length >= MAX_SHOWS) { redirect(res, '/admin/podcast'); return true; }
       let slug = slugify(name);
       while (list.some((s) => s.slug === slug)) slug += '-2';
       list.push({
@@ -834,7 +903,7 @@ function createAdminRouter(ctx) {
         createdAt: new Date().toISOString(),
       });
       store.save('shows', list);
-      redirect(res, `/admin/shows/${slug}`);
+      redirect(res, '/admin/podcast');
       return true;
     }
 
@@ -865,12 +934,12 @@ function createAdminRouter(ctx) {
       if (!show) { html(res, adminPage({ title: 'Not found', body: '<p>Show not found.</p>' }), 404); return true; }
       const action = showMatch[2] || '';
 
-      if (!action && req.method === 'GET') { html(res, showDetail(show)); return true; }
+      if (!action && req.method === 'GET') { redirect(res, '/admin/episodes'); return true; }
 
       if (action === '/delete' && req.method === 'POST') {
         store.save('shows', shows().filter((s) => s.id !== show.id));
         store.save('episodes', episodes().filter((e) => e.showId !== show.id));
-        redirect(res, '/admin/shows');
+        redirect(res, '/admin/podcast');
         return true;
       }
 
@@ -905,7 +974,7 @@ function createAdminRouter(ctx) {
           measure(episode.id);
           refreshWebImages().catch(() => {});
         }
-        redirect(res, `/admin/shows/${show.slug}`);
+        redirect(res, '/admin/episodes');
         return true;
       }
 
@@ -951,7 +1020,7 @@ function createAdminRouter(ctx) {
         }
         store.save('shows', list);
         refreshWebImages().catch(() => {});
-        redirect(res, `/admin/shows/${show.slug}`);
+        redirect(res, '/admin/podcast');
         return true;
       }
 
@@ -992,9 +1061,9 @@ function createAdminRouter(ctx) {
           // The old feed's identity moves with the episodes.
           if (!entry.podcastGuid && channel.podcastGuid) entry.podcastGuid = channel.podcastGuid;
           store.save('shows', showList);
-          html(res, showDetail(entry, `Imported ${imported} episode${imported === 1 ? '' : 's'} from the feed.`));
+          html(res, episodesPage(entry, `Imported ${imported} episode${imported === 1 ? '' : 's'} from the feed.`));
         } catch (err) {
-          html(res, showDetail(show, `Import failed: ${err.message}`));
+          html(res, episodesPage(show, `Import failed: ${err.message}`));
         }
         return true;
       }
@@ -1003,12 +1072,12 @@ function createAdminRouter(ctx) {
     const episodeMatch = p.match(/^\/admin\/episodes\/([a-f0-9-]+)(\/delete)?$/);
     if (episodeMatch) {
       const episode = episodes().find((e) => e.id === episodeMatch[1]);
-      if (!episode) { redirect(res, '/admin/shows'); return true; }
+      if (!episode) { redirect(res, '/admin/episodes'); return true; }
       const show = shows().find((s) => s.id === episode.showId);
 
       if (episodeMatch[2] === '/delete' && req.method === 'POST') {
         store.save('episodes', episodes().filter((e) => e.id !== episode.id));
-        redirect(res, req.headers.referer || '/admin/shows');
+        redirect(res, req.headers.referer || '/admin/episodes');
         return true;
       }
       if (!episodeMatch[2] && req.method === 'GET') {
@@ -1045,7 +1114,7 @@ function createAdminRouter(ctx) {
         store.save('episodes', list);
         measure(entry.id);
         refreshWebImages().catch(() => {});
-        redirect(res, `/admin/shows/${show.slug}`);
+        redirect(res, '/admin/episodes');
         return true;
       }
     }
