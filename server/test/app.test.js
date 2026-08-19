@@ -108,6 +108,17 @@ test('create a show, publish an episode, see both publicly', async () => {
   assert.ok(feed.includes('type="audio/mpeg"'));
 });
 
+test('the episode edit page and the home page render', async () => {
+  const list = JSON.parse(fs.readFileSync(path.join(DATA, 'episodes.json'), 'utf8'));
+  const editRes = await fetch(`${BASE}/admin/episodes/${list[0].id}`, { headers: { cookie } });
+  assert.strictEqual(editRes.status, 200);
+  assert.ok((await editRes.text()).includes('Edit episode'));
+
+  const home = await (await fetch(`${BASE}/`)).text();
+  assert.ok(home.includes('Test Show'));
+  assert.ok(home.includes('Episode One'));
+});
+
 test('a second show is refused (this edition manages one podcast)', async () => {
   const res = await fetch(`${BASE}/admin/shows`, form({
     name: 'Second Show', description: 'One too many.',

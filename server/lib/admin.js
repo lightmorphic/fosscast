@@ -562,6 +562,50 @@ function createAdminRouter(ctx) {
   }
 
 
+  function episodeEditPage(episode, show) {
+    return adminPage({
+      title: episode.title,
+      active: 'shows',
+      body: `<h1 class="page-title">Edit episode</h1>
+      <p class="hint"><a href="/admin/shows/${esc(show.slug)}">&larr; ${esc(show.name)}</a></p>
+      <section class="panel">
+        <form method="post" action="/admin/episodes/${esc(episode.id)}">
+          <label for="title">Title</label>
+          <input id="title" name="title" required maxlength="200" value="${esc(episode.title)}">
+          <div class="field-row">
+            <div><label for="date">Date</label>
+            <input id="date" name="date" type="date" required value="${esc(episode.date)}"></div>
+            <div><label for="epnum">Episode #</label>
+            <input id="epnum" name="episode" type="number" min="1" value="${episode.episode || ''}"></div>
+            <div><label for="season">Season</label>
+            <input id="season" name="season" type="number" min="1" value="${episode.season || ''}"></div>
+            <div><label for="eptype">Type</label>
+            <select id="eptype" name="type">${['full', 'trailer', 'bonus'].map((t) => `<option value="${t}"${(episode.type || 'full') === t ? ' selected' : ''}>${t[0].toUpperCase()}${t.slice(1)}</option>`).join('')}</select></div>
+          </div>
+          <label for="mediaUrl">Media URL</label>
+          <input id="mediaUrl" name="mediaUrl" maxlength="1000" value="${esc(episode.mediaUrl)}">
+          <label for="epDescription">Description</label>
+          <textarea id="epDescription" name="description" rows="4" maxlength="4000">${esc(episode.description)}</textarea>
+          <label for="epArt">Episode cover art (optional)</label>
+          <p class="hint">Square, <strong>3000 x 3000</strong> pixels. Empty
+          means the show's artwork is used.</p>
+          <input id="epArt" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="epArtwork" data-status="epart-status">
+          <p class="hint" id="epart-status">${episode.artwork ? `Current: ${esc(episode.artwork)}` : "Using the show's artwork."}</p>
+          <input type="hidden" id="epArtwork" name="artwork" value="${esc(episode.artwork || '')}">
+          ${episode.artwork ? `<img class="art-preview" src="${esc(episode.artwork)}" alt="Episode artwork" width="120" height="120">` : ''}
+          <label for="transcriptFile">Transcript (.vtt, .srt, .txt or .json; podcast apps show it)</label>
+          <input id="transcriptFile" type="file" accept=".vtt,.srt,.txt,.json,.html" data-upload data-show="${esc(show.slug)}" data-target="transcript" data-status="tr-status">
+          <p class="hint" id="tr-status">${episode.transcript ? `Current: ${esc(episode.transcript)}` : 'None yet.'}</p>
+          <input type="hidden" id="transcript" name="transcript" value="${esc(episode.transcript || '')}">
+          <label for="chapters">Chapters (one per line: HH:MM:SS Title)</label>
+          <textarea id="chapters" name="chapters" rows="5" placeholder="00:00 Intro&#10;05:30 The main topic">${esc(formatChapters(episode.chapters))}</textarea>
+          <label class="check-label"><input type="checkbox" name="draft" value="1" class="check"${episode.draft ? ' checked' : ''}> Draft (hidden from the public site and feed)</label>
+          <button class="btn-primary" type="submit">Save episode</button>
+        </form>
+      </section>`,
+    });
+  }
+
   function accountPage(user, message = '', error = '') {
     return adminPage({
       title: 'Account',
