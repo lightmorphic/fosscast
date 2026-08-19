@@ -112,7 +112,7 @@ test('the episode edit page and the home page render', async () => {
   const list = JSON.parse(fs.readFileSync(path.join(DATA, 'episodes.json'), 'utf8'));
   const editRes = await fetch(`${BASE}/admin/episodes/${list[0].id}`, { headers: { cookie } });
   assert.strictEqual(editRes.status, 200);
-  assert.ok((await editRes.text()).includes('Edit episode'));
+  assert.ok((await editRes.text()).includes('Edit show'));
 
   const home = await (await fetch(`${BASE}/`)).text();
   assert.ok(home.includes('Test Show'));
