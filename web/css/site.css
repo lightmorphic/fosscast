@@ -612,3 +612,19 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
 .check-ok > span:first-child { color: var(--success); }
 .check-bad > span:first-child { color: var(--warning); }
 .check-bad { color: var(--muted-fg); }
+
+/* ---------- Public pages: minimal, unbranded chrome ---------- */
+/* The show's site is theirs. Just a theme toggle up top, and a small
+   FOSSCast mark bottom-right linking home. */
+.top-minimal { justify-content: flex-end; }
+.foot-minimal {
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0;
+  padding: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.powered-by { display: inline-flex; line-height: 0; color: var(--muted-fg); }
+.powered-by:hover { color: var(--accent); }
+.powered-by svg { width: 1.4rem; height: 1.4rem; }

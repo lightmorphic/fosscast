@@ -178,6 +178,7 @@ function showPage(show, allEpisodes, domain) {
     title: `${show.name} - FOSSCast`,
     description: show.description,
     image: show.banner || show.artwork || '',
+    icon: showArtWeb(show),
     body: `
   ${show.banner ? `<div class="show-banner"><img src="${esc(showBannerWeb(show))}" alt=""></div>` : ''}
   <section class="panel hero show-hero">
@@ -214,6 +215,7 @@ function episodePage(show, episode, domain) {
     title: `${episode.title} - ${show.name}`,
     description: episode.description || `An episode of ${show.name}.`,
     image: art ? absolute(art, domain) : '',
+    icon: showArtWeb(show),
     body: `
   <article class="panel episode-page">
     <div class="episode-head">
