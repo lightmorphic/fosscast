@@ -25,6 +25,9 @@ dashboard tying it all together.
   podcast apps can subscribe to. Media files can live on FOSSCast's
   own storage or anywhere else reachable by URL, including
   archive.org.
+- **The people on it**: every host gets a photo, a role and a write-up,
+  a card on the site's Hosts page and a page of their own -- and goes
+  out in the feed so apps can put a face to a voice.
 - **Directory-grade feeds**: full iTunes namespace plus Podcasting 2.0
   transcripts, chapters, people and funding tags.
 - **Publish API**: a studio pushes finished recordings straight in as
@@ -152,6 +155,7 @@ tags above only cover apps that subscribe to the feed directly.
 | Podcast artwork | **3000 x 3000** square | JPG or PNG, RGB. Apple accepts 1400 x 1400 upwards; 3000 is the safe maximum every directory takes. Keep it under about 500 KB. |
 | Episode cover art | **3000 x 3000** square | Optional per episode. Apps that support per-episode art show it; the rest fall back to the podcast artwork, and so does this site. |
 | Website banner | **2560 x 640** (4:1) | JPG, PNG or WebP. 1920 x 480 is fine. Edges crop on narrow screens, so keep anything important central. |
+| Host photo | **800 x 800** square | Anything from 400 x 400 up. Shrunk to a 640px copy for the site; the file you upload is kept as it is. |
 
 Every episode always displays artwork: its own if it has some, the
 show's otherwise, on the site, in the embedded player and in the feed.

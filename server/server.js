@@ -227,6 +227,20 @@ const server = http.createServer((req, res) => {
     return sendHtml(res, publicSite.showPage(show, items, DOMAIN));
   }
 
+  // The hosts pages: the team as cards, and one page each. The instance
+  // holds a single podcast, so these sit at the top level rather than
+  // under the show's slug.
+  const hostsMatch = p.match(/^\/hosts(?:\/([a-z0-9][a-z0-9-]*))?$/);
+  if (hostsMatch) {
+    const show = store.load('shows', [])[0];
+    if (!show) return send(res, 404, 'not found');
+    if (!hostsMatch[1]) return sendHtml(res, publicSite.hostsPage(show, DOMAIN));
+    const host = publicSite.hosts(show)
+      .find((h) => publicSite.hostSlug(h) === hostsMatch[1] || h.id === hostsMatch[1]);
+    if (!host) return send(res, 404, 'not found');
+    return sendHtml(res, publicSite.hostPage(show, host, DOMAIN));
+  }
+
   const chaptersMatch = p.match(/^\/api\/v1\/episodes\/([a-f0-9-]+)\/chapters\.json$/);
   if (chaptersMatch) {
     const episode = store.load('episodes', []).find((e) => e.id === chaptersMatch[1]);

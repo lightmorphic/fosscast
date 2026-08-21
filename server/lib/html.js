@@ -20,7 +20,17 @@ const ICONS = {
   logout: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><path d="M16 17l5-5-5-5"/><path d="M21 12H9"/></svg>',
 };
 
-function publicPage({ title, description, body, image, icon }) {
+// The public site is more than one page now (the show, its episodes, the
+// hosts), so the header carries a small menu. It stays the show's own:
+// the only FOSSCast mark on the page is the one in the footer.
+function siteMenu(nav = []) {
+  if (!nav.length) return '';
+  return `<nav class="site-nav">${nav
+    .map(([href, label, current]) => `<a class="site-link${current ? ' current' : ''}"${current ? ' aria-current="page"' : ''} href="${esc(href)}">${esc(label)}</a>`)
+    .join('')}</nav>`;
+}
+
+function publicPage({ title, description, body, image, icon, nav = [] }) {
   return `<!doctype html>
 <html lang="en" data-accent="deep_orange">
 <head>
@@ -37,7 +47,8 @@ ${image ? `<meta property="og:image" content="${esc(image)}">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body>
-<header class="top top-minimal">
+<header class="top top-minimal${nav.length ? ' top-nav' : ''}">
+  ${siteMenu(nav)}
   <button class="btn-icon theme-toggle" type="button" id="theme-toggle" data-tip="Light or dark" aria-label="Switch between light and dark">
     <span class="icon-light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg></span>
     <span class="icon-dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.8 6.8 0 0 0 9.5 9.5z"/></svg></span>
@@ -142,7 +153,7 @@ document.addEventListener('click', (e) => {
 function adminPage({ title, body, active = '', authed = true }) {
   const nav = authed
     ? `<nav class="admin-nav">
-        ${[['', 'Dashboard'], ['podcast', 'Podcast'], ['episodes', 'Shows'], ['stats', 'Stats'], ['account', 'Account']]
+        ${[['', 'Dashboard'], ['podcast', 'Podcast'], ['hosts', 'Hosts'], ['episodes', 'Shows'], ['stats', 'Stats'], ['account', 'Account']]
           .map(([slug, label]) => `<a class="admin-link${active === (slug || 'dashboard') || (active === '' && slug === '') ? ' current' : ''}" href="/admin${slug ? '/' + slug : ''}">${label}</a>`)
           .join('')}
         <button class="btn-icon theme-toggle" type="button" id="theme-toggle" data-tip="Light or dark" aria-label="Switch between light and dark">
