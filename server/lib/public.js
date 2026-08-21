@@ -82,6 +82,47 @@ const APPS = [
   ['podcastindex', 'Podcast Index', '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 0 0-4 19.2V16a4 4 0 1 1 8 0v5.2A10 10 0 0 0 12 2zm0 6a2 2 0 1 1 0 4 2 2 0 0 1 0-4z"/></svg>'],
 ];
 
+// Where listeners can chip in. Each entry is the service, where to sign
+// up with them, and what a finished link looks like, so the admin form
+// can hand someone straight to the sign-up rather than leaving them to
+// find it. Icons are plain glyphs drawn here, not brand logos: nothing
+// is fetched from anyone and no one's trademark is copied.
+const HEART_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 21s-7.5-4.7-9.3-9A5.2 5.2 0 0 1 12 6.6a5.2 5.2 0 0 1 9.3 5.4C19.5 16.3 12 21 12 21z"/></svg>';
+const CUP_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 6h12v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5V6zm13 1h1.6a2.9 2.9 0 0 1 0 5.8H17V7zM3 19h14v2H3z"/></svg>';
+const COIN_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm.9 15.4v1.2h-1.6v-1.2a4.4 4.4 0 0 1-2.6-1.1l.9-1.4a3.6 3.6 0 0 0 2.3.9c.9 0 1.5-.4 1.5-1.1 0-.6-.4-1-1.6-1.4-1.7-.6-2.8-1.3-2.8-2.8 0-1.3.9-2.3 2.3-2.6V6.4h1.6v1.4c.9.1 1.6.4 2.1.8l-.8 1.4a3.3 3.3 0 0 0-1.9-.7c-.9 0-1.3.5-1.3 1 0 .6.5.9 1.8 1.4 1.8.6 2.6 1.4 2.6 2.8 0 1.3-.9 2.5-2.5 2.9z"/></svg>';
+const HANDS_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M7 10a3 3 0 1 1 0-6 3 3 0 0 1 0 6zm10 0a3 3 0 1 1 0-6 3 3 0 0 1 0 6zM2 20v-1.5C2 15.9 4.2 14 7 14s5 1.9 5 4.5V20H2zm11 0v-1.5c0-1.4-.5-2.6-1.3-3.6.5-.2 1.1-.3 1.7-.3 2.8 0 5 1.9 5 4.5V20h-5.4z"/></svg>';
+
+const SUPPORT = [
+  ['patreon', 'Patreon', 'https://www.patreon.com/create', 'https://www.patreon.com/yourshow', HEART_ICON],
+  ['buymeacoffee', 'Buy Me a Coffee', 'https://buymeacoffee.com/signup', 'https://buymeacoffee.com/yourshow', CUP_ICON],
+  ['kofi', 'Ko-fi', 'https://ko-fi.com/signup', 'https://ko-fi.com/yourshow', CUP_ICON],
+  ['liberapay', 'Liberapay', 'https://liberapay.com/sign-up', 'https://liberapay.com/yourshow', HEART_ICON],
+  ['githubsponsors', 'GitHub Sponsors', 'https://github.com/sponsors', 'https://github.com/sponsors/you', HEART_ICON],
+  ['opencollective', 'Open Collective', 'https://opencollective.com/create', 'https://opencollective.com/yourshow', HANDS_ICON],
+  ['paypal', 'PayPal', 'https://www.paypal.com/paypalme/grab', 'https://www.paypal.me/yourshow', COIN_ICON],
+];
+
+// Everything a listener can pay through: the services above, plus the
+// funding URL typed in by hand.
+function supportLinks(show) {
+  const support = show.support || {};
+  const list = SUPPORT.filter(([key]) => support[key])
+    .map(([key, label, , , icon]) => ({ url: support[key], label, icon }));
+  if (show.funding && show.funding.url) {
+    list.push({ url: show.funding.url, label: show.funding.label || 'Support the show', icon: COIN_ICON });
+  }
+  return list;
+}
+
+function supportRow(show) {
+  const list = supportLinks(show);
+  if (!list.length) return '';
+  return `<div class="subscribe support">
+    <span class="sub-label">Support the show</span>
+    ${list.map((l) => `<a class="sub-btn" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${l.icon}<span>${esc(l.label)}</span></a>`).join('')}
+  </div>`;
+}
+
 const RSS_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 3c8.8 0 16 7.2 16 16h-3C18 11.8 12.2 6 5 6V3zm0 6c5.5 0 10 4.5 10 10h-3c0-3.9-3.1-7-7-7V9zm1.5 6a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/></svg>';
 
 function subscribeRow(show, domain) {
@@ -299,6 +340,7 @@ function showPage(show, allEpisodes, domain) {
     <h1>${esc(show.name)}</h1>
     <p class="lede">${esc(show.description)}</p>
     ${subscribeRow(show, domain)}
+    ${supportRow(show)}
     <p class="feed-line">Paste this into any app: <code>https://${esc(domain)}/shows/${esc(show.slug)}/feed.xml</code></p>
     </div>
   </section>
@@ -449,7 +491,7 @@ function feed(show, episodes, domain) {
     ${show.category ? `<itunes:category text="${escXml(show.category)}"/>` : ''}
     <itunes:explicit>${show.explicit ? 'true' : 'false'}</itunes:explicit>
     <podcast:locked${owner ? ` owner="${escXml(owner)}"` : ''}>${show.locked ? 'yes' : 'no'}</podcast:locked>
-    ${show.funding && show.funding.url ? `<podcast:funding url="${escXml(show.funding.url)}">${escXml(show.funding.label || 'Support the show')}</podcast:funding>` : ''}
+    ${supportLinks(show).map((l) => `<podcast:funding url="${escXml(l.url)}">${escXml(l.label)}</podcast:funding>`).join('\n    ')}
     ${personTags(show, domain)}
     ${items}
   </channel>
@@ -481,4 +523,4 @@ function embedPage(show, episode) {
 `;
 }
 
-module.exports = { landing, showsIndex, showPage, episodePage, hostsPage, hostPage, hosts, hostSlug, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, slugify, APPS };
+module.exports = { landing, showsIndex, showPage, episodePage, hostsPage, hostPage, hosts, hostSlug, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, supportRow, supportLinks, slugify, APPS, SUPPORT };

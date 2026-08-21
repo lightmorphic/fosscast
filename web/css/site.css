@@ -738,3 +738,15 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
   .host-row { flex-wrap: wrap; }
   .host-row-actions { width: 100%; justify-content: flex-end; }
 }
+
+/* ---------- Funding services ---------- */
+/* The sign-up nudge beside a service's field, and the support row on
+   the show page: same buttons as "Listen on", one row down. */
+.hint-link {
+  margin-left: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--muted-fg);
+}
+.hint-link:hover { color: var(--accent); }
+.support { margin-top: 0.75rem; }
