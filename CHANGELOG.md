@@ -4,6 +4,26 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- A Look tab: the public site is the podcaster's, so its appearance is
+  theirs to set. Fourteen preset colours or any hex code you like (with
+  a colour picker), and every other shade -- hovers, tags, soft
+  backgrounds, light and dark alike -- is derived from the one you pick.
+  Backgrounds can be plain, a colour, a gradient at any angle, or an
+  uploaded image with dimming, blur, tile-or-fill and fixed-or-scrolling.
+  Cards can be solid, outlined or glass, with corners from square to very
+  round. Five type choices, three page widths, three episode layouts, a
+  full-bleed banner, a forced light or dark mode with the switch
+  optional, a tagline, your own footer line, and a custom CSS box for
+  anything else. A preview beside the controls is the real front page,
+  re-rendered by the server as you go, so nothing has to be saved to see
+  it -- and one button puts everything back.
+- Surfaces follow the background: pick a pale background and the cards
+  turn light with dark text even for a visitor whose device is set to
+  dark mode, and the other way round. No unreadable combinations.
+- Custom CSS can style anything but cannot reach off the box: imports
+  and remote URLs are stripped, so a themed page still calls out to
+  nobody.
+
 - Removing a host is the same small trash icon as everywhere else,
   sitting in the bottom right corner of their page rather than a whole
   card shouting about it. First click arms it, second click removes.

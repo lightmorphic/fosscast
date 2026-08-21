@@ -208,6 +208,64 @@ test('funding services show as buttons and as feed funding links', async () => {
   assert.ok(admin.includes('Memberships'));
 });
 
+test('the look: colours, background, type and words of your own', async () => {
+  // Unthemed, the public page carries no style block at all.
+  let page = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(!page.includes('<style>'), 'no theme, no cost');
+
+  let res = await fetch(`${BASE}/admin/look`, form({
+    accent: '#e91e63',
+    bgMode: 'gradient', bgColor: '#1e1b4b', bgColor2: '#831843', bgAngle: '200',
+    panel: 'glass', radius: '4', font: 'serif', width: 'wide',
+    episodes: 'compact', mode: 'dark', tagline: 'Two nerds, one microphone',
+    footer: '(c) 2026 Test Show', css: '.lede { font-style: italic; }',
+  }));
+  assert.strictEqual(res.status, 200);
+
+  page = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(page.includes('--accent-light: #e91e63'), 'the chosen colour leads the palette');
+  assert.ok(page.includes('--accent-dark:'), 'and a dark-mode shade is derived from it');
+  assert.ok(page.includes('linear-gradient(200deg, #1e1b4b, #831843)'));
+  assert.ok(page.includes('backdrop-filter'), 'glass cards');
+  assert.ok(page.includes('--panel-radius: 4px'));
+  assert.ok(page.includes('Georgia'));
+  assert.ok(page.includes('max-width: 76rem'));
+  assert.ok(page.includes('data-theme="dark"'), 'a fixed mode is set on the page itself');
+  assert.ok(page.includes('Two nerds, one microphone'));
+  assert.ok(page.includes('(c) 2026 Test Show'));
+  assert.ok(page.includes('.lede { font-style: italic; }'), 'custom CSS is kept');
+
+  // The look reaches every page of the site, not just the front one.
+  assert.ok((await (await fetch(`${BASE}/hosts`)).text()).includes('--accent-light: #e91e63'));
+
+  // Anything that would phone out is stripped, and nothing can break out
+  // of the style element.
+  res = await fetch(`${BASE}/admin/look`, form({
+    accent: '#e91e63', bgMode: 'default', panel: 'solid', radius: '22',
+    font: 'manrope', width: 'standard', episodes: 'row', mode: 'auto', toggle: '1',
+    css: '@import url(https://evil.example/x.css); body { background: url("https://evil.example/pixel.png"); } </style><script>alert(1)</script>',
+  }));
+  assert.strictEqual(res.status, 200);
+  page = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(!page.includes('evil.example'), 'no off-site fetches survive');
+  assert.ok(!page.includes('<script>alert'), 'no breaking out of the style element');
+
+  // The preview renders the pending look without saving it.
+  const preview = await (await fetch(`${BASE}/admin/look/preview`, form({
+    accent: '#16a34a', bgMode: 'default', panel: 'outline', radius: '0',
+    font: 'mono', width: 'narrow', episodes: 'row', mode: 'light',
+  }))).text();
+  assert.ok(preview.includes('--accent-light: #16a34a'));
+  page = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(!page.includes('#16a34a'), 'the preview changed nothing');
+
+  // And it can all be put back.
+  res = await fetch(`${BASE}/admin/look`, form({ reset: '1' }));
+  assert.strictEqual(res.status, 200);
+  page = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(!page.includes('<style>'), 'default look leaves no trace');
+});
+
 test('a second show is refused (this edition manages one podcast)', async () => {
   const res = await fetch(`${BASE}/admin/shows`, form({
     name: 'Second Show', description: 'One too many.',

@@ -265,6 +265,8 @@ function hostsPage(show, domain) {
     image: show.banner || show.artwork || '',
     icon: showArtWeb(show),
     nav: siteNav(show, 'hosts'),
+    theme: show.theme,
+    footer: (show.theme || {}).footer || '',
     body: `
   <section class="panel hero hosts-hero">
     <h1>Hosts</h1>
@@ -285,6 +287,8 @@ function hostPage(show, host, domain) {
     image: photo ? absolute(host.photo || photo, domain) : (show.artwork || ''),
     icon: showArtWeb(show),
     nav: siteNav(show, 'hosts'),
+    theme: show.theme,
+    footer: (show.theme || {}).footer || '',
     body: `
   <article class="panel host-page">
     <div class="host-head">
@@ -332,12 +336,15 @@ function showPage(show, allEpisodes, domain) {
     image: show.banner || show.artwork || '',
     icon: showArtWeb(show),
     nav: siteNav(show, 'home'),
+    theme: show.theme,
+    footer: (show.theme || {}).footer || '',
     body: `
   ${show.banner ? `<div class="show-banner"><img src="${esc(showBannerWeb(show))}" alt=""></div>` : ''}
   <section class="panel hero show-hero">
     ${show.artwork ? `<img class="show-art" src="${esc(showArtWeb(show))}" alt="${esc(show.name)} artwork" width="160" height="160">` : ''}
     <div class="show-hero-text">
     <h1>${esc(show.name)}</h1>
+    ${(show.theme || {}).tagline ? `<p class="tagline">${esc(show.theme.tagline)}</p>` : ''}
     <p class="lede">${esc(show.description)}</p>
     ${subscribeRow(show, domain)}
     ${supportRow(show)}
@@ -371,6 +378,8 @@ function episodePage(show, episode, domain) {
     image: art ? absolute(art, domain) : '',
     icon: showArtWeb(show),
     nav: siteNav(show),
+    theme: show.theme,
+    footer: (show.theme || {}).footer || '',
     body: `
   <article class="panel episode-page">
     <div class="episode-head">
