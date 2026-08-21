@@ -605,14 +605,9 @@ function createAdminRouter(ctx) {
           <p><button class="btn-primary" type="submit">Save host</button></p>
         </section>
       </form>
-      <section class="panel">
-        <h2>Remove</h2>
-        <p class="hint">Their card and page go; nothing else about the
-        podcast changes.</p>
-        <form method="post" action="/admin/hosts/${esc(host.id)}/delete">
-          <button class="btn-danger btn-confirm" type="submit">${ICONS.trash}<span>Remove ${esc(host.name)}</span></button>
-        </form>
-      </section>`,
+      <div class="page-actions">
+        ${deleteButton(`/admin/hosts/${esc(host.id)}/delete`, `Remove ${host.name}`)}
+      </div>`,
     });
   }
 
