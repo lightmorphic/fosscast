@@ -25,6 +25,9 @@ dashboard tying it all together.
   podcast apps can subscribe to. Media files can live on FOSSCast's
   own storage or anywhere else reachable by URL, including
   archive.org.
+- **Getting paid**: Patreon, Buy Me a Coffee, Ko-fi, Liberapay, GitHub
+  Sponsors, Open Collective and PayPal links become buttons on the show
+  page and `podcast:funding` tags in the feed.
 - **The people on it**: every host gets a photo, a role and a write-up,
   a card on the site's Hosts page and a page of their own -- and goes
   out in the feed so apps can put a face to a voice.
