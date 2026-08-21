@@ -750,3 +750,7 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
 }
 .hint-link:hover { color: var(--accent); }
 .support { margin-top: 0.75rem; }
+
+/* A page's own destructive action: small, out of the way, bottom right,
+   and it still takes the second click every delete here takes. */
+.page-actions { display: flex; justify-content: flex-end; }

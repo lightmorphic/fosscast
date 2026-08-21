@@ -4,6 +4,10 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Removing a host is the same small trash icon as everywhere else,
+  sitting in the bottom right corner of their page rather than a whole
+  card shouting about it. First click arms it, second click removes.
+
 - Memberships and tips: a panel under Funding on the podcast page holds
   Patreon, Buy Me a Coffee, Ko-fi, Liberapay, GitHub Sponsors, Open
   Collective and PayPal, each with a sign-up link straight to the
