@@ -25,6 +25,10 @@ dashboard tying it all together.
   podcast apps can subscribe to. Media files can live on FOSSCast's
   own storage or anywhere else reachable by URL, including
   archive.org.
+- **Their site, their look**: a Look tab sets the colour (presets or any
+  hex), background (colour, gradient or image), card style, corners,
+  type, width, episode layout, light/dark, tagline, footer and custom
+  CSS, with a live preview of the real page.
 - **Getting paid**: Patreon, Buy Me a Coffee, Ko-fi, Liberapay, GitHub
   Sponsors, Open Collective and PayPal links become buttons on the show
   page and `podcast:funding` tags in the feed.

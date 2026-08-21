@@ -30,9 +30,14 @@ function siteMenu(nav = []) {
     .join('')}</nav>`;
 }
 
-function publicPage({ title, description, body, image, icon, nav = [] }) {
+function publicPage({ title, description, body, image, icon, nav = [], theme = null, footer = '' }) {
+  const look = theme ? require('./theme').normalise(theme) : null;
+  // A fixed light or dark choice is the operator's; "auto" leaves it to
+  // the visitor's own device and their toggle.
+  const forced = look && look.mode !== 'auto' ? look.mode : '';
+  const showToggle = !look || look.toggle;
   return `<!doctype html>
-<html lang="en" data-accent="deep_orange">
+<html lang="en" data-accent="deep_orange"${forced ? ` data-theme="${forced}"` : ''}>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -44,26 +49,29 @@ function publicPage({ title, description, body, image, icon, nav = [] }) {
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
 <link rel="stylesheet" href="/css/site.css?v=0.4.1">
-<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+${look ? require('./theme').styleTag(look) : ''}
+${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
 <body>
 <header class="top top-minimal${nav.length ? ' top-nav' : ''}">
   ${siteMenu(nav)}
-  <button class="btn-icon theme-toggle" type="button" id="theme-toggle" data-tip="Light or dark" aria-label="Switch between light and dark">
+  ${!showToggle ? '' : `<button class="btn-icon theme-toggle" type="button" id="theme-toggle" data-tip="Light or dark" aria-label="Switch between light and dark">
     <span class="icon-light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg></span>
     <span class="icon-dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.8 6.8 0 0 0 9.5 9.5z"/></svg></span>
-  </button>
+  </button>`}
 </header>
 <main class="wrap">
 ${body}
 </main>
 <footer class="foot foot-minimal">
+  ${footer ? `<p class="foot-own">${esc(footer)}</p>` : ''}
   <a class="powered-by" href="https://fosscast.org" target="_blank" rel="noopener noreferrer" aria-label="Powered by FOSSCast">
     <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
   </a>
 </footer>
 <script>
-document.getElementById('theme-toggle').addEventListener('click', function () {
+var toggle = document.getElementById('theme-toggle');
+if (toggle) toggle.addEventListener('click', function () {
   var root = document.documentElement;
   var now = root.getAttribute('data-theme');
   if (!now) now = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
@@ -119,6 +127,71 @@ document.addEventListener('change', (e) => {
     else { status.textContent = 'Upload failed: ' + (d.error || 'unknown error'); }
   }).catch(() => { status.textContent = 'Upload failed.'; });
 });
+// The Look page: swatches, live labels, fields that appear only when
+// they apply, and a preview that is the real page rendered by the
+// server with the pending theme - so it cannot drift from the result.
+(function look() {
+  const form = document.getElementById('look-form');
+  const frame = document.getElementById('look-preview');
+  if (!form) return;
+  const hex = document.getElementById('accent-hex');
+  const picker = document.getElementById('accent-pick');
+
+  function relevant() {
+    const mode = form.querySelector('input[name=bgMode]:checked');
+    const which = mode ? mode.value : 'default';
+    form.querySelectorAll('.bg-colors').forEach((el) => {
+      el.style.display = which === 'solid' || which === 'gradient' ? '' : 'none';
+    });
+    form.querySelectorAll('.bg-image-fields').forEach((el) => {
+      el.style.display = which === 'image' ? '' : 'none';
+    });
+    form.querySelectorAll('.pick').forEach((p) => {
+      const input = p.querySelector('input');
+      p.classList.toggle('current', input.checked);
+    });
+  }
+
+  function labels() {
+    const set = (id, text) => { const el = form.querySelector('label[for=' + id + ']'); if (el) el.firstChild.textContent = text; };
+    set('radius', 'Corners (' + form.radius.value + 'px) ');
+    set('bg-dim', 'Dim it (' + form.bgDim.value + '%) ');
+    set('bg-blur', 'Blur (' + form.bgBlur.value + 'px) ');
+  }
+
+  let timer;
+  function preview() {
+    if (!frame) return;
+    clearTimeout(timer);
+    timer = setTimeout(() => {
+      fetch('/admin/look/preview', { method: 'POST', body: new URLSearchParams(new FormData(form)) })
+        .then((r) => r.text())
+        .then((html) => { frame.srcdoc = html; })
+        .catch(() => {});
+    }, 220);
+  }
+
+  form.addEventListener('input', () => { relevant(); labels(); preview(); });
+  form.addEventListener('change', () => { relevant(); labels(); preview(); });
+
+  form.querySelectorAll('.swatch').forEach((sw) => {
+    sw.addEventListener('click', () => {
+      const value = sw.dataset.accent;
+      hex.value = value;
+      if (picker) picker.value = value;
+      form.querySelectorAll('.swatch').forEach((s) => s.classList.toggle('current', s === sw));
+      preview();
+    });
+  });
+  if (picker) picker.addEventListener('input', () => { hex.value = picker.value; preview(); });
+  if (hex) hex.addEventListener('input', () => {
+    if (/^#?[0-9a-fA-F]{6}$/.test(hex.value) && picker) picker.value = hex.value.startsWith('#') ? hex.value : '#' + hex.value;
+  });
+  relevant();
+  labels();
+  preview();
+})();
+
 document.addEventListener('click', (e) => {
   const confirmBtn = e.target.closest('.btn-confirm');
   if (confirmBtn) {
@@ -153,7 +226,7 @@ document.addEventListener('click', (e) => {
 function adminPage({ title, body, active = '', authed = true }) {
   const nav = authed
     ? `<nav class="admin-nav">
-        ${[['', 'Dashboard'], ['podcast', 'Podcast'], ['hosts', 'Hosts'], ['episodes', 'Shows'], ['stats', 'Stats'], ['account', 'Account']]
+        ${[['', 'Dashboard'], ['podcast', 'Podcast'], ['hosts', 'Hosts'], ['episodes', 'Shows'], ['look', 'Look'], ['stats', 'Stats'], ['account', 'Account']]
           .map(([slug, label]) => `<a class="admin-link${active === (slug || 'dashboard') || (active === '' && slug === '') ? ' current' : ''}" href="/admin${slug ? '/' + slug : ''}">${label}</a>`)
           .join('')}
         <button class="btn-icon theme-toggle" type="button" id="theme-toggle" data-tip="Light or dark" aria-label="Switch between light and dark">
