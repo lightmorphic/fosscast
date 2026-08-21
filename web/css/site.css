@@ -217,6 +217,14 @@ p { max-width: 65ch; }
 .panel h2 { margin: 0 0 0.75rem; font-size: 1.0625rem; font-weight: 600; }
 .panel > :last-child { margin-bottom: 0; }
 
+/* Cards never touch. Stacked panels keep the same standard gap as
+   everything else on the page, including inside a form: a form groups
+   fields for submitting, it is not a layout container, so without this
+   its panels would sit edge to edge. Grid containers space their own
+   children, so there the gap alone stands. */
+.panel + .panel { margin-top: 1.5rem; }
+.grid > .panel, .episodes > .panel, .host-grid > .panel, .host-rows > .panel { margin-top: 0; }
+
 .hero { padding: 2.5rem 2rem; }
 .hero h1 {
   margin: 0.75rem 0 0.5rem;
@@ -657,7 +665,7 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
 .hosts-hero h1 { margin: 0 0 0.25rem; }
 .host-grid {
   display: grid;
-  gap: 1.25rem;
+  gap: 1.5rem;
   grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
 }
 .host-card {
@@ -700,7 +708,7 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
 }
 
 /* ---------- Hosts (admin) ---------- */
-.host-rows { display: grid; gap: 1rem; margin-bottom: 1.5rem; }
+.host-rows { display: grid; gap: 1.5rem; }
 .host-row { display: flex; gap: 1rem; align-items: center; }
 .host-row-text { flex: 1; min-width: 0; }
 .host-row-text h2 { margin: 0 0 0.125rem; font-size: 1.0625rem; font-weight: 600; }
