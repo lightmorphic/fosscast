@@ -121,8 +121,10 @@ function webPathFor(urlPath) {
 
 // Make the small web copy if it does not exist yet. Longest side capped
 // so a huge upload becomes a light, quick-loading image. Returns the web
-// url path when one is available, else null. Never throws.
-function ensureWebImage(dataDir, urlPath) {
+// url path when one is available, else null. Never throws. maxSide moves
+// the cap down: a host photo is shown far smaller than cover art, so it
+// is made smaller still.
+function ensureWebImage(dataDir, urlPath, maxSide = 1024) {
   return new Promise((resolve) => {
     if (typeof urlPath !== 'string' || !urlPath.startsWith('/media/')) return resolve(null);
     const ext = path.extname(urlPath).toLowerCase();
@@ -131,10 +133,11 @@ function ensureWebImage(dataDir, urlPath) {
     const out = `${file}.web.jpg`;
     if (fs.existsSync(out)) return resolve(webPathFor(urlPath));
     if (!fs.existsSync(file)) return resolve(null);
-    // Fit within 1024x1024, only shrinking (never enlarging a small one).
+    // Fit within the cap, only shrinking (never enlarging a small one).
+    const cap = Math.max(64, Math.min(4096, Number(maxSide) || 1024));
     const p = spawn('ffmpeg', [
       '-y', '-i', file,
-      '-vf', "scale='min(1024,iw)':'min(1024,ih)':force_original_aspect_ratio=decrease",
+      '-vf', `scale='min(${cap},iw)':'min(${cap},ih)':force_original_aspect_ratio=decrease`,
       '-q:v', '4', out,
     ], { stdio: 'ignore' });
     p.on('error', () => resolve(null));

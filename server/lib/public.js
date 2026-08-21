@@ -157,6 +157,117 @@ function showsIndex(shows, episodes) {
   });
 }
 
+// ---------- Hosts ----------
+// A podcast is its people, so each host is a record of their own (name,
+// role, photo, write-up) rather than a line in a list. They appear as
+// cards on /hosts and each has a page of their own.
+function hosts(show) {
+  // Instances filled in before hosts had records of their own kept a
+  // plain "Name | role" list; the feed still speaks for those.
+  const list = Array.isArray(show.hosts) && show.hosts.length
+    ? show.hosts
+    : (show.persons || []);
+  return list.filter((h) => h && h.name);
+}
+
+function hostSlug(host) {
+  return host.slug || slugify(host.name) || host.id;
+}
+
+function hostUrl(host, domain) {
+  const base = domain ? `https://${domain}` : '';
+  return `${base}/hosts/${hostSlug(host)}`;
+}
+
+// The small web copy first, so a page of twenty faces stays quick.
+function hostPhoto(host) { return host.photoWeb || host.photo || ''; }
+
+// The show's own menu. Pages beyond the front page only appear once
+// there is something on them.
+function siteNav(show, current = '') {
+  const items = [['/', 'Home', current === 'home']];
+  if (hosts(show).length) items.push(['/hosts', 'Hosts', current === 'hosts']);
+  return items.length > 1 ? items : [];
+}
+
+function initials(name) {
+  return String(name).trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
+}
+
+function hostCard(host, domain) {
+  const photo = hostPhoto(host);
+  return `
+      <a class="panel host-card" href="${esc(hostUrl(host, ''))}">
+        ${photo
+          ? `<img class="host-photo" src="${esc(photo)}" alt="" width="140" height="140" loading="lazy">`
+          : `<span class="host-photo host-photo-blank" aria-hidden="true">${esc(initials(host.name))}</span>`}
+        <span class="host-card-text">
+          <span class="host-name">${esc(host.name)}</span>
+          ${host.role ? `<span class="host-role">${esc(host.role)}</span>` : ''}
+          ${host.bio ? `<span class="host-snip">${esc(host.bio.split(/\n\n/)[0].slice(0, 150))}${host.bio.length > 150 ? '&hellip;' : ''}</span>` : ''}
+        </span>
+      </a>`;
+}
+
+// Paragraphs, not one wall of text: the write-up is what makes the page
+// worth visiting.
+function paragraphs(text) {
+  return String(text || '').split(/\n{2,}/).map((para) => para.trim()).filter(Boolean)
+    .map((para) => `<p>${esc(para).replaceAll('\n', '<br>')}</p>`).join('');
+}
+
+function hostsPage(show, domain) {
+  const list = hosts(show);
+  return publicPage({
+    title: `Hosts - ${show.name}`,
+    description: `The people behind ${show.name}.`,
+    image: show.banner || show.artwork || '',
+    icon: showArtWeb(show),
+    nav: siteNav(show, 'hosts'),
+    body: `
+  <section class="panel hero hosts-hero">
+    <h1>Hosts</h1>
+    <p class="lede">The people behind ${esc(show.name)}.</p>
+  </section>
+  ${list.length
+    ? `<section class="host-grid">${list.map((h) => hostCard(h, domain)).join('')}</section>`
+    : '<div class="panel"><p class="hint">No hosts listed yet.</p></div>'}`,
+  });
+}
+
+function hostPage(show, host, domain) {
+  const photo = hostPhoto(host);
+  const others = hosts(show).filter((h) => hostSlug(h) !== hostSlug(host));
+  return publicPage({
+    title: `${host.name} - ${show.name}`,
+    description: host.role ? `${host.name}, ${host.role} on ${show.name}.` : `${host.name} on ${show.name}.`,
+    image: photo ? absolute(host.photo || photo, domain) : (show.artwork || ''),
+    icon: showArtWeb(show),
+    nav: siteNav(show, 'hosts'),
+    body: `
+  <article class="panel host-page">
+    <div class="host-head">
+      ${photo
+        ? `<img class="host-photo large" src="${esc(photo)}" alt="" width="200" height="200">`
+        : `<span class="host-photo host-photo-blank large" aria-hidden="true">${esc(initials(host.name))}</span>`}
+      <div class="host-head-text">
+        <p class="hint"><a href="/hosts">Hosts</a></p>
+        <h1>${esc(host.name)}</h1>
+        ${host.role ? `<p class="host-role">${esc(host.role)}</p>` : ''}
+        ${host.link ? `<p class="hint"><a href="${esc(host.link)}" rel="noopener noreferrer">${esc(host.link.replace(/^https?:\/\//, ''))}</a></p>` : ''}
+      </div>
+    </div>
+    ${host.bio ? `<div class="host-bio">${paragraphs(host.bio)}</div>` : ''}
+  </article>
+  ${others.length
+    ? `<section class="host-more">
+        <h2 class="section-title">The rest of the team</h2>
+        <div class="host-grid">${others.map((h) => hostCard(h, domain)).join('')}</div>
+      </section>`
+    : ''}`,
+  });
+}
+
 function showPage(show, allEpisodes, domain) {
   const episodes = visible(allEpisodes);
   const items = episodes.length
@@ -179,6 +290,7 @@ function showPage(show, allEpisodes, domain) {
     description: show.description,
     image: show.banner || show.artwork || '',
     icon: showArtWeb(show),
+    nav: siteNav(show, 'home'),
     body: `
   ${show.banner ? `<div class="show-banner"><img src="${esc(showBannerWeb(show))}" alt=""></div>` : ''}
   <section class="panel hero show-hero">
@@ -216,6 +328,7 @@ function episodePage(show, episode, domain) {
     description: episode.description || `An episode of ${show.name}.`,
     image: art ? absolute(art, domain) : '',
     icon: showArtWeb(show),
+    nav: siteNav(show),
     body: `
   <article class="panel episode-page">
     <div class="episode-head">
@@ -275,9 +388,18 @@ function chaptersJson(episode) {
   };
 }
 
-function personTags(show) {
-  return (show.persons || [])
-    .map((p) => `<podcast:person${p.role ? ` role="${escXml(p.role)}"` : ''}>${escXml(p.name)}</podcast:person>`)
+// podcast:person carries the role, the photo and a link, so apps that
+// show a host's face get it straight from the feed.
+function personTags(show, domain) {
+  return hosts(show)
+    .map((h) => {
+      const img = h.photo ? ` img="${escXml(absolute(h.photo, domain))}"` : '';
+      // Only a real host record has a page to point at; a legacy line
+      // has nothing behind it, so it goes out as a bare name.
+      const page = (h.id || h.slug) && domain ? hostUrl(h, domain) : '';
+      const href = h.link ? ` href="${escXml(h.link)}"` : (page ? ` href="${escXml(page)}"` : '');
+      return `<podcast:person${h.role ? ` role="${escXml(h.role)}"` : ''}${img}${href}>${escXml(h.name)}</podcast:person>`;
+    })
     .join('\n    ');
 }
 
@@ -328,7 +450,7 @@ function feed(show, episodes, domain) {
     <itunes:explicit>${show.explicit ? 'true' : 'false'}</itunes:explicit>
     <podcast:locked${owner ? ` owner="${escXml(owner)}"` : ''}>${show.locked ? 'yes' : 'no'}</podcast:locked>
     ${show.funding && show.funding.url ? `<podcast:funding url="${escXml(show.funding.url)}">${escXml(show.funding.label || 'Support the show')}</podcast:funding>` : ''}
-    ${personTags(show)}
+    ${personTags(show, domain)}
     ${items}
   </channel>
 </rss>
@@ -359,4 +481,4 @@ function embedPage(show, episode) {
 `;
 }
 
-module.exports = { landing, showsIndex, showPage, episodePage, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, APPS };
+module.exports = { landing, showsIndex, showPage, episodePage, hostsPage, hostPage, hosts, hostSlug, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, slugify, APPS };
