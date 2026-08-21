@@ -16,7 +16,8 @@ const CATEGORIES = require('./categories');
 const { probeDuration, ensureWebImage } = require('./media');
 const importer = require('./import');
 const { sendMail, configured: mailConfigured } = require('./mailer');
-const { APPS, SUPPORT } = require('./public');
+const { APPS, SUPPORT, showPage } = require('./public');
+const themes = require('./theme');
 
 // This edition manages one podcast.
 const MAX_SHOWS = 1;
@@ -188,6 +189,12 @@ function createAdminRouter(ctx) {
         if (!show[field]) { if (show[`${field}Web`]) { delete show[`${field}Web`]; showsChanged = true; } continue; }
         const web = await ensureWebImage(dataDir, show[field]);
         if (web && show[`${field}Web`] !== web) { show[`${field}Web`] = web; showsChanged = true; }
+      }
+      // A background image covers the whole screen, so its web copy is
+      // the largest of the lot.
+      if (show.theme && show.theme.bgImage) {
+        const web = await ensureWebImage(dataDir, show.theme.bgImage, 1920);
+        if (web && show.theme.bgImageWeb !== web) { show.theme.bgImageWeb = web; showsChanged = true; }
       }
       // A host photo is shown at a few hundred pixels at most, so its
       // web copy is capped smaller than cover art.
@@ -444,6 +451,180 @@ function createAdminRouter(ctx) {
           <button class="btn-primary" type="submit">Import shows</button>
         </form>
       </section>
+      </div>
+      </div>`,
+    });
+  }
+
+  // ---------- Look ----------
+  // The submitted controls as a theme object. Used by both the save and
+  // the preview, so what you see is what gets stored.
+  function themeFromForm(form) {
+    return themes.normalise({
+      accent: form.get('accent'),
+      bgMode: form.get('bgMode'),
+      bgColor: form.get('bgColor'),
+      bgColor2: form.get('bgColor2'),
+      bgAngle: form.get('bgAngle'),
+      bgImage: form.get('bgImage'),
+      bgFit: form.get('bgFit'),
+      bgAttach: form.get('bgAttach'),
+      bgBlur: form.get('bgBlur'),
+      bgDim: form.get('bgDim'),
+      panel: form.get('panel'),
+      radius: form.get('radius'),
+      font: form.get('font'),
+      mode: form.get('mode'),
+      toggle: form.get('toggle') === '1',
+      width: form.get('width'),
+      episodes: form.get('episodes'),
+      bannerFull: form.get('bannerFull') === '1',
+      tagline: form.get('tagline'),
+      footer: form.get('footer'),
+      css: form.get('css'),
+    });
+  }
+
+
+  // The public site belongs to the podcaster, so its colours, type,
+  // background and card style are theirs to set. Every control writes a
+  // token the stylesheet already reads, and the preview beside them is
+  // the real front page in an iframe, restyled as they touch things -
+  // no saving to find out what it looks like.
+  function lookPage(show, notice = '') {
+    const t = themes.normalise(show.theme);
+    const swatches = themes.PRESETS.map(([key, label, hex]) => `
+      <button type="button" class="swatch${t.accent === hex ? ' current' : ''}" data-accent="${esc(hex)}" style="--sw: ${esc(hex)}" title="${esc(label)}" aria-label="${esc(label)}"></button>`).join('');
+
+    const radio = (name, options, current, hintNote = true) => options.map(([key, label, note]) => `
+      <label class="pick${current === key ? ' current' : ''}">
+        <input type="radio" name="${name}" value="${esc(key)}"${current === key ? ' checked' : ''}>
+        <span class="pick-label">${esc(label)}</span>
+        ${hintNote && note ? `<span class="pick-note">${esc(note)}</span>` : ''}
+      </label>`).join('');
+
+    return adminPage({
+      title: 'Look',
+      active: 'look',
+      body: `<h1 class="page-title">Look</h1>
+      ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
+      <p class="hint">Your site, your colours. Everything here changes the
+      public pages only; the admin stays as it is. The preview updates as
+      you go, and nothing is live until you save.</p>
+
+      <div class="look-layout">
+      <form method="post" action="/admin/look" id="look-form">
+        <section class="panel">
+          <h2>Colour</h2>
+          <p class="hint">Pick one, or type any hex code. Every other
+          shade -- hovers, tags, the soft backgrounds -- is worked out
+          from it, in light and dark alike.</p>
+          <div class="swatches">${swatches}</div>
+          <div class="field-row">
+            <div><label for="accent-hex">Hex code</label>
+            <input id="accent-hex" name="accent" maxlength="7" value="${esc(t.accent)}" pattern="#?[0-9a-fA-F]{3,6}"></div>
+            <div><label for="accent-pick">Or pick</label>
+            <input id="accent-pick" type="color" value="${esc(t.accent)}"></div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Background</h2>
+          ${radio('bgMode', [['default', 'Plain', 'Clean white, or near-black in dark mode.'], ['solid', 'One colour', ''], ['gradient', 'Gradient', ''], ['image', 'Image', 'A photo or pattern behind everything.']], t.bgMode)}
+          <div class="field-row bg-colors">
+            <div><label for="bg-color">Colour</label>
+            <input id="bg-color" name="bgColor" type="color" value="${esc(t.bgColor)}"></div>
+            <div><label for="bg-color2">Second colour (gradient)</label>
+            <input id="bg-color2" name="bgColor2" type="color" value="${esc(t.bgColor2)}"></div>
+            <div><label for="bg-angle">Angle</label>
+            <input id="bg-angle" name="bgAngle" type="range" min="0" max="360" value="${t.bgAngle}"></div>
+          </div>
+          <div class="bg-image-fields">
+            <label for="bg-image">Background image</label>
+            <p class="hint">Wide and not too busy works best -- 2000px or so
+            across. Dim it and text stays readable over anything.</p>
+            <input id="bg-image" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="bg-image-url" data-status="bg-image-status" data-preview="bg-image-img">
+            <p class="hint" id="bg-image-status">${t.bgImage ? 'Uploaded.' : 'None yet.'}</p>
+            <input type="hidden" id="bg-image-url" name="bgImage" value="${esc(t.bgImage)}">
+            <img class="bg-preview" id="bg-image-img" alt="" src="${esc(t.bgImageWeb || t.bgImage)}"${t.bgImage ? '' : ' style="display:none"'}>
+            <div class="field-row">
+              <div><label for="bg-dim">Dim it (${t.bgDim}%)</label>
+              <input id="bg-dim" name="bgDim" type="range" min="0" max="85" value="${t.bgDim}"></div>
+              <div><label for="bg-blur">Blur (${t.bgBlur}px)</label>
+              <input id="bg-blur" name="bgBlur" type="range" min="0" max="24" value="${t.bgBlur}"></div>
+            </div>
+            <div class="field-row">
+              <div><label for="bg-fit">Fit</label>
+              <select id="bg-fit" name="bgFit"><option value="cover"${t.bgFit === 'cover' ? ' selected' : ''}>Fill the screen</option><option value="tile"${t.bgFit === 'tile' ? ' selected' : ''}>Tile it</option></select></div>
+              <div><label for="bg-attach">When scrolling</label>
+              <select id="bg-attach" name="bgAttach"><option value="fixed"${t.bgAttach === 'fixed' ? ' selected' : ''}>Stays put</option><option value="scroll"${t.bgAttach === 'scroll' ? ' selected' : ''}>Scrolls with the page</option></select></div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel">
+          <h2>Cards</h2>
+          ${radio('panel', themes.PANELS, t.panel)}
+          <label for="radius">Corners (${t.radius}px)</label>
+          <p class="hint">All the way down for sharp square corners, up for
+          soft and round.</p>
+          <input id="radius" name="radius" type="range" min="0" max="32" value="${t.radius}">
+        </section>
+
+        <section class="panel">
+          <h2>Type</h2>
+          ${radio('font', themes.FONTS.map(([k, l, , note]) => [k, l, note]), t.font)}
+        </section>
+
+        <section class="panel">
+          <h2>Layout</h2>
+          <label>Page width</label>
+          ${radio('width', themes.WIDTHS.map(([k, l]) => [k, l, '']), t.width)}
+          <label>Episodes</label>
+          ${radio('episodes', themes.EPISODE_LAYOUTS, t.episodes)}
+          <label class="check-label"><input type="checkbox" name="bannerFull" value="1" class="check"${t.bannerFull ? ' checked' : ''}> Banner runs edge to edge</label>
+        </section>
+
+        <section class="panel">
+          <h2>Light or dark</h2>
+          ${radio('mode', [['auto', 'Follow the visitor', "Their device decides, and they can flip it."], ['light', 'Always light', ''], ['dark', 'Always dark', '']], t.mode)}
+          <label class="check-label"><input type="checkbox" name="toggle" value="1" class="check"${t.toggle ? ' checked' : ''}> Offer the light/dark switch</label>
+        </section>
+
+        <section class="panel">
+          <h2>Words of your own</h2>
+          <label for="tagline">Tagline</label>
+          <p class="hint">A line under the title on the front page.</p>
+          <input id="tagline" name="tagline" maxlength="200" value="${esc(t.tagline)}" placeholder="Two nerds, one microphone">
+          <label for="footer-text">Footer line</label>
+          <p class="hint">Your copyright, your credit, whatever you like.</p>
+          <input id="footer-text" name="footer" maxlength="300" value="${esc(t.footer)}" placeholder="&copy; ${new Date().getFullYear()} ${esc(show.name)}">
+        </section>
+
+        <section class="panel">
+          <h2>Custom CSS</h2>
+          <p class="hint">For when you want something the controls above do
+          not cover. It is added last, so it wins. Anything that would load
+          from another site is stripped: your pages never call out to
+          anyone.</p>
+          <textarea id="custom-css" name="css" rows="6" maxlength="8000" spellcheck="false" placeholder=".show-hero h1 { letter-spacing: -.04em; }">${esc(t.css)}</textarea>
+        </section>
+
+        <section class="panel">
+          <button class="btn-primary" type="submit">Save the look</button>
+          <button class="btn-secondary" type="submit" name="reset" value="1">Back to the default</button>
+        </section>
+      </form>
+
+      <div class="look-preview">
+        <div class="panel preview-card">
+          <h2>Preview</h2>
+          <p class="hint">Your front page, live.</p>
+          <div class="preview-frame-wrap">
+            <iframe id="look-preview" title="Preview of the public site" src="/shows/${esc(show.slug)}?preview=1"></iframe>
+          </div>
+          <p class="hint"><a href="/shows/${esc(show.slug)}" target="_blank" rel="noopener noreferrer">Open the real page</a></p>
+        </div>
       </div>
       </div>`,
     });
@@ -1027,6 +1208,49 @@ function createAdminRouter(ctx) {
     if (p === '/admin/podcast/edit' && req.method === 'GET') { redirect(res, '/admin/podcast'); return true; }
     // Old links keep working.
     if (p === '/admin/shows' && req.method === 'GET') { redirect(res, '/admin/episodes'); return true; }
+    // Look: the public site's colours, background, type and card style.
+    if (p === '/admin/look' && req.method === 'GET') {
+      const show = shows()[0];
+      if (!show) { redirect(res, '/admin/podcast'); return true; }
+      html(res, lookPage(show));
+      return true;
+    }
+    if (p === '/admin/look' && req.method === 'POST') {
+      const show = shows()[0];
+      if (!show) { redirect(res, '/admin/podcast'); return true; }
+      const form = await formBody(req, readBody);
+      const list = shows();
+      const entry = list.find((s) => s.id === show.id);
+      if (form.get('reset')) delete entry.theme;
+      else {
+        const next = themeFromForm(form);
+        // The web copy of a background image is kept alongside it.
+        if (next.bgImage && next.bgImage === (entry.theme || {}).bgImage) {
+          next.bgImageWeb = (entry.theme || {}).bgImageWeb || '';
+        }
+        entry.theme = next;
+      }
+      store.save('shows', list);
+      refreshWebImages().catch(() => {});
+      html(res, lookPage(shows()[0], form.get('reset') ? 'Back to the default look.' : 'Saved. Your site looks like this now.'));
+      return true;
+    }
+    // The preview renders the real front page with the theme being
+    // edited, so nothing has to be saved to see it.
+    if (p === '/admin/look/preview' && req.method === 'POST') {
+      const show = shows()[0];
+      if (!show) { send(res, 404, 'no show'); return true; }
+      const form = await formBody(req, readBody);
+      const items = episodes().filter((e) => e.showId === show.id)
+        .sort((a, b) => (a.date < b.date ? 1 : -1));
+      const preview = { ...show, theme: themeFromForm(form) };
+      if (preview.theme.bgImage === (show.theme || {}).bgImage) {
+        preview.theme.bgImageWeb = (show.theme || {}).bgImageWeb || '';
+      }
+      html(res, showPage(preview, items, (process.env.DOMAIN || 'localhost').trim()));
+      return true;
+    }
+
     // Hosts: the people on the podcast, each with a photo and a write-up.
     if (p === '/admin/hosts' && req.method === 'GET') {
       const show = shows()[0];
