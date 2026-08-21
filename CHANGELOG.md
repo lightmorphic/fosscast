@@ -4,6 +4,17 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Hosts are people, not a list of names. Each one is a record of their
+  own -- name, role, photo and a write-up -- entered on a Hosts tab of
+  its own, in any number, in an order you set. The site gains a Hosts
+  page of cards and a page per host, and the header gains a menu now
+  that the show is more than one page. Photos are shrunk to a fast web
+  copy (640px) on upload, the full file kept for the feed, and a host
+  with no photo shows their initials. The feed's `podcast:person` tags
+  carry the role, the photo and a link to their page, so apps can put a
+  face to a voice. Anyone entered as a "Name | role" line before is
+  carried over automatically.
+
 - Live streaming and chat are gone from FOSSCast: they move to
   FOSSStudio, where the show is made. Out with them: MediaMTX and RTMP
   ingest, the live pages and HLS player, the chat room and its

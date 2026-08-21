@@ -119,6 +119,65 @@ test('the episode edit page and the home page render', async () => {
   assert.ok(home.includes('Episode One'));
 });
 
+test('hosts: added, ordered, shown as cards, on their own pages and in the feed', async () => {
+  // Nothing on the site until there is someone to show.
+  assert.strictEqual((await fetch(`${BASE}/hosts`)).status, 200);
+  let hostsPage = await (await fetch(`${BASE}/hosts`)).text();
+  assert.ok(hostsPage.includes('No hosts listed yet.'));
+  assert.ok(!(await (await fetch(`${BASE}/shows/test-show`)).text()).includes('site-nav'));
+
+  let res = await fetch(`${BASE}/admin/hosts`, form({
+    name: 'Sam Smith', role: 'host', bio: 'Sam started it.\n\nStill here.',
+    link: 'https://sam.example',
+  }));
+  assert.strictEqual(res.status, 303);
+  res = await fetch(`${BASE}/admin/hosts`, form({
+    name: 'Ada Byron', role: 'co-host', bio: 'Ada joined later.',
+  }));
+  assert.strictEqual(res.status, 303);
+
+  // The cards page carries both, and the menu now offers it.
+  hostsPage = await (await fetch(`${BASE}/hosts`)).text();
+  assert.ok(hostsPage.includes('Sam Smith'));
+  assert.ok(hostsPage.includes('Ada Byron'));
+  assert.ok(hostsPage.includes('host-card'));
+  const home = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(home.includes('href="/hosts"'));
+
+  // A page each, with the write-up split into paragraphs.
+  const samPage = await (await fetch(`${BASE}/hosts/sam-smith`)).text();
+  assert.ok(samPage.includes('<h1>Sam Smith</h1>'));
+  assert.ok(samPage.includes('Sam started it.'));
+  assert.ok(samPage.includes('Still here.'));
+  assert.ok(samPage.includes('sam.example'));
+  assert.ok(samPage.includes('Ada Byron'), 'the rest of the team is linked');
+  assert.strictEqual((await fetch(`${BASE}/hosts/nobody-here`)).status, 404);
+
+  // The feed says who is on the show, and links their page.
+  const feed = await (await fetch(`${BASE}/shows/test-show/feed.xml`)).text();
+  assert.ok(feed.includes('<podcast:person role="host" href="https://sam.example">Sam Smith</podcast:person>'));
+  assert.ok(feed.includes('href="https://test.example/hosts/ada-byron">Ada Byron</podcast:person>'));
+
+  // The order is the operator's to set.
+  const adminPage = await (await fetch(`${BASE}/admin/hosts`, { headers: { cookie } })).text();
+  const ids = [...adminPage.matchAll(/\/admin\/hosts\/([a-f0-9-]{36})"/g)].map((m) => m[1]);
+  const ada = ids[ids.length - 1];
+  res = await fetch(`${BASE}/admin/hosts/${ada}/move`, form({ dir: 'up' }));
+  assert.strictEqual(res.status, 303);
+  hostsPage = await (await fetch(`${BASE}/hosts`)).text();
+  assert.ok(hostsPage.indexOf('Ada Byron') < hostsPage.indexOf('Sam Smith'), 'Ada moved above Sam');
+
+  // Editing keeps the same record; removing takes the page with it.
+  res = await fetch(`${BASE}/admin/hosts/${ada}`, form({
+    name: 'Ada Byron', role: 'producer', bio: 'Ada joined later.', link: '',
+  }));
+  assert.strictEqual(res.status, 303);
+  assert.ok((await (await fetch(`${BASE}/hosts/ada-byron`)).text()).includes('producer'));
+  res = await fetch(`${BASE}/admin/hosts/${ada}/delete`, form({}));
+  assert.strictEqual(res.status, 303);
+  assert.strictEqual((await fetch(`${BASE}/hosts/ada-byron`)).status, 404);
+});
+
 test('a second show is refused (this edition manages one podcast)', async () => {
   const res = await fetch(`${BASE}/admin/shows`, form({
     name: 'Second Show', description: 'One too many.',
