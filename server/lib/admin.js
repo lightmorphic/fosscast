@@ -16,7 +16,7 @@ const CATEGORIES = require('./categories');
 const { probeDuration, ensureWebImage } = require('./media');
 const importer = require('./import');
 const { sendMail, configured: mailConfigured } = require('./mailer');
-const { APPS } = require('./public');
+const { APPS, SUPPORT } = require('./public');
 
 // This edition manages one podcast.
 const MAX_SHOWS = 1;
@@ -720,6 +720,18 @@ function createAdminRouter(ctx) {
           </div>
         </section>
 
+        <section class="panel" id="sec-support">
+          <h2>Memberships &amp; tips</h2>
+          <p class="hint">The services listeners already use to back a
+          podcast. Paste your page on each one and its button appears on
+          your show page, and goes into the feed as a funding link so apps
+          can offer it too. No account yet? The sign-up link beside each
+          one takes you straight there.</p>
+          ${SUPPORT.map(([key, label, signup, placeholder]) => `<label for="sup-${key}">${esc(label)}
+          <a class="hint-link" href="${esc(signup)}" target="_blank" rel="noopener noreferrer">sign up</a></label>
+          <input id="sup-${key}" name="support_${key}" type="url" maxlength="500" value="${esc((show.support || {})[key] || '')}" placeholder="${esc(placeholder)}">`).join('')}
+        </section>
+
         <section class="panel" id="sec-hosts">
           <h2>Hosts</h2>
           <p class="hint">${hostList(show).length
@@ -1210,6 +1222,11 @@ function createAdminRouter(ctx) {
         const banner = String(form.get('banner') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(banner)) entry.banner = banner;
         // web copies of the new artwork/banner are made just after save
+        entry.support = {};
+        for (const [key] of SUPPORT) {
+          const url = String(form.get(`support_${key}`) || '').trim().slice(0, 500);
+          if (/^https?:\/\//.test(url)) entry.support[key] = url;
+        }
         entry.links = {};
         for (const [key] of APPS) {
           const url = String(form.get(`link_${key}`) || '').trim().slice(0, 500);

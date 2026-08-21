@@ -178,6 +178,36 @@ test('hosts: added, ordered, shown as cards, on their own pages and in the feed'
   assert.strictEqual((await fetch(`${BASE}/hosts/ada-byron`)).status, 404);
 });
 
+test('funding services show as buttons and as feed funding links', async () => {
+  const res = await fetch(`${BASE}/admin/shows/test-show/settings`, form({
+    name: 'Test Show',
+    description: 'A show about tests.',
+    language: 'en',
+    support_patreon: 'https://www.patreon.com/testshow',
+    support_buymeacoffee: 'https://buymeacoffee.com/testshow',
+    support_kofi: 'not a url',
+    fundingUrl: 'https://pay.example/test',
+    fundingLabel: 'Chip in',
+  }));
+  assert.strictEqual(res.status, 303);
+
+  const page = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(page.includes('Support the show'));
+  assert.ok(page.includes('https://www.patreon.com/testshow'));
+  assert.ok(page.includes('Buy Me a Coffee'));
+  assert.ok(!page.includes('not a url'), 'a bad URL is dropped, not shown');
+
+  const feed = await (await fetch(`${BASE}/shows/test-show/feed.xml`)).text();
+  assert.ok(feed.includes('<podcast:funding url="https://www.patreon.com/testshow">Patreon</podcast:funding>'));
+  assert.ok(feed.includes('<podcast:funding url="https://pay.example/test">Chip in</podcast:funding>'));
+
+  // The admin form offers a sign-up link for each service.
+  const admin = await (await fetch(`${BASE}/admin/podcast`, { headers: { cookie } })).text();
+  assert.ok(admin.includes('https://www.patreon.com/create'));
+  assert.ok(admin.includes('https://buymeacoffee.com/signup'));
+  assert.ok(admin.includes('Memberships'));
+});
+
 test('a second show is refused (this edition manages one podcast)', async () => {
   const res = await fetch(`${BASE}/admin/shows`, form({
     name: 'Second Show', description: 'One too many.',

@@ -4,6 +4,18 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Memberships and tips: a panel under Funding on the podcast page holds
+  Patreon, Buy Me a Coffee, Ko-fi, Liberapay, GitHub Sponsors, Open
+  Collective and PayPal, each with a sign-up link straight to the
+  service for anyone who has not got an account yet. Paste your page and
+  its button joins a "Support the show" row under the listen-on buttons,
+  and each one goes into the feed as its own `podcast:funding` tag, so
+  apps can offer them too.
+- Cards never touch. A form is not a layout container, so panels inside
+  one sat edge to edge -- the podcast page was a single slab of eight.
+  Stacked panels now keep the same 1.5rem gap the rest of the site uses,
+  and host cards match it.
+
 - Hosts are people, not a list of names. Each one is a record of their
   own -- name, role, photo and a write-up -- entered on a Hosts tab of
   its own, in any number, in an order you set. The site gains a Hosts
