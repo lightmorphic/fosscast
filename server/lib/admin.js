@@ -1068,6 +1068,32 @@ function createAdminRouter(ctx) {
           <input id="again" name="again" type="password" autocomplete="new-password" minlength="12" required>
           <button class="btn-primary" type="submit">Change password</button>
         </form>
+      </section>
+
+      <section class="panel narrow">
+        <h2>Studio publishing</h2>
+        <p class="hint">The key FOSSStudio &mdash; or any other studio &mdash;
+        uses to publish a finished recording straight into this instance.
+        It was generated when the instance started; copy it into the
+        studio's settings. Anyone holding it can publish here, so treat it
+        like a password.</p>
+        <label for="studio-token">Studio key</label>
+        <div class="key-field">
+          <input id="studio-token" type="password" value="${esc(settings().studioToken || '')}" readonly>
+          <button class="btn-icon btn-reveal" type="button" data-for="studio-token" data-tip="Show or hide" aria-label="Show or hide the key">
+            <span class="icon-a">${ICONS.eye}</span><span class="icon-b">${ICONS.eyeOff}</span>
+          </button>
+          <button class="btn-icon btn-copy" type="button" data-for="studio-token" data-tip="Copy" aria-label="Copy the key">
+            <span class="icon-a">${ICONS.copy}</span><span class="icon-b">${ICONS.tick}</span>
+          </button>
+        </div>
+        <p class="hint">Episodes arrive as drafts for you to look over
+        before they go out. See <a href="https://github.com/lightmorphic/fosscast/blob/main/docs/studio-integration.md">the studio integration notes</a>.</p>
+        <form method="post" action="/admin/account/studio-key">
+          <button class="btn-secondary btn-confirm" type="submit">Generate a new key</button>
+        </form>
+        <p class="hint">A new key stops the old one working at once, so
+        any studio using it needs the new one.</p>
       </section>`,
     });
   }
@@ -1331,6 +1357,13 @@ function createAdminRouter(ctx) {
 
     if (p === '/admin/stats' && req.method === 'GET') { html(res, statsPage()); return true; }
     if (p === '/admin/account' && req.method === 'GET') { html(res, accountPage(user)); return true; }
+    if (p === '/admin/account/studio-key' && req.method === 'POST') {
+      const value = settings();
+      value.studioToken = crypto.randomBytes(32).toString('hex');
+      store.save('settings', value);
+      html(res, accountPage(user, 'New studio key generated. The old one no longer works.'));
+      return true;
+    }
 
     if (p === '/admin/shows' && req.method === 'POST') {
       const form = await formBody(req, readBody);

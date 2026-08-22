@@ -4,6 +4,14 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- The studio key moves out of the compose file and onto the Account
+  page, under Studio publishing: masked, with show and copy buttons, and
+  a two-click "generate a new key" for when it needs retiring. It was
+  always generated automatically, so asking people to put a blank line
+  for it in their compose file only invited the question of what it was
+  for. `FOSSSTUDIO_TOKEN` still works for setting it in advance, when a
+  studio is configured before the instance exists.
+
 - `PUBLISHER_TOKEN` is now `FOSSSTUDIO_TOKEN`, which says what it is
   for: the key a studio uses to publish a finished recording into this
   instance. Nothing breaks on the way: the old environment variable is

@@ -328,6 +328,41 @@ test('editing saves itself: podcast details, a host and an episode', async () =>
   assert.strictEqual(res.status, 303);
 });
 
+test('the studio key lives on the Account page and can be replaced', async () => {
+  const page = await (await fetch(`${BASE}/admin/account`, { headers: { cookie } })).text();
+  assert.ok(page.includes('Studio publishing'));
+  const first = (page.match(/id="studio-token" type="password" value="([a-f0-9]{64})"/) || [])[1];
+  assert.ok(first, 'the key is there, generated without anyone setting it');
+
+  // It is the key the publish API actually accepts.
+  let res = await fetch(`${BASE}/api/v1/episodes`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${first}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: 'From a studio', mediaUrl: 'https://example.org/s.mp3' }),
+  });
+  assert.strictEqual(res.status, 200);
+
+  // Replacing it works, and retires the old one immediately.
+  res = await fetch(`${BASE}/admin/account/studio-key`, form({}));
+  assert.strictEqual(res.status, 200);
+  const after = (await res.text()).match(/id="studio-token" type="password" value="([a-f0-9]{64})"/)[1];
+  assert.notStrictEqual(after, first);
+
+  res = await fetch(`${BASE}/api/v1/episodes`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${first}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: 'Should not publish', mediaUrl: 'https://example.org/s.mp3' }),
+  });
+  assert.strictEqual(res.status, 401, 'the old key is dead');
+
+  res = await fetch(`${BASE}/api/v1/episodes`, {
+    method: 'POST',
+    headers: { Authorization: `Bearer ${after}`, 'Content-Type': 'application/json' },
+    body: JSON.stringify({ title: 'From a studio again', mediaUrl: 'https://example.org/s.mp3', draft: false }),
+  });
+  assert.strictEqual(res.status, 200, 'and the new one works');
+});
+
 test('a second show is refused (this edition manages one podcast)', async () => {
   const res = await fetch(`${BASE}/admin/shows`, form({
     name: 'Second Show', description: 'One too many.',
