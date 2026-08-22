@@ -4,6 +4,15 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- The marketing site is rewritten around what FOSSCast now does: the
+  Look tab, host pages, membership links, feeds, and a plain statement
+  that nothing phones home. The install is the pasted compose file
+  itself, on the page, with a copy button.
+- It carries a playground: a miniature show page beside real controls
+  for colour, background, cards, corners, host-photo shape and episode
+  layout. Everything is drawn in CSS and restyled live -- no
+  screenshots, no images, nothing fetched from anywhere.
+
 - Installing is one pasted file. `docker-compose.pull.yml` (and the same
   snippet in the README) needs no checkout, no build, no `.env` and no
   Caddyfile: the published image now carries the web assets as well as
