@@ -142,7 +142,12 @@ const server = http.createServer((req, res) => {
       const range = req.headers.range;
       if (!range || /^bytes=0-/.test(range)) {
         const episode = store.load('episodes', []).find((e) => e.mediaUrl === p);
-        if (episode) stats.record(episode.id, clientIp(req), req.headers['user-agent'] || '');
+        if (episode) {
+          stats.record(episode.id, clientIp(req), req.headers['user-agent'] || '', {
+            headers: req.headers,
+            published: episode.date,
+          });
+        }
       }
     }
     return media.serveMedia(req, res, MEDIA_DIR, p);
@@ -239,6 +244,9 @@ const server = http.createServer((req, res) => {
       .filter((e) => e.showId === show.id)
       .sort((a, b) => (a.date < b.date ? 1 : -1));
     if (showMatch[2]) {
+      // Apps poll the feed about once a day, so counting distinct
+      // pullers is the nearest honest thing to a subscriber count.
+      stats.recordFeed(clientIp(req), req.headers['user-agent'] || '');
       return send(res, 200, publicSite.feed(show, items, DOMAIN), {
         'Content-Type': 'application/rss+xml; charset=utf-8',
       });
