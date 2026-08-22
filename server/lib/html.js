@@ -48,7 +48,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.5.1">
+<link rel="stylesheet" href="/css/site.css?v=0.6.0">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -70,6 +70,91 @@ ${body}
   </a>
 </footer>
 <script>
+
+// Tooltips: one bubble, appended to the body, positioned in viewport
+// coordinates. Anything drawn inside its trigger can be clipped by a
+// card's rounded corner, hidden under a sticky bar, or pushed off the
+// edge of the page; this cannot be. It flips above or below depending
+// on the room available, stays inside the viewport, and moves its tail
+// to keep pointing at whatever it describes.
+(function tooltips() {
+  var bubble = null;
+  var current = null;
+
+  function make() {
+    bubble = document.createElement('div');
+    bubble.className = 'tip';
+    bubble.setAttribute('role', 'tooltip');
+    document.body.appendChild(bubble);
+    return bubble;
+  }
+
+  function place(target) {
+    var edge = 8;      // never closer than this to the edge of the page
+    var gap = 10;      // between the bubble and what it describes
+    var r = target.getBoundingClientRect();
+    bubble.style.left = '0px';
+    bubble.style.top = '0px';
+    var w = bubble.offsetWidth;
+    var h = bubble.offsetHeight;
+
+    // Above by default; below when there is no room above but there is
+    // below. When neither fits, take the roomier side and let the clamp
+    // keep it on the page.
+    var roomAbove = r.top - gap - edge;
+    var roomBelow = window.innerHeight - r.bottom - gap - edge;
+    var above = roomAbove >= h || roomAbove >= roomBelow;
+    var top = above ? r.top - h - gap : r.bottom + gap;
+    top = Math.max(edge, Math.min(top, window.innerHeight - h - edge));
+
+    var left = r.left + r.width / 2 - w / 2;
+    left = Math.max(edge, Math.min(left, window.innerWidth - w - edge));
+
+    bubble.dataset.place = above ? 'above' : 'below';
+    bubble.style.left = Math.round(left) + 'px';
+    bubble.style.top = Math.round(top) + 'px';
+    // The tail follows the trigger even when the bubble has been pushed
+    // sideways to stay on the page.
+    var tail = Math.round(r.left + r.width / 2 - left - 4);
+    bubble.style.setProperty('--tail-x', Math.max(10, Math.min(tail, w - 19)) + 'px');
+  }
+
+  function show(target) {
+    var text = target.getAttribute('data-tip');
+    if (!text) return;
+    if (!bubble) make();
+    current = target;
+    bubble.textContent = text;
+    place(target);
+    requestAnimationFrame(function () { if (current === target) bubble.classList.add('shown'); });
+  }
+
+  function hide() {
+    current = null;
+    if (bubble) bubble.classList.remove('shown');
+  }
+
+  document.addEventListener('mouseover', function (e) {
+    var t = e.target.closest('[data-tip]');
+    if (t && t !== current) show(t);
+  });
+  document.addEventListener('mouseout', function (e) {
+    var t = e.target.closest('[data-tip]');
+    if (t && t === current) hide();
+  });
+  document.addEventListener('focusin', function (e) {
+    var t = e.target.closest('[data-tip]');
+    if (t) show(t);
+  });
+  document.addEventListener('focusout', hide);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+  // A bubble pinned to the viewport would drift away from its trigger,
+  // so it goes when the page moves under it.
+  window.addEventListener('scroll', hide, true);
+  window.addEventListener('resize', hide);
+  document.addEventListener('click', function (e) { if (!e.target.closest('[data-tip]')) hide(); });
+})();
+
 var toggle = document.getElementById('theme-toggle');
 if (toggle) toggle.addEventListener('click', function () {
   var root = document.documentElement;
@@ -98,6 +183,91 @@ document.addEventListener('click', function (e) {
 // The tiny bit of client behaviour the admin needs: two-click delete
 // confirmation, reveal/copy for secrets. No framework, no build step.
 const ADMIN_SCRIPT = `
+
+// Tooltips: one bubble, appended to the body, positioned in viewport
+// coordinates. Anything drawn inside its trigger can be clipped by a
+// card's rounded corner, hidden under a sticky bar, or pushed off the
+// edge of the page; this cannot be. It flips above or below depending
+// on the room available, stays inside the viewport, and moves its tail
+// to keep pointing at whatever it describes.
+(function tooltips() {
+  var bubble = null;
+  var current = null;
+
+  function make() {
+    bubble = document.createElement('div');
+    bubble.className = 'tip';
+    bubble.setAttribute('role', 'tooltip');
+    document.body.appendChild(bubble);
+    return bubble;
+  }
+
+  function place(target) {
+    var edge = 8;      // never closer than this to the edge of the page
+    var gap = 10;      // between the bubble and what it describes
+    var r = target.getBoundingClientRect();
+    bubble.style.left = '0px';
+    bubble.style.top = '0px';
+    var w = bubble.offsetWidth;
+    var h = bubble.offsetHeight;
+
+    // Above by default; below when there is no room above but there is
+    // below. When neither fits, take the roomier side and let the clamp
+    // keep it on the page.
+    var roomAbove = r.top - gap - edge;
+    var roomBelow = window.innerHeight - r.bottom - gap - edge;
+    var above = roomAbove >= h || roomAbove >= roomBelow;
+    var top = above ? r.top - h - gap : r.bottom + gap;
+    top = Math.max(edge, Math.min(top, window.innerHeight - h - edge));
+
+    var left = r.left + r.width / 2 - w / 2;
+    left = Math.max(edge, Math.min(left, window.innerWidth - w - edge));
+
+    bubble.dataset.place = above ? 'above' : 'below';
+    bubble.style.left = Math.round(left) + 'px';
+    bubble.style.top = Math.round(top) + 'px';
+    // The tail follows the trigger even when the bubble has been pushed
+    // sideways to stay on the page.
+    var tail = Math.round(r.left + r.width / 2 - left - 4);
+    bubble.style.setProperty('--tail-x', Math.max(10, Math.min(tail, w - 19)) + 'px');
+  }
+
+  function show(target) {
+    var text = target.getAttribute('data-tip');
+    if (!text) return;
+    if (!bubble) make();
+    current = target;
+    bubble.textContent = text;
+    place(target);
+    requestAnimationFrame(function () { if (current === target) bubble.classList.add('shown'); });
+  }
+
+  function hide() {
+    current = null;
+    if (bubble) bubble.classList.remove('shown');
+  }
+
+  document.addEventListener('mouseover', function (e) {
+    var t = e.target.closest('[data-tip]');
+    if (t && t !== current) show(t);
+  });
+  document.addEventListener('mouseout', function (e) {
+    var t = e.target.closest('[data-tip]');
+    if (t && t === current) hide();
+  });
+  document.addEventListener('focusin', function (e) {
+    var t = e.target.closest('[data-tip]');
+    if (t) show(t);
+  });
+  document.addEventListener('focusout', hide);
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape') hide(); });
+  // A bubble pinned to the viewport would drift away from its trigger,
+  // so it goes when the page moves under it.
+  window.addEventListener('scroll', hide, true);
+  window.addEventListener('resize', hide);
+  document.addEventListener('click', function (e) { if (!e.target.closest('[data-tip]')) hide(); });
+})();
+
 var themeButton = document.getElementById('theme-toggle');
 if (themeButton) themeButton.addEventListener('click', function () {
   var root = document.documentElement;
@@ -255,7 +425,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.5.1">
+<link rel="stylesheet" href="/css/site.css?v=0.6.0">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">
