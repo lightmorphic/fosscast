@@ -541,7 +541,7 @@ function createAdminRouter(ctx) {
 
       <div class="look-layout">
       <form method="post" action="/admin/look" id="look-form">
-        <section class="panel">
+        <section class="panel" id="sec-colour">
           <h2>Colour</h2>
           <div class="swatches">${swatches}</div>
           <div class="inline-fields">
@@ -553,7 +553,7 @@ function createAdminRouter(ctx) {
           dark -- is worked out from this one.</p>
         </section>
 
-        <section class="panel">
+        <section class="panel" id="sec-background">
           <h2>Background</h2>
           ${chips('bgMode', [['default', 'Plain', 'White, or near-black in dark mode.'], ['solid', 'One colour', ''], ['gradient', 'Gradient', ''], ['image', 'Image', 'A photo or pattern behind everything.']], t.bgMode)}
           <div class="bg-colors inline-fields">
@@ -577,20 +577,20 @@ function createAdminRouter(ctx) {
           </div>
         </section>
 
-        <section class="panel">
+        <section class="panel" id="sec-cards">
           <h2>Cards</h2>
           ${chips('panel', themes.PANELS, t.panel)}
           <div class="slider-row"><label class="inline-label" for="radius">Corners <b>${t.radius}px</b></label>
           <input id="radius" name="radius" type="range" min="0" max="48" value="${t.radius}"></div>
         </section>
 
-        <section class="panel">
+        <section class="panel" id="sec-type">
           <h2>Type</h2>
           ${chips('font', themes.FONTS.map(([k, l, , note]) => [k, l, note]), t.font,
             (key) => ` style="font-family: ${themes.FONTS.find(([k]) => k === key)[2].replaceAll('"', '&quot;')}"`)}
         </section>
 
-        <section class="panel">
+        <section class="panel" id="sec-layout">
           <h2>Layout</h2>
           <p class="group-label">Page width</p>
           ${chips('width', themes.WIDTHS.map(([k, l]) => [k, l, '']), t.width)}
@@ -599,7 +599,7 @@ function createAdminRouter(ctx) {
           <label class="check-label"><input type="checkbox" name="bannerFull" value="1" class="check"${t.bannerFull ? ' checked' : ''}> Banner runs edge to edge</label>
         </section>
 
-        <section class="panel">
+        <section class="panel" id="sec-photos">
           <h2>Photos &amp; artwork</h2>
           <p class="group-label">Host photos</p>
           ${chips('imgShape', themes.IMAGE_SHAPES.map(([k, l]) => [k, l, '']), t.imgShape)}
@@ -608,13 +608,13 @@ function createAdminRouter(ctx) {
           ${chips('artSize', themes.ART_SIZES.map(([k, l]) => [k, l, '']), t.artSize)}
         </section>
 
-        <section class="panel">
+        <section class="panel" id="sec-mode">
           <h2>Light or dark</h2>
           ${chips('mode', [['auto', 'Follow the visitor', "Their device decides, and they can flip it."], ['light', 'Always light', ''], ['dark', 'Always dark', '']], t.mode)}
           <label class="check-label"><input type="checkbox" name="toggle" value="1" class="check"${t.toggle ? ' checked' : ''}> Offer the light/dark switch</label>
         </section>
 
-        <section class="panel">
+        <section class="panel" id="sec-words">
           <h2>Words of your own</h2>
           <label for="tagline">Tagline</label>
           <input id="tagline" name="tagline" maxlength="200" value="${esc(t.tagline)}" placeholder="Two nerds, one microphone">
@@ -829,7 +829,7 @@ function createAdminRouter(ctx) {
       &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
       &middot; <a href="/admin/episodes">shows</a></p>
 
-      <section class="panel">
+      <section class="panel" id="sec-feed">
         <h2>Feed check</h2>
         <p class="hint">What Apple, Spotify and the rest look for before
         they accept a podcast. ${failed.length ? `<strong>${failed.length} still to sort out.</strong>` : 'All good.'}</p>

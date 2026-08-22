@@ -48,7 +48,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.8.0">
+<link rel="stylesheet" href="/css/site.css?v=0.9.0">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -297,6 +297,53 @@ document.addEventListener('change', (e) => {
     else { status.textContent = 'Upload failed: ' + (d.error || 'unknown error'); }
   }).catch(() => { status.textContent = 'Upload failed.'; });
 });
+// A page with a lot of cards gets a rail down the right-hand side: one
+// link per section, the one you are looking at marked. Built from
+// whatever sections the page has rather than kept in step by hand, and
+// only when there are enough of them to be worth it.
+(function sectionRail() {
+  var sections = [].slice.call(document.querySelectorAll('main .panel[id], main details.panel[id]'))
+    .map(function (el) {
+      var heading = el.querySelector('h2');
+      return heading ? { el: el, title: heading.textContent.trim() } : null;
+    })
+    .filter(Boolean);
+  if (sections.length < 5) return;
+
+  var rail = document.createElement('nav');
+  rail.className = 'section-rail';
+  rail.setAttribute('aria-label', 'Sections on this page');
+  rail.innerHTML = sections.map(function (s) {
+    return '<a href="#' + s.el.id + '"><span></span>' + s.title.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</a>';
+  }).join('');
+  document.body.appendChild(rail);
+  var links = rail.querySelectorAll('a');
+
+  function mark(index) {
+    for (var i = 0; i < links.length; i++) links[i].classList.toggle('current', i === index);
+  }
+  mark(0);
+
+  // Whichever section is nearest the top of the window without having
+  // gone past it is the one being read.
+  var ticking = false;
+  function update() {
+    ticking = false;
+    var best = 0;
+    for (var i = 0; i < sections.length; i++) {
+      if (sections[i].el.getBoundingClientRect().top - 120 <= 0) best = i;
+    }
+    mark(best);
+  }
+  window.addEventListener('scroll', function () {
+    if (ticking) return;
+    ticking = true;
+    requestAnimationFrame(update);
+  }, { passive: true });
+  window.addEventListener('resize', update);
+  update();
+})();
+
 // Editing saves itself. Any form marked data-autosave stores what has
 // been typed half a second after the typing stops, so there is no Save
 // button to find and nothing is lost by wandering off. Forms that
@@ -505,7 +552,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.8.0">
+<link rel="stylesheet" href="/css/site.css?v=0.9.0">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">
