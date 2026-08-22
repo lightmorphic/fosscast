@@ -48,7 +48,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.6.1">
+<link rel="stylesheet" href="/css/site.css?v=0.7.0">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -297,6 +297,62 @@ document.addEventListener('change', (e) => {
     else { status.textContent = 'Upload failed: ' + (d.error || 'unknown error'); }
   }).catch(() => { status.textContent = 'Upload failed.'; });
 });
+// Editing saves itself. Any form marked data-autosave stores what has
+// been typed half a second after the typing stops, so there is no Save
+// button to find and nothing is lost by wandering off. Forms that
+// create something - a new episode, a new host, logging in - keep their
+// button, because those are decisions rather than edits.
+(function autosave() {
+  var forms = document.querySelectorAll('form[data-autosave]');
+  if (!forms.length) return;
+
+  // File inputs upload themselves and write their path into a hidden
+  // field, so they are left out of the body sent here.
+  function body(form) {
+    var params = new URLSearchParams();
+    Array.prototype.forEach.call(form.elements, function (el) {
+      if (!el.name || el.disabled || el.type === 'file' || el.type === 'submit') return;
+      if ((el.type === 'checkbox' || el.type === 'radio') && !el.checked) return;
+      params.append(el.name, el.value);
+    });
+    params.set('live', '1');
+    return params;
+  }
+
+  Array.prototype.forEach.call(forms, function (form) {
+    var state = form.querySelector('.save-state');
+    var timer = null;
+    function say(text, cls) {
+      if (!state) return;
+      state.textContent = text;
+      state.className = 'save-state' + (cls ? ' ' + cls : '');
+    }
+    function save() {
+      timer = null;
+      fetch(form.action, { method: 'POST', body: body(form) })
+        .then(function (r) {
+          if (!r.ok) throw new Error('save failed');
+          say('Saved', 'saved');
+          setTimeout(function () { if (state && state.textContent === 'Saved') say(''); }, 2000);
+        })
+        .catch(function () { say('Not saved - check your connection', 'failed'); });
+    }
+    function queue() {
+      clearTimeout(timer);
+      say('Saving...', 'saving');
+      timer = setTimeout(save, 500);
+    }
+    form.addEventListener('input', queue);
+    form.addEventListener('change', queue);
+    // Whatever is still waiting when the page is left goes now.
+    window.addEventListener('pagehide', function () {
+      if (!timer) return;
+      clearTimeout(timer);
+      navigator.sendBeacon(form.action, body(form));
+    });
+  });
+})();
+
 // The Look page: swatches, live labels, fields that appear only when
 // they apply, and a preview that is the real page rendered by the
 // server with the pending theme - so it cannot drift from the result.
@@ -449,7 +505,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.6.1">
+<link rel="stylesheet" href="/css/site.css?v=0.7.0">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">
