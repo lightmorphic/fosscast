@@ -4,13 +4,15 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FOSSCast - self-hosted podcast hosting, done properly</title>
-<meta name="description" content="Free, self-hosted podcast hosting: your own website, episode pages, and RSS feeds built to what Apple, Spotify and Podcast Index actually want.">
+<meta name="description" content="Free, self-hosted podcast hosting. Your own website with your own colours, host pages, membership links, and RSS feeds built to what Apple, Spotify and Podcast Index actually want. One pasted file to install.">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/site.css">
 <link rel="stylesheet" href="/css/marketing.css">
 <meta property="og:title" content="FOSSCast">
-<meta property="og:description" content="Self-hosted podcast hosting, done properly. Free and open source.">
+<meta property="og:description" content="Self-hosted podcast hosting, done properly. One pasted file to install. Free and open source.">
 <meta property="og:type" content="website">
+<meta name="theme-color" content="#ff5721">
+<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body>
 
@@ -20,8 +22,8 @@
     <span>FOSSCast</span>
   </a>
   <nav class="top-nav">
+    <a class="top-link" href="#install">Install</a>
     <a class="top-link" href="#features">Features</a>
-    <a class="top-link" href="#self-host">Self-host</a>
     <a class="top-link" href="#hosted">Hosted</a>
     <a class="top-link" href="https://github.com/lightmorphic/fosscast">GitHub</a>
   </nav>
@@ -31,95 +33,385 @@
 
   <section class="panel hero mkt-hero">
     <p class="status"><span aria-hidden="true">&#9679;</span> Free and open source, GPL v3</p>
-    <h1>Your podcast, your server,<br>your audience.</h1>
-    <p class="lede">FOSSCast gives your show a proper website: a page
-    per episode with artwork, players, chapters and transcripts, and
-    RSS feeds every podcast app understands. Run it yourself on any
-    Linux box, for nothing, forever.</p>
+    <h1>Your podcast, your server,<br>your website.</h1>
+    <p class="lede">FOSSCast gives your show a proper home: a page per
+    episode, a page per host, colours you choose yourself, and RSS feeds
+    every podcast app understands. One pasted file installs it. Nothing
+    it serves ever calls anybody else.</p>
     <div class="cta-row">
-      <a class="btn-primary" href="#self-host">Run it yourself</a>
-      <a class="btn-secondary" href="#hosted">Have us host it</a>
+      <a class="btn-primary" href="#install">Install in one paste</a>
+      <a class="btn-secondary" href="#hosted">Have us run it</a>
     </div>
+    <ul class="spec-strip">
+      <li><b>1</b> file to paste</li>
+      <li><b>0</b> trackers, fonts or scripts from anyone else</li>
+      <li><b>0</b> npm dependencies at runtime</li>
+      <li><b>&pound;0</b> forever, on your own box</li>
+    </ul>
   </section>
 
-  <section class="grid" id="features">
+  <section class="panel install-panel" id="install">
+    <span class="eyebrow">Installing</span>
+    <h2>The whole installation is this file</h2>
+    <p>A Linux machine with Docker, a domain pointed at it, ports 80 and
+    443 open. Paste this into <code>docker-compose.yml</code>, change the
+    three marked values, and run <code>docker compose up -d</code>.</p>
+
+    <div class="code-card">
+      <div class="code-head">
+        <span>docker-compose.yml</span>
+        <button class="btn-copy-code" type="button" data-copy>Copy</button>
+      </div>
+<pre><code id="compose">services:
+  app:
+    image: ghcr.io/lightmorphic/fosscast:latest
+    restart: unless-stopped
+    environment:
+      ADMIN_EMAIL: you@example.com                  # change
+      ADMIN_PASSWORD: change this to something long # change
+      DOMAIN: podcast.example.com                   # change
+    volumes:
+      - fosscast_data:/data
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    command: caddy reverse-proxy --from podcast.example.com --to app:3100  # change
+    ports: ["80:80", "443:443"]
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    cap_add: [NET_BIND_SERVICE]
+
+volumes:
+  fosscast_data:
+  caddy_data:
+  caddy_config:</code></pre>
+    </div>
+
+    <p>No checkout, no build, no <code>.env</code>, no Caddyfile. The
+    image carries the app and everything it serves; the HTTPS certificate
+    arrives on its own. Log in at <code>/admin</code> with the email and
+    password you put in the file.</p>
+    <div class="two-up">
+      <div>
+        <h3>Updating</h3>
+        <pre><code>docker compose pull
+docker compose up -d</code></pre>
+        <p class="hint">Your data lives in a named volume and is left
+        alone.</p>
+      </div>
+      <div>
+        <h3>Already running a proxy?</h3>
+        <p>Delete the <code>caddy</code> service, publish the app on
+        <code>127.0.0.1:3100</code>, and point nginx, Apache, a Cloudflare
+        Tunnel or Tailscale Serve at it. FOSSCast never assumes it owns
+        ports 80 and 443.</p>
+      </div>
+    </div>
+    <p class="hint">It is the same image the maintainer's own shows run
+    on, built from <code>main</code> on every push. What you install is
+    what we use.</p>
+  </section>
+
+  <section class="section-head" id="features">
+    <h2>What you get</h2>
+    <p class="lede">Everything below is in the free, self-hosted edition.
+    There is no paid tier of the software, and no feature waiting behind
+    a subscription.</p>
+  </section>
+
+  <section class="grid">
     <div class="panel wide feature-lead">
-      <span class="eyebrow">Built for the directories</span>
-      <h2>Feeds that get accepted first time</h2>
-      <p>Full iTunes namespace, Podcasting 2.0 transcripts, chapters,
-      people and funding tags, real file sizes and durations, and a
-      feed check in the dashboard that lists exactly what Apple,
-      Spotify and the rest look for. Bring a back catalogue with you:
-      import keeps every episode identity, so a move never looks like
-      a new show.</p>
+      <span class="eyebrow">New</span>
+      <h2>A website that looks like your show, not like ours</h2>
+      <p>The Look tab hands the design to you. Fourteen preset colours or
+      any hex code you like &mdash; and every other shade, in light mode
+      and dark, is worked out from the one you pick, including a link
+      colour checked for contrast so nothing you choose can end up
+      unreadable.</p>
+      <div class="swatch-demo" aria-hidden="true">
+        <span style="--sw:#ff5721"></span><span style="--sw:#e91e63"></span>
+        <span style="--sw:#8b5cf6"></span><span style="--sw:#2563eb"></span>
+        <span style="--sw:#0ea5e9"></span><span style="--sw:#0d9488"></span>
+        <span style="--sw:#16a34a"></span><span style="--sw:#d97706"></span>
+        <span style="--sw:#8d6e63"></span><span style="--sw:#475569"></span>
+      </div>
       <ul class="ticks">
-        <li>A page per episode, linked from the feed, with share cards</li>
-        <li>Listen-on buttons for the major apps, drawn inline</li>
-        <li>Banners, cover art per episode, light and dark</li>
-        <li>Download stats without tracking anybody</li>
+        <li>Backgrounds: plain, a colour, a gradient at any angle, or your own image with dim, blur and tiling</li>
+        <li>Cards solid, outlined or glass; corners from hard square to fully round</li>
+        <li>Five typefaces, three page widths, three episode layouts, four cover sizes</li>
+        <li>Force light or dark, or follow the visitor; hide the switch if you like</li>
+        <li>Your own tagline and footer line, and a custom CSS box for anything else</li>
+        <li>A live preview of your real front page, and it saves as you go &mdash; there is no Save button</li>
       </ul>
     </div>
 
     <div class="panel">
-      <h2>A real podcast host</h2>
-      <p>Episode pages, players, artwork, seasons, drafts and scheduled
-      publishing, with feeds built to the specification Apple, Spotify
-      and Podcast Index actually want.</p>
+      <span class="eyebrow">New</span>
+      <h2>Your hosts, properly introduced</h2>
+      <p>Every host gets a photo, a role and a write-up: a card on your
+      Hosts page and a page of their own. Two of you or twenty, in the
+      order you choose. They travel in the feed as well, so apps can put
+      a face to a voice.</p>
+    </div>
+
+    <div class="panel">
+      <span class="eyebrow">New</span>
+      <h2>Getting paid</h2>
+      <p>Patreon, Buy Me a Coffee, Ko-fi, Liberapay, GitHub Sponsors,
+      Open Collective and PayPal. Paste your page, get a button on your
+      site and a <code>podcast:funding</code> tag in the feed. No account
+      yet? Each one has a sign-up link beside it.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Feeds that get accepted first time</h2>
+      <p>Full iTunes namespace, Podcasting 2.0 transcripts, chapters,
+      people and funding, real file sizes and durations. A feed check in
+      the dashboard lists exactly what Apple, Spotify and the rest look
+      for, and what is still missing.</p>
     </div>
 
     <div class="panel">
       <h2>Bring your back catalogue</h2>
       <p>Paste your current RSS feed and every episode comes across with
-      its metadata. Leaving is just as easy: your data is plain files you
-      can take with you.</p>
+      its metadata and its identity &mdash; GUIDs and all &mdash; so
+      directories treat the move as the same show rather than a new one.</p>
     </div>
 
     <div class="panel">
       <h2>Media anywhere</h2>
-      <p>Upload episodes to your own server, or point at files hosted
-      elsewhere, including archive.org. Both are first-class.</p>
-    </div>
-
-    <div class="panel">
-      <h2>Podcasting 2.0</h2>
-      <p>Transcripts, chapters, people and funding links. Modern apps
-      get the richer experience; everything else still just works.</p>
+      <p>Upload to your own server or point at files hosted elsewhere,
+      archive.org included. Both are first class. Range requests are
+      handled properly, so players seek instantly.</p>
     </div>
 
     <div class="panel">
       <h2>Nothing phones home</h2>
       <p>No trackers, no third-party fonts or scripts, no cookies for
       listeners. Download counts are worked out on your own server
-      without following anybody around.</p>
+      without following anybody around. Even a custom CSS box has its
+      off-site requests stripped.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Fits the server you already have</h2>
+      <p>The bundled Caddy is optional, never assumed. nginx, Apache, a
+      Cloudflare Tunnel, a tailnet-only instance behind Tailscale: all
+      supported, all documented, all tested.</p>
+    </div>
+
+    <div class="panel">
+      <h2>Fast by default</h2>
+      <p>Every uploaded image gets a small web copy made for it while the
+      full-size original goes to the directories. Pages are plain HTML
+      and one stylesheet: no framework, no build step, no bundle.</p>
+    </div>
+
+    <div class="panel wide">
+      <h2>The small things</h2>
+      <ul class="ticks ticks-cols">
+        <li>Editing saves itself &mdash; podcast details, hosts, episodes, design</li>
+        <li>Deleting always takes a second, deliberate click</li>
+        <li>Drafts and dated episodes stay hidden until their moment</li>
+        <li>Seasons, trailers and bonus episodes, properly tagged</li>
+        <li>An embeddable player for any episode</li>
+        <li>Chapters typed as plain lines of text</li>
+        <li>Password reset by email, or from the command line</li>
+        <li>A read-only demo mode for showing the thing off</li>
+      </ul>
     </div>
   </section>
 
-  <section class="panel" id="self-host">
-    <span class="eyebrow">Self-hosting</span>
-    <h2>Up in about five minutes</h2>
-    <p>You need a Linux machine with Docker, a domain pointed at it, and
-    ports 80 and 443 reachable. That is the whole shopping list.</p>
-<pre><code>git clone https://github.com/lightmorphic/fosscast.git
-cd fosscast
-cp .env.example .env   # fill it in, every value is explained
-docker compose up -d --build</code></pre>
-    <p>HTTPS certificates arrive by themselves. Already running nginx or
-    a tunnel? There is a stack without the bundled proxy, and the README
-    covers Cloudflare Tunnel and Tailscale too.</p>
-    <p class="hint">One instance runs one podcast, on purpose: it keeps
-    the whole thing small enough to understand and to trust.</p>
+  <section class="panel wide demo-panel" id="try">
+    <span class="eyebrow">Try it here</span>
+    <h2>Redesign a show without installing anything</h2>
+    <p>These are the same choices the Look tab offers, working on a
+    miniature of a real show page. Nothing is loaded from anywhere and
+    nothing is saved &mdash; have a play.</p>
+
+    <div class="demo-layout" id="demo-root">
+      <div class="demo-controls">
+        <p class="demo-label">Colour</p>
+        <div class="demo-swatches" role="group" aria-label="Accent colour">
+          <button type="button" class="demo-swatch current" data-accent="#ff5721" style="--sw:#ff5721" aria-label="Deep orange"></button>
+          <button type="button" class="demo-swatch" data-accent="#e91e63" style="--sw:#e91e63" aria-label="Pink"></button>
+          <button type="button" class="demo-swatch" data-accent="#8b5cf6" style="--sw:#8b5cf6" aria-label="Purple"></button>
+          <button type="button" class="demo-swatch" data-accent="#2563eb" style="--sw:#2563eb" aria-label="Blue"></button>
+          <button type="button" class="demo-swatch" data-accent="#0d9488" style="--sw:#0d9488" aria-label="Teal"></button>
+          <button type="button" class="demo-swatch" data-accent="#16a34a" style="--sw:#16a34a" aria-label="Green"></button>
+          <button type="button" class="demo-swatch" data-accent="#d97706" style="--sw:#d97706" aria-label="Amber"></button>
+          <button type="button" class="demo-swatch" data-accent="#475569" style="--sw:#475569" aria-label="Slate"></button>
+        </div>
+
+        <p class="demo-label">Background</p>
+        <div class="demo-chips" data-set="bg">
+          <button type="button" class="demo-chip current" data-bg="plain">Plain</button>
+          <button type="button" class="demo-chip" data-bg="tint">One colour</button>
+          <button type="button" class="demo-chip" data-bg="gradient">Gradient</button>
+          <button type="button" class="demo-chip" data-bg="night">Dark</button>
+        </div>
+
+        <p class="demo-label">Cards</p>
+        <div class="demo-chips" data-set="cards">
+          <button type="button" class="demo-chip current" data-cards="solid">Solid</button>
+          <button type="button" class="demo-chip" data-cards="outline">Outlined</button>
+          <button type="button" class="demo-chip" data-cards="glass">Glass</button>
+        </div>
+
+        <p class="demo-label">Corners <b id="demo-radius-value">18px</b></p>
+        <input type="range" id="demo-radius" min="0" max="34" value="18" aria-label="Corner rounding">
+
+        <p class="demo-label">Host photos</p>
+        <div class="demo-chips" data-set="shape">
+          <button type="button" class="demo-chip current" data-shape="round">Circles</button>
+          <button type="button" class="demo-chip" data-shape="rounded">Rounded</button>
+          <button type="button" class="demo-chip" data-shape="square">Square</button>
+        </div>
+
+        <p class="demo-label">Episodes</p>
+        <div class="demo-chips" data-set="episodes">
+          <button type="button" class="demo-chip current" data-episodes="row">Beside</button>
+          <button type="button" class="demo-chip" data-episodes="stacked">Above</button>
+          <button type="button" class="demo-chip" data-episodes="compact">Compact</button>
+        </div>
+      </div>
+
+      <div class="demo-stage">
+        <div class="demo-site" id="demo-site" data-bg="plain" data-cards="solid" data-shape="round" data-episodes="row">
+          <div class="demo-chrome"><span></span><span></span><span></span></div>
+          <div class="demo-page">
+            <div class="demo-nav">
+              <span class="demo-nav-link current">Home</span>
+              <span class="demo-nav-link">Hosts</span>
+            </div>
+            <div class="demo-card demo-hero">
+              <div class="demo-cover" aria-hidden="true">
+                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+              </div>
+              <div class="demo-hero-text">
+                <p class="demo-tagline">Two nerds, one microphone</p>
+                <h3>The Nightly Build</h3>
+                <p class="demo-muted">Free software, argued about properly.</p>
+                <div class="demo-buttons">
+                  <span class="demo-pill">Apple</span>
+                  <span class="demo-pill">Spotify</span>
+                  <span class="demo-pill">RSS</span>
+                </div>
+              </div>
+            </div>
+
+            <div class="demo-card demo-episode">
+              <div class="demo-thumb" aria-hidden="true"></div>
+              <div>
+                <p class="demo-episode-title">42 &middot; The one about init systems</p>
+                <p class="demo-muted">18 Aug 2026 &middot; 54 min</p>
+              </div>
+            </div>
+            <div class="demo-card demo-episode">
+              <div class="demo-thumb" aria-hidden="true"></div>
+              <div>
+                <p class="demo-episode-title">41 &middot; Everything is a file, apparently</p>
+                <p class="demo-muted">11 Aug 2026 &middot; 61 min</p>
+              </div>
+            </div>
+
+            <div class="demo-hosts">
+              <div class="demo-card demo-host">
+                <span class="demo-face" aria-hidden="true">SS</span>
+                <div><p class="demo-episode-title">Sam Smith</p><p class="demo-role">host</p></div>
+              </div>
+              <div class="demo-card demo-host">
+                <span class="demo-face" aria-hidden="true">AB</span>
+                <div><p class="demo-episode-title">Ada Byron</p><p class="demo-role">co-host</p></div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="hint demo-note">A miniature, not a screenshot: it is
+        being restyled live, the same way your real pages would be.</p>
+      </div>
+    </div>
+  </section>
+
+  <section class="panel" id="one-podcast">
+    <span class="eyebrow">By design</span>
+    <h2>One instance, one podcast</h2>
+    <p>FOSSCast runs a single show per instance, on purpose. It keeps the
+    whole thing small enough to read in an afternoon and to trust with
+    your audience, and it means the free edition is the entire product:
+    no multi-tenant complexity you are paying for in bugs. Running three
+    shows? Run three instances; they are tiny.</p>
   </section>
 
   <section class="panel hosted-panel" id="hosted">
     <span class="eyebrow">Hosted</span>
     <h2>Or let us run it for you</h2>
-    <p>Same software, none of the server work. You get your own machine,
-    your own domain, updates and backups looked after, and someone to
-    ask when something looks wrong. Your audio and video stay yours,
-    and you can take the whole thing with you whenever you like.</p>
-    <p>Tell us about your show and we will come back with what it would
-    cost.</p>
+    <p>Same software &mdash; the identical public code, not a special
+    edition &mdash; with none of the server work. Your own machine, your
+    own domain, updates and backups looked after, and someone to ask when
+    something looks wrong.</p>
+    <p>Your audio, your artwork and your listeners stay yours, and you
+    can take the whole thing with you whenever you like: it is plain
+    files and a standard feed.</p>
     <p><a class="btn-primary" href="mailto:hello@fosscast.org?subject=Hosting%20my%20podcast%20on%20FOSSCast">Ask about hosting</a></p>
+  </section>
+
+  <section class="panel">
+    <h2>Questions people actually ask</h2>
+    <div class="faq">
+      <details>
+        <summary>What does it cost to run?</summary>
+        <p>Nothing beyond the machine. FOSSCast is GPL v3 and always
+        will be. A small VPS handles a podcast comfortably; bandwidth is
+        the only thing that scales with your audience.</p>
+      </details>
+      <details>
+        <summary>Can I leave?</summary>
+        <p>Yes, and it is deliberately easy. Your episodes are files on
+        your disk and your data is plain JSON beside them. Your feed is a
+        standard RSS feed with a stable GUID, so moving elsewhere is a
+        DNS change and a redirect.</p>
+      </details>
+      <details>
+        <summary>Do my listeners get tracked?</summary>
+        <p>No. There is no analytics service, no third-party font, no
+        script from anyone else, and no cookie for a listener. Download
+        counts come from your own server logs, by episode, not by person.</p>
+      </details>
+      <details>
+        <summary>Do I need to know Docker?</summary>
+        <p>You need to be able to paste a file and run one command. If
+        that already sounds like a bad evening, the hosted option exists
+        precisely for you.</p>
+      </details>
+      <details>
+        <summary>Is video supported?</summary>
+        <p>Yes. Episodes can be audio or video, hosted here or anywhere
+        reachable by URL, and the page picks the right player.</p>
+      </details>
+      <details>
+        <summary>Where does live streaming fit?</summary>
+        <p>It does not, and that is deliberate. FOSSCast is the published
+        show; recording and going live are a separate job for a separate
+        tool, so your public site stays small, fast and hard to break.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="panel cta-final">
+    <h2>Own your show's home</h2>
+    <p class="lede">One pasted file, five minutes, and the podcast is
+    yours again.</p>
+    <div class="cta-row">
+      <a class="btn-primary" href="#install">Install FOSSCast</a>
+      <a class="btn-secondary" href="https://github.com/lightmorphic/fosscast">Read the source</a>
+    </div>
   </section>
 
 </main>
@@ -138,6 +430,55 @@ docker compose up -d --build</code></pre>
   </a>
   <div class="foot-line">FOSSCast &middot; <a href="https://github.com/lightmorphic/fosscast">GitHub</a> &middot; free software under the <a href="https://github.com/lightmorphic/fosscast/blob/main/LICENSE">GNU GPL v3</a> &middot; built for podcasters who want to own their stack</div>
 </footer>
+
+<script>
+// The playground: chips and swatches set custom properties on the
+// miniature, which is styled entirely by those properties. No canvas,
+// no images, nothing fetched.
+(function playground() {
+  var root = document.getElementById('demo-root');
+  var site = document.getElementById('demo-site');
+  if (!root || !site) return;
+
+  function choose(button, group) {
+    var chips = button.parentElement.querySelectorAll('.demo-chip, .demo-swatch');
+    Array.prototype.forEach.call(chips, function (c) { c.classList.toggle('current', c === button); });
+    if (group) site.dataset[group] = button.dataset[group];
+  }
+
+  root.addEventListener('click', function (e) {
+    var swatch = e.target.closest('.demo-swatch');
+    if (swatch) {
+      site.style.setProperty('--demo-accent', swatch.dataset.accent);
+      choose(swatch);
+      return;
+    }
+    var chip = e.target.closest('.demo-chip');
+    if (!chip) return;
+    var group = chip.parentElement.dataset.set;
+    choose(chip, group === 'cards' ? 'cards' : group === 'bg' ? 'bg' : group === 'shape' ? 'shape' : 'episodes');
+  });
+
+  var radius = document.getElementById('demo-radius');
+  var readout = document.getElementById('demo-radius-value');
+  radius.addEventListener('input', function () {
+    site.style.setProperty('--demo-radius', radius.value + 'px');
+    readout.textContent = radius.value + 'px';
+  });
+})();
+
+document.addEventListener('click', function (e) {
+  var button = e.target.closest('[data-copy]');
+  if (!button) return;
+  var code = document.getElementById('compose');
+  navigator.clipboard.writeText(code.textContent).then(function () {
+    var was = button.textContent;
+    button.textContent = 'Copied';
+    button.classList.add('copied');
+    setTimeout(function () { button.textContent = was; button.classList.remove('copied'); }, 1800);
+  });
+});
+</script>
 
 </body>
 </html>
