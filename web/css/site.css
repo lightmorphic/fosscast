@@ -716,8 +716,16 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
 .host-grid {
   display: grid;
   gap: 1.5rem;
-  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  /* auto-fit rather than auto-fill: two hosts share the row between
+     them instead of sitting in a third of it with an empty track
+     alongside. (The cap has to live on the card, not the track: a
+     minmax with a fixed maximum is measured at its maximum, which
+     collapses the whole grid to one column.) */
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 }
+.host-grid > .host-card { max-width: 34rem; }
+/* A single host, centred, rather than one card and a large hole. */
+.host-grid > .host-card:only-child { justify-self: center; }
 /* Every card lays out the same whatever the length of the write-up: the
    photo and the name start at the top, so a two-line bio and a
    six-line one still line up across a row. */
@@ -759,16 +767,23 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
   -webkit-box-orient: vertical;
   overflow: hidden;
 }
-.host-head { display: flex; gap: 1.5rem; align-items: center; margin-bottom: 1rem; }
-.host-head-text { min-width: 0; }
-.host-head h1 { margin: 0.125rem 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+/* Who they are down one side, what they have to say filling the rest:
+   a column of text half the width of its own card looked like a
+   mistake, and the space beside it was doing nothing. */
+.host-page { display: grid; gap: 2rem; grid-template-columns: 15rem minmax(0, 1fr); align-items: start; }
+.host-side { display: grid; gap: 1rem; justify-items: start; position: sticky; top: 1.5rem; }
+.host-side-text { min-width: 0; }
+.host-side h1 { margin: 0.125rem 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+.host-page .host-bio p { max-width: none; }
+@media (max-width: 52rem) {
+  .host-page { grid-template-columns: 1fr; gap: 1.25rem; }
+  .host-side { position: static; }
+}
 .host-bio p { margin: 0 0 0.875rem; }
 .host-bio > :last-child { margin-bottom: 0; }
 .host-more { margin-top: 2rem; display: grid; gap: 1rem; }
 .section-title { margin: 0; font-size: 1.0625rem; font-weight: 600; }
-@media (max-width: 40rem) {
-  .host-head { flex-direction: column; align-items: flex-start; gap: 1rem; }
-}
+
 
 /* ---------- Hosts (admin) ---------- */
 .host-rows { display: grid; gap: 1.5rem; }
