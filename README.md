@@ -29,6 +29,10 @@ dashboard tying it all together.
   hex), background (colour, gradient or image), card style, corners,
   type, width, episode layout, light/dark, tagline, footer and custom
   CSS, with a live preview of the real page.
+- **Statistics without surveillance**: a page of charts -- months, days,
+  apps, countries, platforms, languages, when people listen, how long an
+  episode keeps earning -- all drawn on your own server from counters
+  that cannot be joined back to a person.
 - **Where to find you**: Matrix first, then Mastodon, PeerTube, Lemmy,
   Bluesky and the big platforms -- eighteen in all, as buttons on your
   page.

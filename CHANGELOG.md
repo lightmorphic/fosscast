@@ -4,6 +4,25 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Stats grew from two charts into a page: eight headline numbers, twelve
+  months as bars, thirty days as a curve, feed pulls a day (the nearest
+  honest thing to a subscriber count), doughnuts for apps and countries,
+  bars for platforms and languages, a day-by-hour heatmap of when people
+  actually listen, busiest days, how long an episode keeps earning, and
+  every episode with its share of the total.
+- Every chart is SVG drawn on the server. No charting library, no script
+  on the page, nothing fetched from anyone: the stats page is as private
+  as the counting behind it, and it takes its colours from the theme.
+- What is recorded grew, but only as counters: app, platform, language,
+  hour, weekday, month, and the age of an episode when it was
+  downloaded. There is still no row for any listener anywhere, and a
+  test asserts that neither an address nor a raw user agent is ever
+  written to disk.
+- Countries appear when the proxy says so -- Cloudflare's `CF-IPCountry`
+  or nginx's `X-Country-Code`. FOSSCast will not look an address up
+  itself: that would mean shipping a database or asking somebody else
+  about your listeners.
+
 - A banner can be video: a few seconds in the same 4:1 strip, playing
   silently on a loop, with the still banner as its poster while it loads
   and for anyone who has asked their device for less motion.
