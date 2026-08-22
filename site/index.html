@@ -340,22 +340,27 @@
     <span class="eyebrow">Installing</span>
     <h2>The whole installation is this file</h2>
     <p>A Linux machine with Docker, a domain pointed at it, ports 80 and
-    443 open. Paste this into <code>docker-compose.yml</code>, change the
-    three marked values, and run <code>docker compose up -d</code>.</p>
+    443 open. Paste this into <code>docker-compose.yml</code>, edit the
+    block at the top &mdash; everything you need to change is up there,
+    and the domain is typed once &mdash; then run
+    <code>docker compose up -d</code>.</p>
 
     <div class="code-card">
       <div class="code-head">
         <span>docker-compose.yml</span>
         <button class="btn-copy-code" type="button" data-copy>Copy</button>
       </div>
-<pre><code id="compose">services:
+<pre><code id="compose">x-config: &amp;config
+  DOMAIN: podcast.example.com          # your public address
+  ADMIN_EMAIL: you@example.com         # the first admin account
+  ADMIN_PASSWORD: change-me-to-something-long
+  PUBLISHER_TOKEN: ""                  # optional, for the publish API
+
+services:
   app:
     image: ghcr.io/lightmorphic/fosscast:latest
     restart: unless-stopped
-    environment:
-      ADMIN_EMAIL: you@example.com                  # change
-      ADMIN_PASSWORD: change this to something long # change
-      DOMAIN: podcast.example.com                   # change
+    environment: *config
     volumes:
       - fosscast_data:/data
     read_only: true
@@ -366,7 +371,8 @@
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
-    command: caddy reverse-proxy --from podcast.example.com --to app:3100  # change
+    environment: *config
+    command: sh -c 'caddy reverse-proxy --from "$$DOMAIN" --to app:3100'
     ports: ["80:80", "443:443"]
     volumes:
       - caddy_data:/data

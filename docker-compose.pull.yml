@@ -1,28 +1,32 @@
 # FOSSCast, the whole thing, from a single file.
 #
-# Paste this into docker-compose.yml on a fresh machine, change the
-# three values under `environment:`, and run:
+# Everything you need to change is in the block at the top. Paste this
+# into docker-compose.yml, edit those four lines, and run:
 #
 #   docker compose up -d
 #
 # That is the install. No checkout, no build, no .env file, no
 # Caddyfile: the published image carries the app and its web assets,
-# and Caddy is configured by the one line below. Point your domain's
-# DNS at the machine first and the certificate arrives by itself.
+# and both services read their settings from the same block, so the
+# domain is typed once.
+#
+# Point your domain's DNS at the machine first and the HTTPS
+# certificate arrives by itself.
 #
 # It runs the same image as the maintainer's own instances, built from
 # the main branch of github.com/lightmorphic/fosscast.
+
+x-config: &config
+  DOMAIN: podcast.example.com          # your public address
+  ADMIN_EMAIL: you@example.com         # the first admin account
+  ADMIN_PASSWORD: change-me-to-something-long
+  PUBLISHER_TOKEN: ""                  # optional, for the publish API: openssl rand -hex 32
+
 services:
   app:
     image: ghcr.io/lightmorphic/fosscast:latest
     restart: unless-stopped
-    environment:
-      # The first admin account, created on first start. Log in at
-      # /admin, then change the password from the Account page.
-      ADMIN_EMAIL: you@example.com
-      ADMIN_PASSWORD: change this to something long
-      # Your public address, for absolute links in the RSS feed.
-      DOMAIN: podcast.example.com
+    environment: *config
     volumes:
       - fosscast_data:/data
     read_only: true
@@ -43,15 +47,16 @@ services:
         max-size: "10m"
         max-file: "3"
 
-  # Automatic HTTPS. Put your own domain in place of the one below --
-  # the same one as DOMAIN above. Delete this whole service if the
-  # machine already runs nginx, a Cloudflare Tunnel or Tailscale, and
-  # point that at the app instead (add `ports: ["127.0.0.1:3100:3100"]`
-  # to the app service so it can reach it).
+  # Automatic HTTPS, reading the same DOMAIN as the app above. Delete
+  # this whole service if the machine already runs nginx, a Cloudflare
+  # Tunnel or Tailscale, and point that at the app instead (add
+  # `ports: ["127.0.0.1:3100:3100"]` to the app service so it can reach
+  # it).
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
-    command: caddy reverse-proxy --from podcast.example.com --to app:3100
+    environment: *config
+    command: sh -c 'caddy reverse-proxy --from "$$DOMAIN" --to app:3100'
     ports:
       - "80:80"
       - "443:443"
