@@ -363,6 +363,33 @@ test('the studio key lives on the Account page and can be replaced', async () =>
   assert.strictEqual(res.status, 200, 'and the new one works');
 });
 
+test('social links, with Matrix leading', async () => {
+  const res = await fetch(`${BASE}/admin/shows/test-show/settings`, form({
+    name: 'Test Show', description: 'Edited in place.', language: 'en',
+    social_matrix: 'matrix:r/testshow:example.org',
+    social_mastodon: 'https://mastodon.social/@testshow',
+    social_youtube: 'https://youtube.com/@testshow',
+    social_x: 'not-a-url',
+    live: '1',
+  }));
+  assert.strictEqual(res.status, 204);
+
+  const page = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(page.includes('Find us on'));
+  assert.ok(page.includes('matrix:r/testshow:example.org'), 'a matrix: URI is kept, not only https');
+  assert.ok(page.includes('mastodon.social/@testshow'));
+  assert.ok(page.includes('youtube.com/@testshow'));
+  assert.ok(!page.includes('not-a-url'), 'rubbish is dropped rather than shown');
+  assert.ok(page.indexOf('>Matrix<') < page.indexOf('>Mastodon<'), 'Matrix leads');
+  assert.ok(page.indexOf('>Mastodon<') < page.indexOf('>YouTube<'), 'the open places come before the platforms');
+
+  // The admin form offers every network, Matrix first.
+  const admin = await (await fetch(`${BASE}/admin/podcast`, { headers: { cookie } })).text();
+  assert.ok(admin.includes('social_matrix'));
+  assert.ok(admin.indexOf('social_matrix') < admin.indexOf('social_mastodon'));
+  assert.ok(admin.includes('social_peertube') && admin.includes('social_lemmy') && admin.includes('social_bluesky'));
+});
+
 test('a second show is refused (this edition manages one podcast)', async () => {
   const res = await fetch(`${BASE}/admin/shows`, form({
     name: 'Second Show', description: 'One too many.',

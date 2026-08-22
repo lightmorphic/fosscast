@@ -937,3 +937,7 @@ details.panel[open] > summary { margin-bottom: 0.75rem; }
 /* ---------- Themed extras (public) ---------- */
 .tagline { margin: 0 0 0.5rem; font-size: 1.0625rem; font-weight: 500; color: var(--accent); }
 .foot-own { margin: 0; font-size: 0.8125rem; color: var(--muted-fg); }
+
+/* The three rows of buttons on a show page - listen, find us, support -
+   read as one block rather than three loose lines. */
+.social { margin-top: 0.75rem; }
