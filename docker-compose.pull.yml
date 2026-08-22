@@ -1,0 +1,71 @@
+# FOSSCast, the whole thing, from a single file.
+#
+# Paste this into docker-compose.yml on a fresh machine, change the
+# three values under `environment:`, and run:
+#
+#   docker compose up -d
+#
+# That is the install. No checkout, no build, no .env file, no
+# Caddyfile: the published image carries the app and its web assets,
+# and Caddy is configured by the one line below. Point your domain's
+# DNS at the machine first and the certificate arrives by itself.
+#
+# It runs the same image as the maintainer's own instances, built from
+# the main branch of github.com/lightmorphic/fosscast.
+services:
+  app:
+    image: ghcr.io/lightmorphic/fosscast:latest
+    restart: unless-stopped
+    environment:
+      # The first admin account, created on first start. Log in at
+      # /admin, then change the password from the Account page.
+      ADMIN_EMAIL: you@example.com
+      ADMIN_PASSWORD: change this to something long
+      # Your public address, for absolute links in the RSS feed.
+      DOMAIN: podcast.example.com
+    volumes:
+      - fosscast_data:/data
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3100/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: &log
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+  # Automatic HTTPS. Put your own domain in place of the one below --
+  # the same one as DOMAIN above. Delete this whole service if the
+  # machine already runs nginx, a Cloudflare Tunnel or Tailscale, and
+  # point that at the app instead (add `ports: ["127.0.0.1:3100:3100"]`
+  # to the app service so it can reach it).
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    command: caddy reverse-proxy --from podcast.example.com --to app:3100
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    logging: *log
+
+volumes:
+  fosscast_data:
+  caddy_data:
+  caddy_config:

@@ -11,7 +11,11 @@
 services:
   app:
     image: ghcr.io/lightmorphic/fosscast:latest
-    build: ./server
+    # Building from a checkout is for working on FOSSCast; installing it
+    # needs no build at all (see docker-compose.pull.yml).
+    build:
+      context: .
+      dockerfile: server/Dockerfile
     restart: unless-stopped
     env_file: .env
     environment:

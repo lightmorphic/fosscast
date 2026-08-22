@@ -32,7 +32,10 @@ jobs:
       - name: Build and push
         uses: docker/build-push-action@v6
         with:
-          context: ./server
+          # The whole repository: the image carries the web assets as
+          # well as the server, so a pulled image needs no local files.
+          context: .
+          file: ./server/Dockerfile
           push: true
           tags: |
             ghcr.io/${{ env.OWNER_LC }}/fosscast:latest

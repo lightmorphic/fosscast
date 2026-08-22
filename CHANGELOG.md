@@ -4,6 +4,15 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Installing is one pasted file. `docker-compose.pull.yml` (and the same
+  snippet in the README) needs no checkout, no build, no `.env` and no
+  Caddyfile: the published image now carries the web assets as well as
+  the server, and Caddy is configured by a single command line. Paste,
+  change three values, `docker compose up -d`.
+- The image is therefore built from the repository root rather than
+  `server/`, so `web/` lands inside it. A checkout still mounts its own
+  `web/` over the top for development.
+
 - Editing saves itself everywhere, not just on the Look tab. Podcast
   details, a host's page and an episode all store what has been typed
   half a second after the typing stops, with a small line saying
