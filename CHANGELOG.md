@@ -4,6 +4,13 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- The long admin pages carry a rail of their own sections, floating at
+  the right of the window: one link per card, the one you are reading
+  marked as you scroll. It builds itself from whatever sections a page
+  has -- the podcast details and the Look tab both qualify -- appears
+  only where there is room beside the column, and stays out of the way
+  entirely on a narrow screen.
+
 - Social links: a "Find us on" row beside the listen-on and support
   buttons, with eighteen places to fill in. Matrix leads, then the rest
   of the open, federated ones -- Mastodon, PeerTube, Lemmy, Bluesky --
