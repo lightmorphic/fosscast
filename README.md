@@ -254,6 +254,7 @@ tags above only cover apps that subscribe to the feed directly.
 |---|---|---|
 | Podcast artwork | **3000 x 3000** square | JPG or PNG, RGB. Apple accepts 1400 x 1400 upwards; 3000 is the safe maximum every directory takes. Keep it under about 500 KB. |
 | Episode cover art | **3000 x 3000** square | Optional per episode. Apps that support per-episode art show it; the rest fall back to the podcast artwork, and so does this site. |
+| Banner video | **1280 x 320** (4:1) | Optional, in place of the still banner. Hard limits: 1920 x 480, 8 MB, 20 seconds, MP4 (H.264) or WebM. Nothing is re-encoded on the server, so anything larger is refused with a note saying what to change. Keep the still banner too: it is the poster. |
 | Website banner | **2560 x 640** (4:1) | JPG, PNG or WebP. 1920 x 480 is fine. Edges crop on narrow screens, so keep anything important central. |
 | Host photo | **800 x 800** square | Anything from 400 x 400 up. Shrunk to a 640px copy for the site; the file you upload is kept as it is. |
 

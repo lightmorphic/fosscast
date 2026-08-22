@@ -48,7 +48,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.9.2">
+<link rel="stylesheet" href="/css/site.css?v=0.10.0">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -290,7 +290,8 @@ document.addEventListener('change', (e) => {
     if (preview) { preview.src = URL.createObjectURL(file); preview.style.display = 'block'; }
   }
   status.textContent = 'Uploading ' + file.name + ' (' + (file.size / 1048576).toFixed(1) + ' MB)...';
-  fetch('/admin/api/upload?show=' + encodeURIComponent(input.dataset.show) + '&filename=' + encodeURIComponent(file.name), {
+  var check = input.dataset.check ? '&check=' + encodeURIComponent(input.dataset.check) : '';
+  fetch('/admin/api/upload?show=' + encodeURIComponent(input.dataset.show) + '&filename=' + encodeURIComponent(file.name) + check, {
     method: 'PUT', body: file,
   }).then((r) => r.json()).then((d) => {
     if (d.urlPath) { target.value = d.urlPath; status.textContent = 'Uploaded: ' + d.name; }
@@ -574,7 +575,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.9.2">
+<link rel="stylesheet" href="/css/site.css?v=0.10.0">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">
