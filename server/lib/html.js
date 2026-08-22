@@ -48,7 +48,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.6.0">
+<link rel="stylesheet" href="/css/site.css?v=0.6.1">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -338,16 +338,31 @@ document.addEventListener('change', (e) => {
     });
   }
 
-  let timer;
+  // The look saves itself. One request stores the change and returns the
+  // front page as it now stands, so the preview is the saved truth
+  // rather than a guess at it.
+  var timer;
+  var state = document.getElementById('save-state');
+  function say(text, cls) {
+    if (!state) return;
+    state.textContent = text;
+    state.className = 'save-state' + (cls ? ' ' + cls : '');
+  }
   function preview() {
-    if (!frame) return;
     clearTimeout(timer);
+    say('Saving...', 'saving');
     timer = setTimeout(() => {
-      fetch('/admin/look/preview', { method: 'POST', body: new URLSearchParams(new FormData(form)) })
-        .then((r) => r.text())
-        .then((html) => { frame.srcdoc = html; })
-        .catch(() => {});
-    }, 220);
+      const body = new URLSearchParams(new FormData(form));
+      body.set('live', '1');
+      fetch('/admin/look', { method: 'POST', body })
+        .then((r) => { if (!r.ok) throw new Error('save failed'); return r.text(); })
+        .then((html) => {
+          if (frame) frame.srcdoc = html;
+          say('Saved', 'saved');
+          setTimeout(() => { if (state && state.textContent === 'Saved') say(''); }, 2000);
+        })
+        .catch(() => say('Not saved - check your connection', 'failed'));
+    }, 500);
   }
 
   form.addEventListener('input', () => { relevant(); labels(); preview(); });
@@ -366,9 +381,18 @@ document.addEventListener('change', (e) => {
   if (hex) hex.addEventListener('input', () => {
     if (/^#?[0-9a-fA-F]{6}$/.test(hex.value) && picker) picker.value = hex.value.startsWith('#') ? hex.value : '#' + hex.value;
   });
+  // A change still inside the debounce when the page is left is sent
+  // immediately rather than lost.
+  window.addEventListener('pagehide', () => {
+    if (!timer) return;
+    clearTimeout(timer);
+    const body = new URLSearchParams(new FormData(form));
+    body.set('live', '1');
+    navigator.sendBeacon('/admin/look', body);
+  });
+
   relevant();
   labels();
-  preview();
 })();
 
 document.addEventListener('click', (e) => {
@@ -425,7 +449,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.6.0">
+<link rel="stylesheet" href="/css/site.css?v=0.6.1">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">
