@@ -4,6 +4,13 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Host cards line up with each other again. A short write-up left its
+  photo and name floating in the middle of the card while a long one
+  started at the top, so a row of hosts looked misaligned; everything
+  now starts at the top, and a write-up is shown four lines at most, so
+  one talkative host cannot make their card twice the height of the
+  rest.
+
 - The studio key moves out of the compose file and onto the Account
   page, under Studio publishing: masked, with show and copy buttons, and
   a two-click "generate a new key" for when it needs retiring. It was
