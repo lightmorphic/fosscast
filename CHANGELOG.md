@@ -4,6 +4,16 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- A banner can be video: a few seconds in the same 4:1 strip, playing
+  silently on a loop, with the still banner as its poster while it loads
+  and for anyone who has asked their device for less motion.
+- It is measured on arrival and refused if it is too much: 1920 x 480,
+  8 MB and 20 seconds are the ceilings, 1280 x 320 the recommendation,
+  and the message says which one was missed and by how much. Nothing is
+  re-encoded -- a small VPS should not be asked to transcode video, so
+  the file you upload is the file your listeners get, and it has to be
+  right before it lands.
+
 - The "Hosts" link under a host's photo has gone: the menu at the top of
   every page already says Hosts, and repeating it under the picture only
   crowded the name it sat above.

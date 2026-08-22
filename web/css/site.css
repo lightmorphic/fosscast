@@ -577,6 +577,20 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
   margin: 0 auto 1.5rem;
   padding: 0 1.5rem;
 }
+.show-banner video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 1;
+  object-fit: cover;
+  border-radius: var(--panel-radius);
+}
+/* Someone who has asked their device for less motion gets the still
+   banner instead: the video is left at its poster frame. */
+@media (prefers-reduced-motion: reduce) {
+  .show-banner video { animation-play-state: paused; }
+}
+.limits { margin: 0.5rem 0 0.75rem; }
+.limits li > span:first-child { color: var(--accent); }
 .show-banner img {
   display: block;
   width: 100%;
