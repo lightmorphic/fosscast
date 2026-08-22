@@ -4,6 +4,18 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Links stop looking like 1996: gone is the browser's blue with a hard
+  underline through the descenders. A link now takes a shade of the
+  show's own colour, with a hair-thin underline set away from the text
+  that fills in on hover. Anything that is already a control -- buttons,
+  cards, nav, subscribe chips -- carries no underline at all, since its
+  shape already says it is clickable.
+- The link shade is derived for readability rather than taken straight
+  from the accent: a bright accent on white is often around 3:1 where
+  body text wants 4.5:1, so the colour is walked darker (or lighter, in
+  dark mode) until it clears the bar. Every preset and any custom hex
+  clears 4.5:1 in both light and dark.
+
 - Photos and artwork get their own controls on the Look tab: host photos
   can be circles, rounded squares or hard squares, in four sizes, and the
   cover on the front page has four sizes of its own. The corner slider is
