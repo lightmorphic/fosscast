@@ -78,8 +78,10 @@ function clientIp(req) {
 // no uploads, no publishing, no chat for anyone to spoil.
 const DEMO = process.env.DEMO_MODE === '1';
 
-function publisherAuthed(req) {
-  const token = (admin.settings().publisherToken || '').trim();
+// The studio's own key: FOSSStudio (or any other studio) sends it to
+// publish a finished recording. Nothing else uses it.
+function studioAuthed(req) {
+  const token = (admin.settings().studioToken || '').trim();
   const given = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
   if (!token || !given || given.length !== token.length) return false;
   return require('crypto').timingSafeEqual(Buffer.from(given), Buffer.from(token));
@@ -141,7 +143,7 @@ const server = http.createServer((req, res) => {
   // episodes. Two steps: PUT the media, then POST the episode.
   if (p === '/api/v1/media' && req.method === 'PUT') {
     if (DEMO) return sendJson(res, 403, { error: 'demo instance is read-only' });
-    if (!publisherAuthed(req)) return sendJson(res, 401, { error: 'bad token' });
+    if (!studioAuthed(req)) return sendJson(res, 401, { error: 'bad token' });
     const show = store.load('shows', [])[0];
     if (!show) return sendJson(res, 409, { error: 'no show configured yet' });
     media.saveUpload(req, MEDIA_DIR, show.slug, url.searchParams.get('filename') || 'upload')
@@ -151,7 +153,7 @@ const server = http.createServer((req, res) => {
   }
   if (p === '/api/v1/episodes' && req.method === 'POST') {
     if (DEMO) return sendJson(res, 403, { error: 'demo instance is read-only' });
-    if (!publisherAuthed(req)) return sendJson(res, 401, { error: 'bad token' });
+    if (!studioAuthed(req)) return sendJson(res, 401, { error: 'bad token' });
     readBody(req).then((raw) => {
       let body;
       try { body = JSON.parse(raw.toString() || '{}'); } catch {

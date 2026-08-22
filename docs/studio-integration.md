@@ -7,7 +7,7 @@ relationship is this one API.
 
 ## Publishing episodes (the publish API)
 
-Token-authenticated (the instance's `PUBLISHER_TOKEN`, sent as
+Token-authenticated (the instance's `FOSSSTUDIO_TOKEN`, sent as
 `Authorization: Bearer <token>`). Two steps:
 
 1. `PUT /api/v1/media?filename=<name>` with the raw file as the body.

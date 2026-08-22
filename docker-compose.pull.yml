@@ -20,7 +20,7 @@ x-config: &config
   DOMAIN: podcast.example.com          # your public address
   ADMIN_EMAIL: you@example.com         # the first admin account
   ADMIN_PASSWORD: change-me-to-something-long
-  PUBLISHER_TOKEN: ""                  # optional, for the publish API: openssl rand -hex 32
+  FOSSSTUDIO_TOKEN: ""                 # only if a studio publishes into this instance
 
 services:
   app:
