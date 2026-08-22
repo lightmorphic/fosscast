@@ -7,8 +7,11 @@ relationship is this one API.
 
 ## Publishing episodes (the publish API)
 
-Token-authenticated (the instance's `FOSSSTUDIO_TOKEN`, sent as
-`Authorization: Bearer <token>`). Two steps:
+Token-authenticated: the key is on the instance's Account page, under
+Studio publishing, where it can be copied or replaced. It is sent as
+`Authorization: Bearer <token>`. (`FOSSSTUDIO_TOKEN` in the environment
+sets it in advance instead, for a studio configured before the instance
+exists.) Two steps:
 
 1. `PUT /api/v1/media?filename=<name>` with the raw file as the body.
    Returns `{ "urlPath": "/media/<show>/<name>", "size": <bytes> }`.
