@@ -288,6 +288,46 @@ test('the look: colours, background, type and words of your own', async () => {
   assert.ok(!page.includes('<style>'), 'default look leaves no trace');
 });
 
+test('editing saves itself: podcast details, a host and an episode', async () => {
+  // Podcast details, saved the way the page saves them.
+  let res = await fetch(`${BASE}/admin/shows/test-show/settings`, form({
+    name: 'Test Show', description: 'Saved without a button.', language: 'en',
+    author: 'Jo', live: '1',
+  }));
+  assert.strictEqual(res.status, 204, 'no page comes back, the browser stays put');
+  let page = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(page.includes('Saved without a button.'));
+
+  // A host.
+  const hostsAdmin = await (await fetch(`${BASE}/admin/hosts`, { headers: { cookie } })).text();
+  const hostId = (hostsAdmin.match(/\/admin\/hosts\/([a-f0-9-]{36})"/) || [])[1];
+  assert.ok(hostId, 'there is a host to edit');
+  res = await fetch(`${BASE}/admin/hosts/${hostId}`, form({
+    name: 'Sam Smith', role: 'presenter', bio: 'Typed, not submitted.', live: '1',
+  }));
+  assert.strictEqual(res.status, 204);
+  assert.ok((await (await fetch(`${BASE}/hosts/sam-smith`)).text()).includes('Typed, not submitted.'));
+
+  // An episode.
+  const list = await (await fetch(`${BASE}/admin/episodes`, { headers: { cookie } })).text();
+  const episodeId = (list.match(/\/admin\/episodes\/([a-f0-9-]{36})"/) || [])[1];
+  assert.ok(episodeId, 'there is an episode to edit');
+  res = await fetch(`${BASE}/admin/episodes/${episodeId}`, form({
+    title: 'Episode One', date: '2026-08-15',
+    mediaUrl: `https://example.org/media/episode-one.mp3`,
+    description: 'Edited in place.', live: '1',
+  }));
+  assert.strictEqual(res.status, 204);
+  assert.ok((await (await fetch(`${BASE}/shows/test-show`)).text()).includes('Edited in place.'));
+
+  // Without the marker the old behaviour stands, so a browser with no
+  // JavaScript still gets its redirect.
+  res = await fetch(`${BASE}/admin/shows/test-show/settings`, form({
+    name: 'Test Show', description: 'Edited in place.', language: 'en',
+  }));
+  assert.strictEqual(res.status, 303);
+});
+
 test('a second show is refused (this edition manages one podcast)', async () => {
   const res = await fetch(`${BASE}/admin/shows`, form({
     name: 'Second Show', description: 'One too many.',

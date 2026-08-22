@@ -96,6 +96,13 @@ function html(res, page, status = 200) {
   res.end(page);
 }
 
+// Saved from the page itself: no page to send back, and the browser
+// stays where it is.
+function noContent(res) {
+  res.writeHead(204, { 'Content-Length': '0' });
+  res.end();
+}
+
 async function formBody(req, readBody) {
   const raw = (await readBody(req)).toString();
   return new URLSearchParams(raw);
@@ -782,12 +789,12 @@ function createAdminRouter(ctx) {
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
       <p class="hint"><a href="/hosts/${esc(host.slug || host.id)}">their page</a>
       on the site</p>
-      <form method="post" action="/admin/hosts/${esc(host.id)}">
+      <form method="post" action="/admin/hosts/${esc(host.id)}" data-autosave>
         <section class="panel">
           <h2>Details</h2>
           ${hostFields(show, host, 'e')}
-          <p><button class="btn-primary" type="submit">Save host</button></p>
         </section>
+        <div class="save-bar"><span class="save-state" aria-live="polite"></span></div>
       </form>
       <div class="page-actions">
         ${deleteButton(`/admin/hosts/${esc(host.id)}/delete`, `Remove ${host.name}`)}
@@ -825,7 +832,7 @@ function createAdminRouter(ctx) {
         </ul>
       </section>
 
-      <form method="post" action="/admin/shows/${esc(show.slug)}/settings">
+      <form method="post" action="/admin/shows/${esc(show.slug)}/settings" data-autosave>
         <section class="panel" id="sec-basics">
           <h2>Basics</h2>
           <label for="sname">Name</label>
@@ -941,7 +948,7 @@ function createAdminRouter(ctx) {
           <input id="sguid" name="podcastGuid" maxlength="60" value="${esc(show.podcastGuid || '')}" placeholder="">
         </section>
 
-        <button class="btn-primary" type="submit">Save details</button>
+        <div class="save-bar"><span class="save-state" aria-live="polite"></span></div>
       </form>`,
     });
   }
@@ -996,7 +1003,7 @@ function createAdminRouter(ctx) {
       body: `<h1 class="page-title">Edit show</h1>
       <p class="hint"><a href="/admin/episodes">&larr; Shows</a></p>
       <section class="panel">
-        <form method="post" action="/admin/episodes/${esc(episode.id)}">
+        <form method="post" action="/admin/episodes/${esc(episode.id)}" data-autosave>
           <label for="title">Title</label>
           <input id="title" name="title" required maxlength="200" value="${esc(episode.title)}">
           <div class="field-row">
@@ -1027,7 +1034,7 @@ function createAdminRouter(ctx) {
           <label for="chapters">Chapters (one per line: HH:MM:SS Title)</label>
           <textarea id="chapters" name="chapters" rows="5" placeholder="00:00 Intro&#10;05:30 The main topic">${esc(formatChapters(episode.chapters))}</textarea>
           <label class="check-label"><input type="checkbox" name="draft" value="1" class="check"${episode.draft ? ' checked' : ''}> Draft (hidden from the public site and feed)</label>
-          <button class="btn-primary" type="submit">Save show</button>
+          <div class="save-bar"><span class="save-state" aria-live="polite"></span></div>
         </form>
       </section>`,
     });
@@ -1307,6 +1314,7 @@ function createAdminRouter(ctx) {
         applyHostForm(host, form, entry);
         store.save('shows', list);
         refreshWebImages().catch(() => {});
+        if (form.get('live')) { noContent(res); return true; }
         redirect(res, '/admin/hosts');
         return true;
       }
@@ -1449,6 +1457,9 @@ function createAdminRouter(ctx) {
         }
         store.save('shows', list);
         refreshWebImages().catch(() => {});
+        // Saved from the page as it was typed: nothing to redirect to,
+        // the page is already showing what was stored.
+        if (form.get('live')) { noContent(res); return true; }
         redirect(res, '/admin/podcast');
         return true;
       }
@@ -1543,6 +1554,7 @@ function createAdminRouter(ctx) {
         store.save('episodes', list);
         measure(entry.id);
         refreshWebImages().catch(() => {});
+        if (form.get('live')) { noContent(res); return true; }
         redirect(res, '/admin/episodes');
         return true;
       }

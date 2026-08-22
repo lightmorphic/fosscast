@@ -4,6 +4,19 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Editing saves itself everywhere, not just on the Look tab. Podcast
+  details, a host's page and an episode all store what has been typed
+  half a second after the typing stops, with a small line saying
+  "Saving..." then "Saved" where the button used to be. Wander off
+  mid-sentence and it still lands: whatever is waiting is sent as the
+  page unloads.
+- Buttons stay where a button is the point: publishing a new episode,
+  adding a host, importing a feed, creating the podcast, changing a
+  password, logging in. Those are decisions, not edits.
+- Saving without JavaScript still works exactly as it did -- the form
+  posts, the server redirects -- so nothing depends on the new
+  behaviour.
+
 - The Look tab saves itself. There is no Save button to hunt for: pick a
   colour, drag a slider, type a tagline, and half a second later it is
   stored and the preview is the saved page rather than a guess at it.
