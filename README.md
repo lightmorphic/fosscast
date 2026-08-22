@@ -29,6 +29,9 @@ dashboard tying it all together.
   hex), background (colour, gradient or image), card style, corners,
   type, width, episode layout, light/dark, tagline, footer and custom
   CSS, with a live preview of the real page.
+- **Where to find you**: Matrix first, then Mastodon, PeerTube, Lemmy,
+  Bluesky and the big platforms -- eighteen in all, as buttons on your
+  page.
 - **Getting paid**: Patreon, Buy Me a Coffee, Ko-fi, Liberapay, GitHub
   Sponsors, Open Collective and PayPal links become buttons on the show
   page and `podcast:funding` tags in the feed.

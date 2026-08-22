@@ -4,6 +4,12 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Social links: a "Find us on" row beside the listen-on and support
+  buttons, with eighteen places to fill in. Matrix leads, then the rest
+  of the open, federated ones -- Mastodon, PeerTube, Lemmy, Bluesky --
+  then the big platforms. A Matrix room can be given as a `matrix:` URI
+  as well as a matrix.to link.
+
 - Host cards line up with each other again. A short write-up left its
   photo and name floating in the middle of the card while a long one
   started at the top, so a row of hosts looked misaligned; everything
