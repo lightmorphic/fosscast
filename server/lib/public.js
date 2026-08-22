@@ -102,6 +102,54 @@ const SUPPORT = [
   ['paypal', 'PayPal', 'https://www.paypal.com/paypalme/grab', 'https://www.paypal.me/yourshow', COIN_ICON],
 ];
 
+// Where the show talks to its audience. Matrix leads, then the rest of
+// the open, federated places, then the big platforms - a podcast that
+// cares about owning its own feed usually cares about that order.
+// Icons are plain glyphs by kind of place, not brand marks: nothing is
+// fetched from anyone and no trademark is copied.
+const CHAT_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 3c5 0 9 3.1 9 7s-4 7-9 7a11 11 0 0 1-2.6-.3L5 19.5l.9-3.4C4.1 14.8 3 12.9 3 10.7 3 6.8 7 3 12 3z"/></svg>';
+const FEDI_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M12 2a10 10 0 1 0 0 20 10 10 0 0 0 0-20zm6.9 7h-2.8a15 15 0 0 0-1.2-3.6A8 8 0 0 1 18.9 9zM12 4.2c.7 1 1.3 2.4 1.7 4.8h-3.4c.4-2.4 1-3.8 1.7-4.8zM4.3 13a8 8 0 0 1 0-2h3.2a19 19 0 0 0 0 2H4.3zm.8 2h2.8c.3 1.4.7 2.6 1.2 3.6A8 8 0 0 1 5.1 15zm2.8-6H5.1a8 8 0 0 1 4-3.6C8.6 6.4 8.2 7.6 7.9 9zM12 19.8c-.7-1-1.3-2.4-1.7-4.8h3.4c-.4 2.4-1 3.8-1.7 4.8zm2-6.8h-4a17 17 0 0 1 0-2h4a17 17 0 0 1 0 2zm.9 5.6c.5-1 .9-2.2 1.2-3.6h2.8a8 8 0 0 1-4 3.6zm1.6-5.6a19 19 0 0 0 0-2h3.2a8 8 0 0 1 0 2h-3.2z"/></svg>';
+const VIDEO_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M4 5h16a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V6a1 1 0 0 1 1-1zm6 3.5v7l6-3.5z"/></svg>';
+const PHOTO_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M9 4h6l1.2 2H20a1 1 0 0 1 1 1v11a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h3.8L9 4zm3 5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9zm0 2a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/></svg>';
+const POST_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 3h14a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2zm2 4v2h10V7H7zm0 4v2h10v-2H7zm0 4v2h6v-2H7z"/></svg>';
+const LINK_ICON = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.1 0l2.4-2.4a5 5 0 0 0-7.1-7.1L11 4.9"/><path d="M14 11a5 5 0 0 0-7.1 0L4.5 13.4a5 5 0 0 0 7.1 7.1l1.4-1.4"/></svg>';
+
+const SOCIAL = [
+  ['matrix', 'Matrix', 'https://matrix.to/#/#yourshow:example.org', CHAT_ICON],
+  ['mastodon', 'Mastodon', 'https://mastodon.social/@yourshow', FEDI_ICON],
+  ['peertube', 'PeerTube', 'https://your.peertube.site/c/yourshow', VIDEO_ICON],
+  ['lemmy', 'Lemmy', 'https://lemmy.world/c/yourshow', POST_ICON],
+  ['bluesky', 'Bluesky', 'https://bsky.app/profile/yourshow', FEDI_ICON],
+  ['discord', 'Discord', 'https://discord.gg/yourinvite', CHAT_ICON],
+  ['telegram', 'Telegram', 'https://t.me/yourshow', CHAT_ICON],
+  ['signal', 'Signal', 'https://signal.group/#your-group-link', CHAT_ICON],
+  ['youtube', 'YouTube', 'https://youtube.com/@yourshow', VIDEO_ICON],
+  ['twitch', 'Twitch', 'https://twitch.tv/yourshow', VIDEO_ICON],
+  ['tiktok', 'TikTok', 'https://tiktok.com/@yourshow', VIDEO_ICON],
+  ['instagram', 'Instagram', 'https://instagram.com/yourshow', PHOTO_ICON],
+  ['facebook', 'Facebook', 'https://facebook.com/yourshow', POST_ICON],
+  ['x', 'X', 'https://x.com/yourshow', POST_ICON],
+  ['threads', 'Threads', 'https://threads.net/@yourshow', POST_ICON],
+  ['reddit', 'Reddit', 'https://reddit.com/r/yourshow', POST_ICON],
+  ['linkedin', 'LinkedIn', 'https://linkedin.com/company/yourshow', POST_ICON],
+  ['website', 'Website', 'https://yourshow.example.com', LINK_ICON],
+];
+
+function socialLinks(show) {
+  const social = show.social || {};
+  return SOCIAL.filter(([key]) => social[key])
+    .map(([key, label, , icon]) => ({ url: social[key], label, icon }));
+}
+
+function socialRow(show) {
+  const list = socialLinks(show);
+  if (!list.length) return '';
+  return `<div class="subscribe social">
+    <span class="sub-label">Find us on</span>
+    ${list.map((l) => `<a class="sub-btn" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${l.icon}<span>${esc(l.label)}</span></a>`).join('')}
+  </div>`;
+}
+
 // Everything a listener can pay through: the services above, plus the
 // funding URL typed in by hand.
 function supportLinks(show) {
@@ -347,6 +395,7 @@ function showPage(show, allEpisodes, domain) {
     ${(show.theme || {}).tagline ? `<p class="tagline">${esc(show.theme.tagline)}</p>` : ''}
     <p class="lede">${esc(show.description)}</p>
     ${subscribeRow(show, domain)}
+    ${socialRow(show)}
     ${supportRow(show)}
     <p class="feed-line">Paste this into any app: <code>https://${esc(domain)}/shows/${esc(show.slug)}/feed.xml</code></p>
     </div>
@@ -532,4 +581,4 @@ function embedPage(show, episode) {
 `;
 }
 
-module.exports = { landing, showsIndex, showPage, episodePage, hostsPage, hostPage, hosts, hostSlug, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, supportRow, supportLinks, slugify, APPS, SUPPORT };
+module.exports = { landing, showsIndex, showPage, episodePage, hostsPage, hostPage, hosts, hostSlug, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, supportRow, supportLinks, socialRow, socialLinks, slugify, APPS, SUPPORT, SOCIAL };

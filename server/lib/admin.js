@@ -16,7 +16,7 @@ const CATEGORIES = require('./categories');
 const { probeDuration, ensureWebImage } = require('./media');
 const importer = require('./import');
 const { sendMail, configured: mailConfigured } = require('./mailer');
-const { APPS, SUPPORT, showPage } = require('./public');
+const { APPS, SUPPORT, SOCIAL, showPage } = require('./public');
 const themes = require('./theme');
 
 // This edition manages one podcast.
@@ -946,6 +946,15 @@ function createAdminRouter(ctx) {
           <input id="link-${key}" name="link_${key}" type="url" maxlength="500" value="${esc((show.links || {})[key] || '')}" placeholder="https://">`).join('')}
         </section>
 
+        <section class="panel" id="sec-social">
+          <h2>Find us on</h2>
+          <p class="hint">Where the show talks to its audience. Anything
+          you fill in becomes a button on your page. Matrix first, then
+          the rest of the open places, then the big platforms.</p>
+          ${SOCIAL.map(([key, label, placeholder]) => `<label for="social-${key}">${esc(label)}</label>
+          <input id="social-${key}" name="social_${key}" type="url" maxlength="500" value="${esc((show.social || {})[key] || '')}" placeholder="${esc(placeholder)}">`).join('')}
+        </section>
+
         <section class="panel" id="sec-guid">
           <h2>Moving from another host</h2>
           <label for="sguid">Feed GUID</label>
@@ -1487,6 +1496,13 @@ function createAdminRouter(ctx) {
         const banner = String(form.get('banner') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(banner)) entry.banner = banner;
         // web copies of the new artwork/banner are made just after save
+        entry.social = {};
+        for (const [key] of SOCIAL) {
+          const url = String(form.get(`social_${key}`) || '').trim().slice(0, 500);
+          // Matrix rooms are often shared as a matrix: URI rather than a
+          // matrix.to link, and both should work.
+          if (/^https?:\/\//.test(url) || (key === 'matrix' && /^matrix:/.test(url))) entry.social[key] = url;
+        }
         entry.support = {};
         for (const [key] of SUPPORT) {
           const url = String(form.get(`support_${key}`) || '').trim().slice(0, 500);
