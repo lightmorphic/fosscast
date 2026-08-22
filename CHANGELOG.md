@@ -4,6 +4,15 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- The "Hosts" link under a host's photo has gone: the menu at the top of
+  every page already says Hosts, and repeating it under the picture only
+  crowded the name it sat above.
+- The section rail moves in beside the cards. It was pinned to the edge
+  of the window, which on a wide screen left a corridor of nothing
+  between it and the page; it now sits 12px off the content column,
+  narrows when that is what it takes to fit, and steps aside when it
+  cannot. A trimmed section name shows in full on its tooltip.
+
 - A host's page is two columns now: who they are down one side, their
   write-up filling the rest. A column of text 634px wide inside a 976px
   card left a third of the page empty for its whole length, which read

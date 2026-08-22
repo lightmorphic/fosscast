@@ -48,7 +48,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.9.1">
+<link rel="stylesheet" href="/css/site.css?v=0.9.2">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -314,10 +314,32 @@ document.addEventListener('change', (e) => {
   rail.className = 'section-rail';
   rail.setAttribute('aria-label', 'Sections on this page');
   rail.innerHTML = sections.map(function (s) {
-    return '<a href="#' + s.el.id + '"><span></span>' + s.title.replace(/&/g, '&amp;').replace(/</g, '&lt;') + '</a>';
+    var label = s.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
+    // A long section name is trimmed to fit the rail, so the full one is
+    // on the tooltip rather than lost.
+    return '<a href="#' + s.el.id + '" data-tip="' + label + '"><span></span>' + label + '</a>';
   }).join('');
   document.body.appendChild(rail);
   var links = rail.querySelectorAll('a');
+
+  // Beside the cards, not out at the edge of the window: the rail is
+  // put against the right edge of the content column, and steps aside
+  // entirely when there is no room for it there.
+  var column = document.querySelector('main.wrap');
+  function place() {
+    var box = column.getBoundingClientRect();
+    // 12px off the column, 8px clear of the window edge; narrower than
+    // its natural width when that is what it takes to fit beside the
+    // cards, and gone entirely when even that will not do.
+    var available = window.innerWidth - box.right - 20;
+    var width = Math.min(184, available);
+    if (width < 132) { rail.classList.remove('shown'); return; }
+    rail.style.width = Math.round(width) + 'px';
+    rail.style.left = Math.round(box.right + 12) + 'px';
+    rail.classList.add('shown');
+  }
+  place();
+  window.addEventListener('resize', place);
 
   function mark(index) {
     for (var i = 0; i < links.length; i++) links[i].classList.toggle('current', i === index);
@@ -552,7 +574,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.9.1">
+<link rel="stylesheet" href="/css/site.css?v=0.9.2">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">
