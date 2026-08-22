@@ -520,8 +520,8 @@ function createAdminRouter(ctx) {
       active: 'look',
       body: `<h1 class="page-title">Look</h1>
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
-      <p class="hint">Your site, your colours. The preview follows along as
-      you go; nothing is live until you save.</p>
+      <p class="hint">Your site, your colours. Every change saves itself and
+      shows up in the preview as you go.</p>
 
       <div class="look-layout">
       <form method="post" action="/admin/look" id="look-form">
@@ -615,8 +615,8 @@ function createAdminRouter(ctx) {
         </details>
 
         <div class="save-bar">
-          <button class="btn-primary" type="submit">Save the look</button>
-          <button class="btn-secondary" type="submit" name="reset" value="1">Back to the default</button>
+          <span class="save-state" id="save-state" aria-live="polite"></span>
+          <button class="btn-secondary btn-small" type="submit" name="reset" value="1">Back to the default</button>
         </div>
       </form>
 
@@ -1235,25 +1235,18 @@ function createAdminRouter(ctx) {
       }
       store.save('shows', list);
       refreshWebImages().catch(() => {});
-      html(res, lookPage(shows()[0], form.get('reset') ? 'Back to the default look.' : 'Saved. Your site looks like this now.'));
-      return true;
-    }
-    // The preview renders the real front page with the theme being
-    // edited, so nothing has to be saved to see it.
-    if (p === '/admin/look/preview' && req.method === 'POST') {
-      const show = shows()[0];
-      if (!show) { send(res, 404, 'no show'); return true; }
-      const form = await formBody(req, readBody);
-      const items = episodes().filter((e) => e.showId === show.id)
-        .sort((a, b) => (a.date < b.date ? 1 : -1));
-      const preview = { ...show, theme: themeFromForm(form) };
-      if (preview.theme.bgImage === (show.theme || {}).bgImage) {
-        preview.theme.bgImageWeb = (show.theme || {}).bgImageWeb || '';
+      // Editing the look saves as it goes: the page answers with the
+      // front page as it now stands, which is both the confirmation and
+      // the preview, in one round trip. Only the reset button reloads.
+      if (form.get('live')) {
+        const items = episodes().filter((e) => e.showId === show.id)
+          .sort((a, b) => (a.date < b.date ? 1 : -1));
+        html(res, showPage(shows()[0], items, (process.env.DOMAIN || 'localhost').trim()));
+        return true;
       }
-      html(res, showPage(preview, items, (process.env.DOMAIN || 'localhost').trim()));
+      html(res, lookPage(shows()[0], form.get('reset') ? 'Back to the default look.' : 'Saved.'));
       return true;
     }
-
     // Hosts: the people on the podcast, each with a photo and a write-up.
     if (p === '/admin/hosts' && req.method === 'GET') {
       const show = shows()[0];
