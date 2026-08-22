@@ -344,7 +344,6 @@ function hostPage(show, host, domain) {
         ? `<img class="host-photo large" src="${esc(photo)}" alt="" width="200" height="200">`
         : `<span class="host-photo host-photo-blank large" aria-hidden="true">${esc(initials(host.name))}</span>`}
       <div class="host-side-text">
-        <p class="hint"><a href="/hosts">Hosts</a></p>
         <h1>${esc(host.name)}</h1>
         ${host.role ? `<p class="host-role">${esc(host.role)}</p>` : ''}
         ${host.link ? `<p class="hint"><a href="${esc(host.link)}" rel="noopener noreferrer">${esc(host.link.replace(/^https?:\/\//, ''))}</a></p>` : ''}
