@@ -4,6 +4,13 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- `PUBLISHER_TOKEN` is now `FOSSSTUDIO_TOKEN`, which says what it is
+  for: the key a studio uses to publish a finished recording into this
+  instance. Nothing breaks on the way: the old environment variable is
+  still read, and an instance that already has a token keeps it -- it
+  is carried over under the new name rather than rotated, because it is
+  sitting in a studio's configuration somewhere.
+
 - Everything an installer edits now sits in one `x-config` block at the
   top of the compose file, the way FOSSStudio does it, and both services
   read from it. The domain used to be typed twice -- once for the app,

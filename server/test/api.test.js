@@ -29,7 +29,7 @@ before(async () => {
   }]));
   token = 'tok-' + 'a'.repeat(60);
   fs.writeFileSync(path.join(DATA, 'settings.json'), JSON.stringify({
-    secret: 's'.repeat(64), publisherToken: token,
+    secret: 's'.repeat(64), studioToken: token,
   }));
   child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
     env: { ...process.env, HTTP_PORT: String(PORT), DATA_DIR: DATA, DOMAIN: 'api.example' },

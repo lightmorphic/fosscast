@@ -27,7 +27,7 @@ docs/live-handover.md).
   archive.org, which is free, permanent and supports the byte-range
   requests players need). The publish API accepts both.
 - **Publishers** are studio hosts holding a FOSSCast token
-  (`PUBLISHER_TOKEN`). No shared auth with FOSSStudio.
+  (`FOSSSTUDIO_TOKEN`). No shared auth beyond that one key.
 - **Instances stack.** Several FOSSCast instances can share one
   machine: each is its own compose project with its own data dir,
   domain and port (`HTTP_PORT`), behind one shared reverse proxy. Or
@@ -65,7 +65,7 @@ docs/live-handover.md).
   The bundled caddy service in this repo is for self-hosters and stays
   off on our box.
 - Deploy keys: `lightmorphic-fosscast-deploy` (GitHub) and
-  `lightmorphic-fosscast-vps-deploy` (VPS) in `/home/charlie/2-Data/SSH/`,
+  `lightmorphic-fosscast-vps-deploy` (VPS) in `/home/charlie/9-Claude/ssh/`,
   aliases `github-lightmorphic-fosscast` and `fosscast-deploy`. The VPS
   key should get forced-command restriction once deploy verbs settle
   (mirror FOSSStudio's wrapper).
