@@ -29,8 +29,14 @@ COPY web ./web
 RUN rm -rf /usr/local/lib/node_modules/npm /usr/local/bin/npm /usr/local/bin/npx \
     /opt/yarn* /usr/local/bin/yarn /usr/local/bin/yarnpkg
 
+# The data directory exists in the image and belongs to node, so a
+# named volume mounted over it inherits that ownership instead of
+# arriving as root-owned and unwritable. This is what lets a pasted
+# compose file work with no chown step and no instructions.
+RUN mkdir -p /data && chown -R node:node /app /data
+VOLUME ["/data"]
+
 # Run as the base image's own built-in non-root user.
-RUN chown -R node:node /app
 USER node
 
 ENV WEB_DIR=/app/web DATA_DIR=/data
