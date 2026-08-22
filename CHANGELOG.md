@@ -4,6 +4,14 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- The Look tab saves itself. There is no Save button to hunt for: pick a
+  colour, drag a slider, type a tagline, and half a second later it is
+  stored and the preview is the saved page rather than a guess at it.
+  One request does both, a small line says "Saving..." then "Saved", and
+  a change still in flight when the page is left is sent on its way
+  rather than lost. The only button left is a small "Back to the
+  default" in the bottom right corner.
+
 - Tooltips are speech bubbles now -- the same blue bubble with white
   text in light mode and dark, since a tooltip is a label from the
   interface rather than part of the page it floats over. The tail points
