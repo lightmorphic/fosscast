@@ -52,7 +52,6 @@ x-config: &config
   DOMAIN: podcast.example.com          # your public address
   ADMIN_EMAIL: you@example.com         # the first admin account
   ADMIN_PASSWORD: change-me-to-something-long
-  FOSSSTUDIO_TOKEN: ""                 # only if a studio publishes into this instance
 
 services:
   app:
