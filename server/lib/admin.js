@@ -499,147 +499,134 @@ function createAdminRouter(ctx) {
     const swatches = themes.PRESETS.map(([key, label, hex]) => `
       <button type="button" class="swatch${t.accent === hex ? ' current' : ''}" data-accent="${esc(hex)}" style="--sw: ${esc(hex)}" title="${esc(label)}" aria-label="${esc(label)}"></button>`).join('');
 
-    const radio = (name, options, current, hintNote = true) => options.map(([key, label, note]) => `
-      <label class="pick${current === key ? ' current' : ''}">
-        <input type="radio" name="${name}" value="${esc(key)}"${current === key ? ' checked' : ''}>
-        <span class="pick-label">${esc(label)}</span>
-        ${hintNote && note ? `<span class="pick-note">${esc(note)}</span>` : ''}
-      </label>`).join('');
+    // A choice is a row of chips: the options are short, so they belong
+    // side by side rather than stacked full-width. The note for whichever
+    // is chosen shows underneath, one line, instead of a note per option
+    // shouting at once.
+    const chips = (name, options, current, style = () => '') => {
+      const chosen = options.find(([key]) => key === current) || options[0];
+      return `<div class="picks" role="radiogroup">
+        ${options.map(([key, label, note]) => `
+        <label class="pick${current === key ? ' current' : ''}"${style(key)}>
+          <input type="radio" name="${name}" value="${esc(key)}"${current === key ? ' checked' : ''} data-note="${esc(note || '')}">
+          <span>${esc(label)}</span>
+        </label>`).join('')}
+      </div>
+      <p class="hint pick-hint" id="note-${name}">${esc(chosen[2] || '')}</p>`;
+    };
 
     return adminPage({
       title: 'Look',
       active: 'look',
       body: `<h1 class="page-title">Look</h1>
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
-      <p class="hint">Your site, your colours. Everything here changes the
-      public pages only; the admin stays as it is. The preview updates as
-      you go, and nothing is live until you save.</p>
+      <p class="hint">Your site, your colours. The preview follows along as
+      you go; nothing is live until you save.</p>
 
       <div class="look-layout">
       <form method="post" action="/admin/look" id="look-form">
         <section class="panel">
           <h2>Colour</h2>
-          <p class="hint">Pick one, or type any hex code. Every other
-          shade -- hovers, tags, the soft backgrounds -- is worked out
-          from it, in light and dark alike.</p>
           <div class="swatches">${swatches}</div>
-          <div class="field-row">
-            <div><label for="accent-hex">Hex code</label>
-            <input id="accent-hex" name="accent" maxlength="7" value="${esc(t.accent)}" pattern="#?[0-9a-fA-F]{3,6}"></div>
-            <div><label for="accent-pick">Or pick</label>
-            <input id="accent-pick" type="color" value="${esc(t.accent)}"></div>
+          <div class="inline-fields">
+            <label class="inline-label" for="accent-hex">Hex</label>
+            <input id="accent-hex" name="accent" class="hex-field" maxlength="7" value="${esc(t.accent)}">
+            <input id="accent-pick" type="color" class="color-chip" value="${esc(t.accent)}" aria-label="Pick a colour">
           </div>
+          <p class="hint">Every other shade -- hovers, tags, links, light and
+          dark -- is worked out from this one.</p>
         </section>
 
         <section class="panel">
           <h2>Background</h2>
-          ${radio('bgMode', [['default', 'Plain', 'Clean white, or near-black in dark mode.'], ['solid', 'One colour', ''], ['gradient', 'Gradient', ''], ['image', 'Image', 'A photo or pattern behind everything.']], t.bgMode)}
-          <div class="field-row bg-colors">
-            <div><label for="bg-color">Colour</label>
-            <input id="bg-color" name="bgColor" type="color" value="${esc(t.bgColor)}"></div>
-            <div><label for="bg-color2">Second colour (gradient)</label>
-            <input id="bg-color2" name="bgColor2" type="color" value="${esc(t.bgColor2)}"></div>
-            <div><label for="bg-angle">Angle</label>
-            <input id="bg-angle" name="bgAngle" type="range" min="0" max="360" value="${t.bgAngle}"></div>
+          ${chips('bgMode', [['default', 'Plain', 'White, or near-black in dark mode.'], ['solid', 'One colour', ''], ['gradient', 'Gradient', ''], ['image', 'Image', 'A photo or pattern behind everything.']], t.bgMode)}
+          <div class="bg-colors inline-fields">
+            <label class="inline-label" for="bg-color">Colour</label>
+            <input id="bg-color" name="bgColor" type="color" class="color-chip" value="${esc(t.bgColor)}">
+            <label class="inline-label" for="bg-color2">to</label>
+            <input id="bg-color2" name="bgColor2" type="color" class="color-chip" value="${esc(t.bgColor2)}">
+            <input id="bg-angle" name="bgAngle" type="range" min="0" max="360" value="${t.bgAngle}" class="inline-range" aria-label="Gradient angle">
           </div>
           <div class="bg-image-fields">
-            <label for="bg-image">Background image</label>
-            <p class="hint">Wide and not too busy works best -- 2000px or so
-            across. Dim it and text stays readable over anything.</p>
             <input id="bg-image" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="bg-image-url" data-status="bg-image-status" data-preview="bg-image-img">
-            <p class="hint" id="bg-image-status">${t.bgImage ? 'Uploaded.' : 'None yet.'}</p>
+            <p class="hint" id="bg-image-status">${t.bgImage ? 'Uploaded.' : 'Wide and not too busy works best.'}</p>
             <input type="hidden" id="bg-image-url" name="bgImage" value="${esc(t.bgImage)}">
             <img class="bg-preview" id="bg-image-img" alt="" src="${esc(t.bgImageWeb || t.bgImage)}"${t.bgImage ? '' : ' style="display:none"'}>
-            <div class="field-row">
-              <div><label for="bg-dim">Dim it (${t.bgDim}%)</label>
-              <input id="bg-dim" name="bgDim" type="range" min="0" max="85" value="${t.bgDim}"></div>
-              <div><label for="bg-blur">Blur (${t.bgBlur}px)</label>
-              <input id="bg-blur" name="bgBlur" type="range" min="0" max="24" value="${t.bgBlur}"></div>
-            </div>
-            <div class="field-row">
-              <div><label for="bg-fit">Fit</label>
-              <select id="bg-fit" name="bgFit"><option value="cover"${t.bgFit === 'cover' ? ' selected' : ''}>Fill the screen</option><option value="tile"${t.bgFit === 'tile' ? ' selected' : ''}>Tile it</option></select></div>
-              <div><label for="bg-attach">When scrolling</label>
-              <select id="bg-attach" name="bgAttach"><option value="fixed"${t.bgAttach === 'fixed' ? ' selected' : ''}>Stays put</option><option value="scroll"${t.bgAttach === 'scroll' ? ' selected' : ''}>Scrolls with the page</option></select></div>
-            </div>
+            <div class="slider-row"><label class="inline-label" for="bg-dim">Dim <b>${t.bgDim}%</b></label>
+            <input id="bg-dim" name="bgDim" type="range" min="0" max="85" value="${t.bgDim}"></div>
+            <div class="slider-row"><label class="inline-label" for="bg-blur">Blur <b>${t.bgBlur}px</b></label>
+            <input id="bg-blur" name="bgBlur" type="range" min="0" max="24" value="${t.bgBlur}"></div>
+            ${chips('bgFit', [['cover', 'Fill the screen', ''], ['tile', 'Tile it', '']], t.bgFit)}
+            ${chips('bgAttach', [['fixed', 'Stays put', ''], ['scroll', 'Scrolls', '']], t.bgAttach)}
           </div>
         </section>
 
         <section class="panel">
           <h2>Cards</h2>
-          ${radio('panel', themes.PANELS, t.panel)}
-          <label for="radius">Corners (${t.radius}px)</label>
-          <p class="hint">All the way down for sharp square corners, up for
-          soft and round.</p>
-          <input id="radius" name="radius" type="range" min="0" max="48" value="${t.radius}">
+          ${chips('panel', themes.PANELS, t.panel)}
+          <div class="slider-row"><label class="inline-label" for="radius">Corners <b>${t.radius}px</b></label>
+          <input id="radius" name="radius" type="range" min="0" max="48" value="${t.radius}"></div>
         </section>
 
         <section class="panel">
           <h2>Type</h2>
-          ${radio('font', themes.FONTS.map(([k, l, , note]) => [k, l, note]), t.font)}
+          ${chips('font', themes.FONTS.map(([k, l, , note]) => [k, l, note]), t.font,
+            (key) => ` style="font-family: ${themes.FONTS.find(([k]) => k === key)[2].replaceAll('"', '&quot;')}"`)}
         </section>
 
         <section class="panel">
           <h2>Layout</h2>
-          <label>Page width</label>
-          ${radio('width', themes.WIDTHS.map(([k, l]) => [k, l, '']), t.width)}
-          <label>Episodes</label>
-          ${radio('episodes', themes.EPISODE_LAYOUTS, t.episodes)}
+          <p class="group-label">Page width</p>
+          ${chips('width', themes.WIDTHS.map(([k, l]) => [k, l, '']), t.width)}
+          <p class="group-label">Episodes</p>
+          ${chips('episodes', themes.EPISODE_LAYOUTS.map(([k, l]) => [k, l.replace(' the text', '').replace(', small thumbnails', ''), '']), t.episodes)}
           <label class="check-label"><input type="checkbox" name="bannerFull" value="1" class="check"${t.bannerFull ? ' checked' : ''}> Banner runs edge to edge</label>
         </section>
 
         <section class="panel">
           <h2>Photos &amp; artwork</h2>
-          <p class="hint">Host photos are circles by default. Their shape and
-          their size are set here, not by the corner slider above -- a circle
-          has no corners to round.</p>
-          <label>Shape of host photos</label>
-          ${radio('imgShape', themes.IMAGE_SHAPES, t.imgShape)}
-          <label>Size of host photos</label>
-          ${radio('photoSize', themes.IMAGE_SIZES.map(([k, l]) => [k, l, '']), t.photoSize)}
-          <label>Size of the cover on the front page</label>
-          ${radio('artSize', themes.ART_SIZES.map(([k, l]) => [k, l, '']), t.artSize)}
+          <p class="group-label">Host photos</p>
+          ${chips('imgShape', themes.IMAGE_SHAPES.map(([k, l]) => [k, l, '']), t.imgShape)}
+          ${chips('photoSize', themes.IMAGE_SIZES.map(([k, l]) => [k, l, '']), t.photoSize)}
+          <p class="group-label">Cover on the front page</p>
+          ${chips('artSize', themes.ART_SIZES.map(([k, l]) => [k, l, '']), t.artSize)}
         </section>
 
         <section class="panel">
           <h2>Light or dark</h2>
-          ${radio('mode', [['auto', 'Follow the visitor', "Their device decides, and they can flip it."], ['light', 'Always light', ''], ['dark', 'Always dark', '']], t.mode)}
+          ${chips('mode', [['auto', 'Follow the visitor', "Their device decides, and they can flip it."], ['light', 'Always light', ''], ['dark', 'Always dark', '']], t.mode)}
           <label class="check-label"><input type="checkbox" name="toggle" value="1" class="check"${t.toggle ? ' checked' : ''}> Offer the light/dark switch</label>
         </section>
 
         <section class="panel">
           <h2>Words of your own</h2>
           <label for="tagline">Tagline</label>
-          <p class="hint">A line under the title on the front page.</p>
           <input id="tagline" name="tagline" maxlength="200" value="${esc(t.tagline)}" placeholder="Two nerds, one microphone">
           <label for="footer-text">Footer line</label>
-          <p class="hint">Your copyright, your credit, whatever you like.</p>
           <input id="footer-text" name="footer" maxlength="300" value="${esc(t.footer)}" placeholder="&copy; ${new Date().getFullYear()} ${esc(show.name)}">
         </section>
 
-        <section class="panel">
-          <h2>Custom CSS</h2>
-          <p class="hint">For when you want something the controls above do
-          not cover. It is added last, so it wins. Anything that would load
+        <details class="panel" id="sec-css"${t.css ? ' open' : ''}>
+          <summary><h2>Custom CSS</h2></summary>
+          <p class="hint">Added last, so it wins. Anything that would load
           from another site is stripped: your pages never call out to
           anyone.</p>
           <textarea id="custom-css" name="css" rows="6" maxlength="8000" spellcheck="false" placeholder=".show-hero h1 { letter-spacing: -.04em; }">${esc(t.css)}</textarea>
-        </section>
+        </details>
 
-        <section class="panel">
+        <div class="save-bar">
           <button class="btn-primary" type="submit">Save the look</button>
           <button class="btn-secondary" type="submit" name="reset" value="1">Back to the default</button>
-        </section>
+        </div>
       </form>
 
       <div class="look-preview">
         <div class="panel preview-card">
           <h2>Preview</h2>
-          <p class="hint">Your front page, live.</p>
           <div class="preview-frame-wrap">
             <iframe id="look-preview" title="Preview of the public site" src="/shows/${esc(show.slug)}?preview=1"></iframe>
           </div>
-          <p class="hint"><a href="/shows/${esc(show.slug)}" target="_blank" rel="noopener noreferrer">Open the real page</a></p>
+          <p class="hint">Your front page, live &middot; <a href="/shows/${esc(show.slug)}" target="_blank" rel="noopener noreferrer">open the real one</a></p>
         </div>
       </div>
       </div>`,
