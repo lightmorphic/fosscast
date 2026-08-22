@@ -478,6 +478,9 @@ function createAdminRouter(ctx) {
       toggle: form.get('toggle') === '1',
       width: form.get('width'),
       episodes: form.get('episodes'),
+      imgShape: form.get('imgShape'),
+      photoSize: form.get('photoSize'),
+      artSize: form.get('artSize'),
       bannerFull: form.get('bannerFull') === '1',
       tagline: form.get('tagline'),
       footer: form.get('footer'),
@@ -568,7 +571,7 @@ function createAdminRouter(ctx) {
           <label for="radius">Corners (${t.radius}px)</label>
           <p class="hint">All the way down for sharp square corners, up for
           soft and round.</p>
-          <input id="radius" name="radius" type="range" min="0" max="32" value="${t.radius}">
+          <input id="radius" name="radius" type="range" min="0" max="48" value="${t.radius}">
         </section>
 
         <section class="panel">
@@ -583,6 +586,19 @@ function createAdminRouter(ctx) {
           <label>Episodes</label>
           ${radio('episodes', themes.EPISODE_LAYOUTS, t.episodes)}
           <label class="check-label"><input type="checkbox" name="bannerFull" value="1" class="check"${t.bannerFull ? ' checked' : ''}> Banner runs edge to edge</label>
+        </section>
+
+        <section class="panel">
+          <h2>Photos &amp; artwork</h2>
+          <p class="hint">Host photos are circles by default. Their shape and
+          their size are set here, not by the corner slider above -- a circle
+          has no corners to round.</p>
+          <label>Shape of host photos</label>
+          ${radio('imgShape', themes.IMAGE_SHAPES, t.imgShape)}
+          <label>Size of host photos</label>
+          ${radio('photoSize', themes.IMAGE_SIZES.map(([k, l]) => [k, l, '']), t.photoSize)}
+          <label>Size of the cover on the front page</label>
+          ${radio('artSize', themes.ART_SIZES.map(([k, l]) => [k, l, '']), t.artSize)}
         </section>
 
         <section class="panel">

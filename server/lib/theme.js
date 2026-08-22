@@ -45,6 +45,28 @@ const PANELS = [
 
 const WIDTHS = [['narrow', 'Narrow', '52rem'], ['standard', 'Standard', '64rem'], ['wide', 'Wide', '76rem']];
 
+const IMAGE_SHAPES = [
+  ['round', 'Circles', 'Host photos as circles. The default.'],
+  ['rounded', 'Rounded', 'Soft-cornered squares, matching the cards.'],
+  ['square', 'Square', 'Hard corners, no rounding at all.'],
+];
+
+// Sizes are named rather than free numbers: every one of them has been
+// checked against the layouts, so no choice can break a row.
+const IMAGE_SIZES = [
+  ['s', 'Small', ['4rem', '6.5rem', '2.75rem']],
+  ['m', 'Medium', ['5.25rem', '8.5rem', '3.5rem']],
+  ['l', 'Large', ['7rem', '11rem', '4.5rem']],
+  ['xl', 'Extra large', ['9rem', '14rem', '5.5rem']],
+];
+
+const ART_SIZES = [
+  ['s', 'Small', '7rem'],
+  ['m', 'Medium', '10rem'],
+  ['l', 'Large', '14rem'],
+  ['xl', 'Extra large', '18rem'],
+];
+
 const EPISODE_LAYOUTS = [
   ['row', 'Image beside the text', ''],
   ['stacked', 'Image above the text', ''],
@@ -70,6 +92,9 @@ const DEFAULTS = {
   toggle: true,
   width: 'standard',
   episodes: 'row',
+  imgShape: 'round',
+  photoSize: 'm',
+  artSize: 'm',
   bannerFull: false,
   tagline: '',
   footer: '',
@@ -170,6 +195,7 @@ function accentPalette(hex) {
 // ---------- validation ----------
 
 function clampInt(value, min, max, fallback) {
+  if (value === undefined || value === null || value === '') return fallback;
   const n = Math.round(Number(value));
   if (!Number.isFinite(n)) return fallback;
   return Math.max(min, Math.min(max, n));
@@ -206,12 +232,15 @@ function normalise(input = {}) {
     bgBlur: clampInt(t.bgBlur, 0, 24, 0),
     bgDim: clampInt(t.bgDim, 0, 85, DEFAULTS.bgDim),
     panel: oneOf(t.panel, PANELS.map(([k]) => k), 'solid'),
-    radius: clampInt(t.radius, 0, 32, DEFAULTS.radius),
+    radius: clampInt(t.radius, 0, 48, DEFAULTS.radius),
     font: oneOf(t.font, FONTS.map(([k]) => k), 'manrope'),
     mode: oneOf(t.mode, ['auto', 'light', 'dark'], 'auto'),
     toggle: t.toggle !== false,
     width: oneOf(t.width, WIDTHS.map(([k]) => k), 'standard'),
     episodes: oneOf(t.episodes, EPISODE_LAYOUTS.map(([k]) => k), 'row'),
+    imgShape: oneOf(t.imgShape, IMAGE_SHAPES.map(([k]) => k), 'round'),
+    photoSize: oneOf(t.photoSize, IMAGE_SIZES.map(([k]) => k), 'm'),
+    artSize: oneOf(t.artSize, ART_SIZES.map(([k]) => k), 'm'),
     bannerFull: t.bannerFull === true,
     tagline: String(t.tagline || '').trim().slice(0, 200),
     footer: String(t.footer || '').trim().slice(0, 300),
@@ -327,6 +356,29 @@ function episodeCss(t) {
   return '';
 }
 
+// Host photos and the show's cover: their shape and their size. This is
+// the "circle" people mean when they ask to make it bigger - the corner
+// slider is for cards, and a circle has no corners to slide.
+function imageCss(t) {
+  const shape = IMAGE_SHAPES.find(([k]) => k === t.imgShape);
+  const [, , sizes] = IMAGE_SIZES.find(([k]) => k === t.photoSize);
+  const [, , art] = ART_SIZES.find(([k]) => k === t.artSize);
+  const rules = [];
+  if (shape[0] !== 'round') {
+    const radius = shape[0] === 'square' ? '0' : 'var(--radius)';
+    rules.push(`.host-photo, .host-thumb, .host-photo-blank { border-radius: ${radius}; }`);
+  }
+  if (t.photoSize !== 'm') {
+    rules.push(`.host-photo { width: ${sizes[0]}; height: ${sizes[0]}; }
+.host-photo.large { width: ${sizes[1]}; height: ${sizes[1]}; }
+.host-thumb { width: ${sizes[2]}; height: ${sizes[2]}; }`);
+  }
+  if (t.artSize !== 'm') {
+    rules.push(`.show-art { width: ${art}; height: ${art}; }`);
+  }
+  return rules.join('\n');
+}
+
 // The whole theme as one style element. Only the parts that differ from
 // the default are written, so an unthemed show pays nothing.
 function styleTag(theme) {
@@ -353,6 +405,7 @@ ${bg}
     backgroundLayer(t),
     panelCss(t),
     episodeCss(t),
+    imageCss(t),
     t.bannerFull ? `.show-banner { border-radius: 0; margin: -1rem -1.5rem 0; }
 .show-banner img { border-radius: 0; }` : '',
     t.css,
@@ -361,6 +414,6 @@ ${bg}
 }
 
 module.exports = {
-  PRESETS, FONTS, PANELS, WIDTHS, EPISODE_LAYOUTS, DEFAULTS,
+  PRESETS, FONTS, PANELS, WIDTHS, EPISODE_LAYOUTS, IMAGE_SHAPES, IMAGE_SIZES, ART_SIZES, DEFAULTS,
   normalise, isDefault, styleTag, accentPalette, parseHex, readableOn, safeCss,
 };
