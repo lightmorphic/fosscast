@@ -4,6 +4,12 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Everything an installer edits now sits in one `x-config` block at the
+  top of the compose file, the way FOSSStudio does it, and both services
+  read from it. The domain used to be typed twice -- once for the app,
+  once in Caddy's command line -- which is exactly the sort of thing
+  that goes wrong quietly.
+
 - The marketing site is rewritten around what FOSSCast now does: the
   Look tab, host pages, membership links, feeds, and a plain statement
   that nothing phones home. The install is the pasted compose file

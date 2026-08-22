@@ -42,19 +42,23 @@ dashboard tying it all together.
 
 ## Self-hosting
 
-One file, one command, no checkout. Put your domain's DNS at the
-machine, paste this into `docker-compose.yml`, change the three values
-marked, and run `docker compose up -d`:
+One file, one command, no checkout. Everything you edit is in the block
+at the top, so nothing has to be hunted for in the body and the domain
+is typed once. Point your domain's DNS at the machine, paste this into
+`docker-compose.yml`, edit those lines, and run `docker compose up -d`:
 
 ```yaml
+x-config: &config
+  DOMAIN: podcast.example.com          # your public address
+  ADMIN_EMAIL: you@example.com         # the first admin account
+  ADMIN_PASSWORD: change-me-to-something-long
+  PUBLISHER_TOKEN: ""                  # optional, for the publish API
+
 services:
   app:
     image: ghcr.io/lightmorphic/fosscast:latest
     restart: unless-stopped
-    environment:
-      ADMIN_EMAIL: you@example.com                 # <- change
-      ADMIN_PASSWORD: change this to something long # <- change
-      DOMAIN: podcast.example.com                   # <- change
+    environment: *config
     volumes:
       - fosscast_data:/data
     read_only: true
@@ -65,7 +69,8 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
-    command: caddy reverse-proxy --from podcast.example.com --to app:3100  # <- change
+    environment: *config
+    command: sh -c 'caddy reverse-proxy --from "$$DOMAIN" --to app:3100'
     ports: ["80:80", "443:443"]
     volumes:
       - caddy_data:/data
