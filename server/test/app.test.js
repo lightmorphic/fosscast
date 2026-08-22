@@ -266,6 +266,19 @@ test('the look: colours, background, type and words of your own', async () => {
   assert.ok(page.includes('--link-light:'), 'links get their own shade');
   assert.ok(page.includes('--link-dark:'));
 
+  // A card summarises the whole write-up, not its opening line: a host
+  // who says hello in their first paragraph should not get a one-line
+  // card beside four-line ones.
+  const greeter = (await (await fetch(`${BASE}/admin/hosts`, form({
+    name: 'Charlie', role: 'Host',
+    bio: "Hi there! I'm Charlie.\n\nMy tech journey started in the early eighties with a ZX81, an affordable alternative to everything else on the shelf, and it started something that has not stopped since.",
+  }))).status);
+  assert.strictEqual(greeter, 303);
+  const cards = await (await fetch(`${BASE}/hosts`)).text();
+  const snippet = (cards.match(/host-snip">([^<]*)/g) || []).find((t) => t.includes('Charlie'));
+  assert.ok(snippet.includes('ZX81'), 'the summary carries on past the greeting');
+  assert.ok(snippet.length > 100, 'and fills the card like everyone else');
+
   // Photos are circles by default; shape and size are their own controls
   // rather than the corner slider, and they reach the public pages.
   res = await fetch(`${BASE}/admin/look`, form({

@@ -283,6 +283,20 @@ function initials(name) {
   return String(name).trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 }
 
+// The first line of a write-up is not a summary of it: "Hi there! I'm
+// Charlie." is a greeting, and a card showing only that next to cards
+// showing four lines looks broken. So the card summarises the whole
+// piece - paragraphs run together, cut at a word - and every host gets
+// the same amount of it.
+function summarise(text, limit = 150) {
+  const flat = String(text || '').replace(/\s+/g, ' ').trim();
+  if (flat.length <= limit) return { text: flat, more: false };
+  const cut = flat.slice(0, limit);
+  const space = cut.lastIndexOf(' ');
+  const trimmed = (space > limit * 0.6 ? cut.slice(0, space) : cut).replace(/[\s,;:.!?-]+$/, '');
+  return { text: trimmed, more: true };
+}
+
 function hostCard(host, domain) {
   const photo = hostPhoto(host);
   return `
@@ -293,7 +307,7 @@ function hostCard(host, domain) {
         <span class="host-card-text">
           <span class="host-name">${esc(host.name)}</span>
           ${host.role ? `<span class="host-role">${esc(host.role)}</span>` : ''}
-          ${host.bio ? `<span class="host-snip">${esc(host.bio.split(/\n\n/)[0].slice(0, 150))}${host.bio.length > 150 ? '&hellip;' : ''}</span>` : ''}
+          ${host.bio ? (() => { const s = summarise(host.bio); return `<span class="host-snip">${esc(s.text)}${s.more ? '&hellip;' : ''}</span>`; })() : ''}
         </span>
       </a>`;
 }

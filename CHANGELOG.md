@@ -4,10 +4,12 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
-- Host cards keep the same shape whatever their host wrote: the summary
-  block is exactly four lines, so a one-line introduction reserves the
-  same space a four-line one fills instead of leaving a card looking
-  half-finished beside its neighbours.
+- Host cards summarise the whole write-up rather than its first
+  paragraph. A host who opens with "Hi there!" and puts their life story
+  in the paragraphs after it was getting a one-line card beside
+  four-line ones; the summary now runs the paragraphs together and cuts
+  at a word, so every card carries the same amount. The block is four
+  lines tall either way, so a genuinely brief host still lines up.
 - The banner matches the cards below it. It carried its own padding on
   top of the page's, which made it 48 pixels narrower than everything
   else in the column.
