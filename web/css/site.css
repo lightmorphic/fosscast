@@ -346,25 +346,51 @@ code {
 .btn-icon.copied { color: var(--success); }
 
 /* Pill tooltips (badges may be pills; buttons never are) */
-[data-tip]::after {
-  content: attr(data-tip);
-  position: absolute;
-  bottom: calc(100% + 0.5rem);
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--fg);
-  color: var(--bg);
-  font-size: 0.75rem;
-  font-weight: 600;
-  white-space: nowrap;
-  padding: 0.25rem 0.625rem;
-  border-radius: 999px;
-  opacity: 0;
+/* ---------- Tooltips ---------- */
+/* One bubble, moved and filled in as needed, living at the end of the
+   body: a tooltip drawn inside its trigger can be clipped by a card,
+   trapped under a sticky bar or pushed off the page, and this one
+   cannot be. Same blue in light and dark - a tooltip is a label from
+   the interface, not part of the page it is floating over. */
+.tip {
+  position: fixed;
+  z-index: 2147483000;
+  max-width: min(22rem, calc(100vw - 1rem));
+  padding: 0.4375rem 0.75rem;
+  background: #2f9bff;
+  color: #ffffff;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  line-height: 1.35;
+  border-radius: 0.625rem;
+  box-shadow: 0 6px 20px -6px rgba(16, 24, 40, 0.45);
   pointer-events: none;
-  transition: opacity 120ms ease;
-  z-index: 10;
+  opacity: 0;
+  transform: translateY(2px);
+  transition: opacity 120ms ease, transform 120ms ease;
 }
-[data-tip]:hover::after, [data-tip]:focus-visible::after { opacity: 1; }
+.tip.shown { opacity: 1; transform: none; }
+/* The tail is a right angle, as in a speech bubble, and swaps ends when
+   the bubble flips to the other side of what it is describing. */
+.tip::after {
+  content: '';
+  position: absolute;
+  left: var(--tail-x, 1rem);
+  width: 0;
+  height: 0;
+  border-left: 9px solid #2f9bff;
+}
+.tip[data-place="above"]::after {
+  bottom: -9px;
+  border-bottom: 9px solid transparent;
+}
+.tip[data-place="below"]::after {
+  top: -9px;
+  border-top: 9px solid transparent;
+}
+@media (prefers-reduced-motion: reduce) {
+  .tip { transition: none; }
+}
 
 /* ---------- Forms ---------- */
 label {
