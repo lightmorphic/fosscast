@@ -170,6 +170,26 @@ function readableOn(hex) {
   return luminance(hex) > 0.45 ? '#101014' : '#ffffff';
 }
 
+function contrast(a, b) {
+  const l1 = luminance(a);
+  const l2 = luminance(b);
+  return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
+}
+
+// Link text has to be readable, and a bright accent on white rarely is:
+// deep orange manages 3.2:1 where body text wants 4.5:1. So links get
+// their own shade of the chosen colour - walked darker for light mode
+// and lighter for dark until it clears the bar.
+function linkShade(hex, against) {
+  const [h, s] = toHsl(hex);
+  const darker = against === '#ffffff';
+  for (let l = toHsl(hex)[2]; darker ? l >= 12 : l <= 92; l += darker ? -2 : 2) {
+    const candidate = fromHsl(h, s, l);
+    if (contrast(candidate, against) >= 4.5) return candidate;
+  }
+  return darker ? '#1a1a1f' : '#f5f5f5';
+}
+
 // One chosen colour becomes the whole accent family: a version that
 // holds up on white, a brighter one for dark mode, hover states, and
 // the soft "container" pair the nav pills and tags use.
@@ -180,6 +200,8 @@ function accentPalette(hex) {
   const light = l > 62 ? fromHsl(h, sat, 52) : hex;
   const dark = l < 45 ? fromHsl(h, Math.min(90, sat + 8), 62) : hex;
   return {
+    '--link-light': linkShade(hex, '#ffffff'),
+    '--link-dark': linkShade(hex, '#0b0b0e'),
     '--accent-light': light,
     '--accent-hover-light': fromHsl(h, sat, Math.max(20, toHsl(light)[2] - 8)),
     '--accent-container-light': fromHsl(h, Math.min(90, sat + 5), 93),

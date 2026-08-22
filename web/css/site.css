@@ -16,7 +16,6 @@
   --shadow-panel: 0 1px 2px rgba(24,24,40,.05), 0 8px 24px -16px rgba(24,24,40,.18);
 
   --brand-navy: #111827;
-  --link: #1b74bc;
   --danger: #cc372d;   --danger-bg: #fef2f1;
   --success: #38813a;  --success-bg: #f2f9f3;
   --warning: #8f6c03;  --warning-bg: #fffbee;
@@ -32,7 +31,6 @@
     --panel: #1b1d29;  --panel-border: rgba(255,255,255,.09);
     --border: #27272a;  --muted: #1c1c1f;  --muted-fg: #a1a1aa;
     --shadow-panel: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px -16px rgba(0,0,0,.6);
-    --link: #2295f1;
     --danger: #f34236;   --danger-bg: #350f0c;
     --success: #4bae4f;  --success-bg: #102611;
     --warning: #ffc006;  --warning-bg: #382a01;
@@ -45,7 +43,6 @@
   --panel: #ffffff;  --panel-border: rgba(24, 24, 40, 0.10);
   --border: #e4e4e7;  --muted: #f4f4f5;  --muted-fg: #71717a;
   --shadow-panel: 0 1px 2px rgba(24,24,40,.05), 0 8px 24px -16px rgba(24,24,40,.18);
-  --link: #1b74bc;
   --danger: #cc372d;   --danger-bg: #fef2f1;
   --success: #38813a;  --success-bg: #f2f9f3;
   --warning: #8f6c03;  --warning-bg: #fffbee;
@@ -57,7 +54,6 @@
   --panel: #1b1d29;  --panel-border: rgba(255,255,255,.09);
   --border: #27272a;  --muted: #1c1c1f;  --muted-fg: #a1a1aa;
   --shadow-panel: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px -16px rgba(0,0,0,.6);
-  --link: #2295f1;
   --danger: #f34236;   --danger-bg: #350f0c;
   --success: #4bae4f;  --success-bg: #102611;
   --warning: #ffc006;  --warning-bg: #382a01;
@@ -66,6 +62,9 @@
 
 /* ---------- Accent: deep orange, both themes ---------- */
 :root[data-accent="deep_orange"] {
+  /* Link text needs 4.5:1 against the page, which the accent itself does
+     not reach on white, so links get their own shade of it. */
+  --link-light: #c4400f; --link-dark: #ff8f68;
   --accent-light: #ff5721; --accent-hover-light: #e04d1d;
   --accent-container-light: #ffebe4; --on-accent-container-light: #61210d;
   --accent-dark: #ff5721; --accent-hover-dark: #ff6b3c;
@@ -73,6 +72,7 @@
   --on-accent: #471809;
 }
 :root[data-accent] {
+  --link: var(--link-light);
   --accent: var(--accent-light);
   --accent-hover: var(--accent-hover-light);
   --accent-container: var(--accent-container-light);
@@ -80,6 +80,7 @@
 }
 @media (prefers-color-scheme: dark) {
   :root[data-accent] {
+    --link: var(--link-dark);
     --accent: var(--accent-dark);
     --accent-hover: var(--accent-hover-dark);
     --accent-container: var(--accent-container-dark);
@@ -87,12 +88,14 @@
   }
 }
 :root[data-theme="light"][data-accent] {
+  --link: var(--link-light);
   --accent: var(--accent-light);
   --accent-hover: var(--accent-hover-light);
   --accent-container: var(--accent-container-light);
   --on-accent-container: var(--on-accent-container-light);
 }
 :root[data-theme="dark"][data-accent] {
+  --link: var(--link-dark);
   --accent: var(--accent-dark);
   --accent-hover: var(--accent-hover-dark);
   --accent-container: var(--accent-container-dark);
@@ -113,7 +116,28 @@ body {
   flex-direction: column;
 }
 
-a { color: var(--link); }
+/* Links take the show's own colour, not the browser's blue, and wear a
+   quiet underline set away from the text that fills in on hover. The
+   old default - blue with a hard underline through the descenders -
+   belonged to a different decade. */
+a {
+  color: var(--link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  text-decoration-color: color-mix(in srgb, currentColor 32%, transparent);
+  border-radius: 0.2rem;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+/* Hover fills the underline in rather than changing the colour: the
+   text stays at its readable shade the whole time. */
+a:hover { text-decoration-color: currentColor; }
+/* Links that are already a control - buttons, cards, nav, anything with
+   its own box - say so by their shape and take no underline. */
+.btn-primary, .btn-secondary, .btn-icon, .sub-btn, .site-link, .admin-link,
+.host-card, .show-card, .episode-art-link, .powered-by, .swatch, .wordmark {
+  text-decoration: none;
+}
 a:focus-visible, button:focus-visible, input:focus-visible,
 textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible {
   outline: 2px solid var(--accent);

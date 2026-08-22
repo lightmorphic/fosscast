@@ -259,6 +259,11 @@ test('the look: colours, background, type and words of your own', async () => {
   page = await (await fetch(`${BASE}/shows/test-show`)).text();
   assert.ok(!page.includes('#16a34a'), 'the preview changed nothing');
 
+  // Links take a shade of the chosen colour that is actually readable:
+  // the accent itself is often too light against white for body text.
+  assert.ok(page.includes('--link-light:'), 'links get their own shade');
+  assert.ok(page.includes('--link-dark:'));
+
   // Photos are circles by default; shape and size are their own controls
   // rather than the corner slider, and they reach the public pages.
   res = await fetch(`${BASE}/admin/look`, form({
