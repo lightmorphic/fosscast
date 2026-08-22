@@ -339,3 +339,24 @@ pre code { background: none; padding: 0; word-break: normal; }
 @media (prefers-reduced-motion: reduce) {
   .demo-card, .demo-thumb, .demo-face, .demo-site { transition: none; }
 }
+
+/* ---------- The header stays put ---------- */
+/* Sticky rather than fixed: it keeps its place in the flow, so nothing
+   below it has to be pushed down by a magic number, and it still holds
+   its position as the page scrolls under it. */
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(10px) saturate(1.1);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  border-bottom: 1px solid var(--panel-border);
+  /* Full width, but its contents stay lined up with the column below. */
+  max-width: none;
+  padding: 1rem max(1.5rem, calc(50vw - 32rem));
+}
+/* An anchor lands below the header, not behind it. */
+:target, section[id] { scroll-margin-top: 5.5rem; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }

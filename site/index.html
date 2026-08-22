@@ -39,8 +39,8 @@
     every podcast app understands. One pasted file installs it. Nothing
     it serves ever calls anybody else.</p>
     <div class="cta-row">
-      <a class="btn-primary" href="#install">Install in one paste</a>
-      <a class="btn-secondary" href="#hosted">Have us run it</a>
+      <a class="btn-primary" href="#features">See what it does</a>
+      <a class="btn-secondary" href="#install">Install it in one paste</a>
     </div>
     <ul class="spec-strip">
       <li><b>1</b> file to paste</li>
@@ -48,74 +48,6 @@
       <li><b>0</b> npm dependencies at runtime</li>
       <li><b>&pound;0</b> forever, on your own box</li>
     </ul>
-  </section>
-
-  <section class="panel install-panel" id="install">
-    <span class="eyebrow">Installing</span>
-    <h2>The whole installation is this file</h2>
-    <p>A Linux machine with Docker, a domain pointed at it, ports 80 and
-    443 open. Paste this into <code>docker-compose.yml</code>, change the
-    three marked values, and run <code>docker compose up -d</code>.</p>
-
-    <div class="code-card">
-      <div class="code-head">
-        <span>docker-compose.yml</span>
-        <button class="btn-copy-code" type="button" data-copy>Copy</button>
-      </div>
-<pre><code id="compose">services:
-  app:
-    image: ghcr.io/lightmorphic/fosscast:latest
-    restart: unless-stopped
-    environment:
-      ADMIN_EMAIL: you@example.com                  # change
-      ADMIN_PASSWORD: change this to something long # change
-      DOMAIN: podcast.example.com                   # change
-    volumes:
-      - fosscast_data:/data
-    read_only: true
-    tmpfs: [/tmp]
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
-
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    command: caddy reverse-proxy --from podcast.example.com --to app:3100  # change
-    ports: ["80:80", "443:443"]
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
-    cap_add: [NET_BIND_SERVICE]
-
-volumes:
-  fosscast_data:
-  caddy_data:
-  caddy_config:</code></pre>
-    </div>
-
-    <p>No checkout, no build, no <code>.env</code>, no Caddyfile. The
-    image carries the app and everything it serves; the HTTPS certificate
-    arrives on its own. Log in at <code>/admin</code> with the email and
-    password you put in the file.</p>
-    <div class="two-up">
-      <div>
-        <h3>Updating</h3>
-        <pre><code>docker compose pull
-docker compose up -d</code></pre>
-        <p class="hint">Your data lives in a named volume and is left
-        alone.</p>
-      </div>
-      <div>
-        <h3>Already running a proxy?</h3>
-        <p>Delete the <code>caddy</code> service, publish the app on
-        <code>127.0.0.1:3100</code>, and point nginx, Apache, a Cloudflare
-        Tunnel or Tailscale Serve at it. FOSSCast never assumes it owns
-        ports 80 and 443.</p>
-      </div>
-    </div>
-    <p class="hint">It is the same image the maintainer's own shows run
-    on, built from <code>main</code> on every push. What you install is
-    what we use.</p>
   </section>
 
   <section class="section-head" id="features">
@@ -402,6 +334,74 @@ docker compose up -d</code></pre>
         tool, so your public site stays small, fast and hard to break.</p>
       </details>
     </div>
+  </section>
+
+  <section class="panel install-panel" id="install">
+    <span class="eyebrow">Installing</span>
+    <h2>The whole installation is this file</h2>
+    <p>A Linux machine with Docker, a domain pointed at it, ports 80 and
+    443 open. Paste this into <code>docker-compose.yml</code>, change the
+    three marked values, and run <code>docker compose up -d</code>.</p>
+
+    <div class="code-card">
+      <div class="code-head">
+        <span>docker-compose.yml</span>
+        <button class="btn-copy-code" type="button" data-copy>Copy</button>
+      </div>
+<pre><code id="compose">services:
+  app:
+    image: ghcr.io/lightmorphic/fosscast:latest
+    restart: unless-stopped
+    environment:
+      ADMIN_EMAIL: you@example.com                  # change
+      ADMIN_PASSWORD: change this to something long # change
+      DOMAIN: podcast.example.com                   # change
+    volumes:
+      - fosscast_data:/data
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    command: caddy reverse-proxy --from podcast.example.com --to app:3100  # change
+    ports: ["80:80", "443:443"]
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    cap_add: [NET_BIND_SERVICE]
+
+volumes:
+  fosscast_data:
+  caddy_data:
+  caddy_config:</code></pre>
+    </div>
+
+    <p>No checkout, no build, no <code>.env</code>, no Caddyfile. The
+    image carries the app and everything it serves; the HTTPS certificate
+    arrives on its own. Log in at <code>/admin</code> with the email and
+    password you put in the file.</p>
+    <div class="two-up">
+      <div>
+        <h3>Updating</h3>
+        <pre><code>docker compose pull
+docker compose up -d</code></pre>
+        <p class="hint">Your data lives in a named volume and is left
+        alone.</p>
+      </div>
+      <div>
+        <h3>Already running a proxy?</h3>
+        <p>Delete the <code>caddy</code> service, publish the app on
+        <code>127.0.0.1:3100</code>, and point nginx, Apache, a Cloudflare
+        Tunnel or Tailscale Serve at it. FOSSCast never assumes it owns
+        ports 80 and 443.</p>
+      </div>
+    </div>
+    <p class="hint">It is the same image the maintainer's own shows run
+    on, built from <code>main</code> on every push. What you install is
+    what we use.</p>
   </section>
 
   <section class="panel cta-final">
