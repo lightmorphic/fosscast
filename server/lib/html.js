@@ -48,7 +48,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.5.0">
+<link rel="stylesheet" href="/css/site.css?v=0.5.1">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -153,10 +153,19 @@ document.addEventListener('change', (e) => {
   }
 
   function labels() {
-    const set = (id, text) => { const el = form.querySelector('label[for=' + id + ']'); if (el) el.firstChild.textContent = text; };
-    set('radius', 'Corners (' + form.radius.value + 'px) ');
-    set('bg-dim', 'Dim it (' + form.bgDim.value + '%) ');
-    set('bg-blur', 'Blur (' + form.bgBlur.value + 'px) ');
+    const set = (id, value) => {
+      const el = form.querySelector('label[for=' + id + '] b');
+      if (el) el.textContent = value;
+    };
+    set('radius', form.radius.value + 'px');
+    set('bg-dim', form.bgDim.value + '%');
+    set('bg-blur', form.bgBlur.value + 'px');
+    // One note, for whichever chip is chosen, rather than a note per chip.
+    form.querySelectorAll('.picks').forEach((group) => {
+      const chosen = group.querySelector('input:checked');
+      const note = document.getElementById('note-' + (chosen ? chosen.name : ''));
+      if (chosen && note) note.textContent = chosen.dataset.note || '';
+    });
   }
 
   let timer;
@@ -246,7 +255,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.5.0">
+<link rel="stylesheet" href="/css/site.css?v=0.5.1">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">

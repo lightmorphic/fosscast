@@ -4,6 +4,15 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- The Look controls are chips, not slabs. Every radio was being stretched
+  to the full width of its card by the global input rule, which pushed
+  the labels into odd narrow columns and made the page enormous. Choices
+  now sit side by side as small pills, with one note underneath for
+  whichever is chosen rather than a note on every option at once; sliders
+  carry their value in their own label; the type chips are drawn in the
+  font they offer; the custom CSS box folds away until wanted; and Save
+  sticks to the bottom of the column however far you scroll.
+
 - Links stop looking like 1996: gone is the browser's blue with a hard
   underline through the descenders. A link now takes a shade of the
   show's own colour, with a hair-thin underline set away from the text
