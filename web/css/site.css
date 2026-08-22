@@ -718,10 +718,13 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
   gap: 1.5rem;
   grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
 }
+/* Every card lays out the same whatever the length of the write-up: the
+   photo and the name start at the top, so a two-line bio and a
+   six-line one still line up across a row. */
 .host-card {
   display: flex;
   gap: 1rem;
-  align-items: center;
+  align-items: flex-start;
   text-decoration: none;
   color: inherit;
 }
@@ -745,7 +748,17 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
 .host-card-text { display: grid; gap: 0.125rem; min-width: 0; }
 .host-name { font-weight: 600; }
 .host-role { color: var(--accent); font-size: 0.875rem; }
-.host-snip { color: var(--muted-fg); font-size: 0.875rem; }
+/* Four lines at most, so one talkative host cannot make their card
+   twice the height of everyone else's. */
+.host-snip {
+  color: var(--muted-fg);
+  font-size: 0.875rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
 .host-head { display: flex; gap: 1.5rem; align-items: center; margin-bottom: 1rem; }
 .host-head-text { min-width: 0; }
 .host-head h1 { margin: 0.125rem 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
