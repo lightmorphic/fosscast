@@ -4,6 +4,16 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Photos and artwork get their own controls on the Look tab: host photos
+  can be circles, rounded squares or hard squares, in four sizes, and the
+  cover on the front page has four sizes of its own. The corner slider is
+  for cards -- a circle has no corners to round -- so wanting a bigger
+  circle now has somewhere to go.
+- Corners go up to 48px instead of 32px, so the roundest setting looks
+  clearly different from the default rather than slightly different.
+- A theme field left out of a submission keeps its default instead of
+  falling to zero.
+
 - A Look tab: the public site is the podcaster's, so its appearance is
   theirs to set. Fourteen preset colours or any hex code you like (with
   a colour picker), and every other shade -- hovers, tags, soft

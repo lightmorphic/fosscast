@@ -259,6 +259,21 @@ test('the look: colours, background, type and words of your own', async () => {
   page = await (await fetch(`${BASE}/shows/test-show`)).text();
   assert.ok(!page.includes('#16a34a'), 'the preview changed nothing');
 
+  // Photos are circles by default; shape and size are their own controls
+  // rather than the corner slider, and they reach the public pages.
+  res = await fetch(`${BASE}/admin/look`, form({
+    accent: '#e91e63', bgMode: 'default', panel: 'solid', radius: '48',
+    font: 'manrope', width: 'standard', episodes: 'row', mode: 'auto', toggle: '1',
+    imgShape: 'rounded', photoSize: 'xl', artSize: 'l',
+  }));
+  assert.strictEqual(res.status, 200);
+  page = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(page.includes('--panel-radius: 48px'), 'corners go further than they did');
+  assert.ok(page.includes('.show-art { width: 14rem'), 'the cover can be made bigger');
+  const hostsHtml = await (await fetch(`${BASE}/hosts`)).text();
+  assert.ok(/\.host-photo \{ width: 9rem/.test(hostsHtml), 'host photos can be made bigger');
+  assert.ok(hostsHtml.includes('.host-photo, .host-thumb, .host-photo-blank { border-radius: var(--radius); }'));
+
   // And it can all be put back.
   res = await fetch(`${BASE}/admin/look`, form({ reset: '1' }));
   assert.strictEqual(res.status, 200);
