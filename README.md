@@ -154,6 +154,51 @@ server {
 }
 ```
 
+### A proxy on another machine
+
+The default binding is loopback, which a proxy on a different box
+cannot reach. Publish the app on an address that machine *can* reach,
+and make sure nothing else can:
+
+```yaml
+services:
+  app:
+    image: ghcr.io/lightmorphic/fosscast:latest
+    environment: *config
+    ports:
+      - "10.0.0.5:3100:3100"   # this machine's private address, not 0.0.0.0
+    volumes:
+      - fosscast_data:/data
+```
+
+Delete the `caddy` service from the compose file; the other machine is
+your front now.
+
+- **Bind to one address, not all of them.** `10.0.0.5:3100` on a private
+  network, or a Tailscale address (`100.x.y.z:3100`) if the two machines
+  are on a tailnet. `0.0.0.0:3100` publishes the admin login to anything
+  that can route to the box, so if you must use it, firewall port 3100
+  to the proxy's IP alone.
+- **Send both forwarded headers.** `X-Forwarded-For`, or every listener
+  counts as one; and `X-Forwarded-Proto: https`, or the session cookie
+  is issued without `Secure` and the login will not stick.
+- **`DOMAIN` is the public address**, the one listeners type, not the
+  private one the proxy dials. It is what the feed puts in front of
+  every episode URL.
+- The upload size and TLS notes above apply unchanged.
+
+```nginx
+location / {
+    proxy_pass http://10.0.0.5:3100;
+    proxy_http_version 1.1;
+    proxy_set_header Host $host;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header X-Forwarded-Proto $scheme;
+    client_max_body_size 4G;
+    proxy_request_buffering off;
+}
+```
+
 ### Cloudflare Tunnel
 
 The site, players and feed all work through a tunnel (`cloudflared`
