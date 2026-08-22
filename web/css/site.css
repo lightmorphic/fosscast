@@ -571,12 +571,10 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
 :root[data-theme="light"] .theme-toggle .icon-dark { display: none; }
 
 /* ---------- Show banner and artwork ---------- */
-.show-banner {
-  max-width: 64rem;
-  width: 100%;
-  margin: 0 auto 1.5rem;
-  padding: 0 1.5rem;
-}
+/* The banner is one of the blocks in the column, so it takes the
+   column's width like every card: its own padding on top of the page's
+   made it 48px narrower than the cards under it. */
+.show-banner { margin: 0; }
 .show-banner video {
   display: block;
   width: 100%;
@@ -770,8 +768,9 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
 .host-card-text { display: grid; gap: 0.125rem; min-width: 0; }
 .host-name { font-weight: 600; }
 .host-role { color: var(--accent); font-size: 0.875rem; }
-/* Four lines at most, so one talkative host cannot make their card
-   twice the height of everyone else's. */
+/* Exactly four lines: a long write-up is trimmed to them and a short
+   one still reserves them, so a row of cards lines up whatever their
+   hosts had to say for themselves. */
 .host-snip {
   color: var(--muted-fg);
   font-size: 0.875rem;
@@ -780,6 +779,7 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
   line-clamp: 4;
   -webkit-box-orient: vertical;
   overflow: hidden;
+  min-height: calc(4 * 1.6em);
 }
 /* Who they are down one side, what they have to say filling the rest:
    a column of text half the width of its own card looked like a
