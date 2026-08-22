@@ -315,10 +315,8 @@ document.addEventListener('change', (e) => {
   rail.className = 'section-rail';
   rail.setAttribute('aria-label', 'Sections on this page');
   rail.innerHTML = sections.map(function (s) {
-    var label = s.title.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/"/g, '&quot;');
-    // A long section name is trimmed to fit the rail, so the full one is
-    // on the tooltip rather than lost.
-    return '<a href="#' + s.el.id + '" data-tip="' + label + '"><span></span>' + label + '</a>';
+    var label = s.title.replace(/&/g, '&amp;').replace(/</g, '&lt;');
+    return '<a href="#' + s.el.id + '"><span></span>' + label + '</a>';
   }).join('');
   document.body.appendChild(rail);
   var links = rail.querySelectorAll('a');
