@@ -4,6 +4,14 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Host cards keep the same shape whatever their host wrote: the summary
+  block is exactly four lines, so a one-line introduction reserves the
+  same space a four-line one fills instead of leaving a card looking
+  half-finished beside its neighbours.
+- The banner matches the cards below it. It carried its own padding on
+  top of the page's, which made it 48 pixels narrower than everything
+  else in the column.
+
 - Stats grew from two charts into a page: eight headline numbers, twelve
   months as bars, thirty days as a curve, feed pulls a day (the nearest
   honest thing to a subscriber count), doughnuts for apps and countries,
