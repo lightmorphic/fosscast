@@ -339,11 +339,11 @@ function hostPage(show, host, domain) {
     footer: (show.theme || {}).footer || '',
     body: `
   <article class="panel host-page">
-    <div class="host-head">
+    <div class="host-side">
       ${photo
         ? `<img class="host-photo large" src="${esc(photo)}" alt="" width="200" height="200">`
         : `<span class="host-photo host-photo-blank large" aria-hidden="true">${esc(initials(host.name))}</span>`}
-      <div class="host-head-text">
+      <div class="host-side-text">
         <p class="hint"><a href="/hosts">Hosts</a></p>
         <h1>${esc(host.name)}</h1>
         ${host.role ? `<p class="host-role">${esc(host.role)}</p>` : ''}

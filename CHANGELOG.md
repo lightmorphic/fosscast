@@ -4,6 +4,15 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- A host's page is two columns now: who they are down one side, their
+  write-up filling the rest. A column of text 634px wide inside a 976px
+  card left a third of the page empty for its whole length, which read
+  as a mistake rather than a margin. The side column sticks as you read.
+- Host cards fill the row they are in. Two hosts used to sit in two
+  thirds of the width with an empty track beside them; they now share
+  the row. A lone host is centred rather than stretched across the
+  page.
+
 - The long admin pages carry a rail of their own sections, floating at
   the right of the window: one link per card, the one you are reading
   marked as you scroll. It builds itself from whatever sections a page
