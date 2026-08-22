@@ -360,3 +360,36 @@ pre code { background: none; padding: 0; word-break: normal; }
 :target, section[id] { scroll-margin-top: 5.5rem; }
 html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* ---------- Footer ---------- */
+/* Laid out like FOSSStudio's: the sister-project card across the top,
+   then the maker on the left and the licence on the right. */
+.foot {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 64rem;
+  margin: 3rem auto 0;
+  width: 100%;
+}
+.sister {
+  flex-basis: 100%;
+  order: -1;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted-fg);
+  max-width: none;
+}
+.sister b { color: var(--fg); font-weight: 600; }
+.sister a { font-weight: 700; }
+.gpl { font-size: 0.8125rem; color: var(--muted-fg); }
+@media (max-width: 40rem) {
+  .foot { justify-content: center; text-align: center; }
+}
