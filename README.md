@@ -42,17 +42,58 @@ dashboard tying it all together.
 
 ## Self-hosting
 
-Requirements: a Linux box with Docker, a domain pointing at it, and
-ports 80 and 443 reachable.
+One file, one command, no checkout. Put your domain's DNS at the
+machine, paste this into `docker-compose.yml`, change the three values
+marked, and run `docker compose up -d`:
 
-```bash
-git clone https://github.com/lightmorphic/fosscast.git
-cd fosscast
-cp .env.example .env   # then fill it in (each value is explained)
-docker compose up -d --build
+```yaml
+services:
+  app:
+    image: ghcr.io/lightmorphic/fosscast:latest
+    restart: unless-stopped
+    environment:
+      ADMIN_EMAIL: you@example.com                 # <- change
+      ADMIN_PASSWORD: change this to something long # <- change
+      DOMAIN: podcast.example.com                   # <- change
+    volumes:
+      - fosscast_data:/data
+    read_only: true
+    tmpfs: [/tmp]
+    cap_drop: [ALL]
+    security_opt: [no-new-privileges:true]
+
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    command: caddy reverse-proxy --from podcast.example.com --to app:3100  # <- change
+    ports: ["80:80", "443:443"]
+    volumes:
+      - caddy_data:/data
+      - caddy_config:/config
+    cap_add: [NET_BIND_SERVICE]
+
+volumes:
+  fosscast_data:
+  caddy_data:
+  caddy_config:
 ```
 
-The bundled Caddy fetches HTTPS certificates automatically.
+That is the whole installation. The image carries the app and its web
+assets, Caddy is configured by that one command line, and the HTTPS
+certificate arrives on its own within a minute of the first request.
+Log in at `https://your-domain/admin` with the email and password you
+put in the file, and change the password from the Account page.
+
+The same file lives in the repository as `docker-compose.pull.yml`, and
+it runs the same image as the maintainer's own instances: every push to
+`main` publishes it.
+
+To update: `docker compose pull && docker compose up -d`. Your data
+lives in the `fosscast_data` volume and is untouched by updates.
+
+Working on FOSSCast itself, rather than running it? Clone the
+repository and use `docker-compose.yml`, which builds from source and
+mounts `web/` so edits show up on reload.
 
 ### Bring your own reverse proxy (nginx, Apache, a tunnel)
 
