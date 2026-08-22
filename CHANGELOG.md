@@ -4,6 +4,19 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Tooltips are speech bubbles now -- the same blue bubble with white
+  text in light mode and dark, since a tooltip is a label from the
+  interface rather than part of the page it floats over. The tail points
+  at whatever the tooltip describes and swaps ends when the bubble flips
+  to the other side of it.
+- A tooltip can no longer be clipped, covered or pushed off the page:
+  one bubble lives at the end of the body in viewport coordinates,
+  above the whole stack. It goes above its trigger when there is room
+  and below when there is not, stays a clear 8px inside every edge, and
+  slides its tail along to keep pointing at the right thing when it has
+  been nudged sideways to fit. Keyboard focus shows it, Escape hides it,
+  and scrolling dismisses it rather than letting it drift.
+
 - The Look controls are chips, not slabs. Every radio was being stretched
   to the full width of its card by the global input rule, which pushed
   the labels into odd narrow columns and made the page enormous. Choices

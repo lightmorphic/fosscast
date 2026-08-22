@@ -497,7 +497,7 @@ function createAdminRouter(ctx) {
   function lookPage(show, notice = '') {
     const t = themes.normalise(show.theme);
     const swatches = themes.PRESETS.map(([key, label, hex]) => `
-      <button type="button" class="swatch${t.accent === hex ? ' current' : ''}" data-accent="${esc(hex)}" style="--sw: ${esc(hex)}" title="${esc(label)}" aria-label="${esc(label)}"></button>`).join('');
+      <button type="button" class="swatch${t.accent === hex ? ' current' : ''}" data-accent="${esc(hex)}" style="--sw: ${esc(hex)}" data-tip="${esc(label)}" aria-label="${esc(label)}"></button>`).join('');
 
     // A choice is a row of chips: the options are short, so they belong
     // side by side rather than stacked full-width. The note for whichever
