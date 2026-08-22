@@ -227,13 +227,22 @@ function createAdminRouter(ctx) {
 
   function settings() {
     const value = store.load('settings', () => ({}));
-    // Persist on first creation, so the cookie secret and publisher
+    // Persist on first creation, so the cookie secret and the studio
     // token stay stable across restarts rather than logging everyone
     // out and rotating the token on every deploy.
     let changed = false;
     if (!value.secret) { value.secret = crypto.randomBytes(32).toString('hex'); changed = true; }
-    if (!value.publisherToken) {
-      value.publisherToken = (process.env.PUBLISHER_TOKEN || '').trim() || crypto.randomBytes(32).toString('hex');
+    // Instances set up before the rename keep the token they already
+    // have: it is in a studio's configuration somewhere, and silently
+    // issuing a new one would break publishing without saying so.
+    if (!value.studioToken && value.publisherToken) {
+      value.studioToken = value.publisherToken;
+      delete value.publisherToken;
+      changed = true;
+    }
+    if (!value.studioToken) {
+      const fromEnv = (process.env.FOSSSTUDIO_TOKEN || process.env.PUBLISHER_TOKEN || '').trim();
+      value.studioToken = fromEnv || crypto.randomBytes(32).toString('hex');
       changed = true;
     }
     if (changed) store.save('settings', value);
