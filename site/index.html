@@ -402,6 +402,10 @@ docker compose up -d</code></pre>
         <code>127.0.0.1:3100</code>, and point nginx, Apache, a Cloudflare
         Tunnel or Tailscale Serve at it. FOSSCast never assumes it owns
         ports 80 and 443.</p>
+        <p>Proxy on a different machine? Publish on that box's private or
+        Tailscale address instead of loopback, and pass
+        <code>X-Forwarded-For</code> and <code>X-Forwarded-Proto</code>.
+        The README has the nginx block.</p>
       </div>
     </div>
     <p class="hint">It is the same image the maintainer's own shows run
