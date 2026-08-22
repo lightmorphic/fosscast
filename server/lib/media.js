@@ -145,7 +145,73 @@ function ensureWebImage(dataDir, urlPath, maxSide = 1024) {
   });
 }
 
+// A banner video plays on every visit to the front page, so it has to
+// be small: the limits below are what a listener on a phone can afford
+// and what a small VPS can serve. Nothing here re-encodes anything -
+// the file is measured and kept or refused, because transcoding a video
+// on the box the site runs on is exactly the kind of work a small
+// server cannot spare.
+const BANNER_VIDEO = {
+  width: 1920,      // hard maximum; 1280 x 320 is the recommendation
+  height: 480,
+  bytes: 8 * 1024 * 1024,
+  seconds: 20,
+  ratio: 4,         // 4:1, the same strip as the still banner
+  ratioTolerance: 0.6,
+};
+
+// Read a video's dimensions and duration. ffprobe reads the header, so
+// this costs nothing like the encode it saves us.
+function probeVideo(file) {
+  return new Promise((resolve) => {
+    const p = spawn('ffprobe', [
+      '-v', 'error',
+      '-select_streams', 'v:0',
+      '-show_entries', 'stream=width,height:format=duration',
+      '-of', 'json', file,
+    ]);
+    let out = '';
+    p.stdout.on('data', (d) => { out += d; });
+    p.on('error', () => resolve(null));
+    p.on('close', (code) => {
+      if (code !== 0) return resolve(null);
+      try {
+        const data = JSON.parse(out);
+        const stream = (data.streams || [])[0] || {};
+        resolve({
+          width: Number(stream.width) || 0,
+          height: Number(stream.height) || 0,
+          duration: Math.round(Number((data.format || {}).duration) || 0),
+        });
+      } catch { resolve(null); }
+    });
+  });
+}
+
+// What is wrong with this video, in a sentence the operator can act on.
+// Returns null when nothing is.
+function bannerVideoProblem(info) {
+  if (!info || !info.width || !info.height) {
+    return 'That file could not be read as a video. MP4 (H.264) or WebM, please.';
+  }
+  if (info.bytes > BANNER_VIDEO.bytes) {
+    return `That is ${(info.bytes / 1048576).toFixed(1)} MB. The limit is ${BANNER_VIDEO.bytes / 1048576} MB: every visitor downloads this file.`;
+  }
+  if (info.width > BANNER_VIDEO.width || info.height > BANNER_VIDEO.height) {
+    return `That is ${info.width} x ${info.height}. The maximum is ${BANNER_VIDEO.width} x ${BANNER_VIDEO.height}, and 1280 x 320 is plenty - it is a strip across the top of a page, not a cinema screen.`;
+  }
+  if (info.duration > BANNER_VIDEO.seconds) {
+    return `That is ${info.duration} seconds. The limit is ${BANNER_VIDEO.seconds}: it loops, so a few seconds is all it needs.`;
+  }
+  const ratio = info.width / info.height;
+  if (Math.abs(ratio - BANNER_VIDEO.ratio) > BANNER_VIDEO.ratioTolerance) {
+    return `That is ${ratio.toFixed(1)}:1. The banner is a 4:1 strip, so anything much taller gets cropped to fit - crop it yourself and you decide what survives.`;
+  }
+  return null;
+}
+
 module.exports = {
   saveUpload, serveMedia, typeFor, safeName, probeDuration,
   ensureWebImage, webPathFor, MEDIA_TYPES,
+  probeVideo, bannerVideoProblem, BANNER_VIDEO,
 };

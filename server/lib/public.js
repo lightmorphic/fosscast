@@ -386,7 +386,9 @@ function showPage(show, allEpisodes, domain) {
     theme: show.theme,
     footer: (show.theme || {}).footer || '',
     body: `
-  ${show.banner ? `<div class="show-banner"><img src="${esc(showBannerWeb(show))}" alt=""></div>` : ''}
+  ${show.bannerVideo
+    ? `<div class="show-banner"><video src="${esc(show.bannerVideo)}"${show.banner ? ` poster="${esc(showBannerWeb(show))}"` : ''} autoplay muted loop playsinline preload="metadata" aria-hidden="true"></video></div>`
+    : show.banner ? `<div class="show-banner"><img src="${esc(showBannerWeb(show))}" alt=""></div>` : ''}
   <section class="panel hero show-hero">
     ${show.artwork ? `<img class="show-art" src="${esc(showArtWeb(show))}" alt="${esc(show.name)} artwork" width="160" height="160">` : ''}
     <div class="show-hero-text">

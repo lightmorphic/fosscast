@@ -903,6 +903,28 @@ function createAdminRouter(ctx) {
           <p class="hint" id="banner-status">${show.banner ? 'Uploaded.' : 'None yet, so the page starts at the title.'}</p>
           <input type="hidden" id="banner" name="banner" value="${esc(show.banner || '')}">
           <img class="banner-preview" id="banner-preview-img" alt="" src="${show.banner ? esc(show.bannerWeb || show.banner) : ''}"${show.banner ? '' : ' style="display:none"'}>
+
+          <label for="sbannervideo">Banner video (optional)</label>
+          <p class="hint">A few seconds of video in place of the still
+          banner, playing silently on a loop. It has to be small: every
+          visitor downloads it, and nothing is re-encoded here &mdash; the
+          file you upload is the file they get.</p>
+          <ul class="checks limits">
+            <li><span aria-hidden="true">&bull;</span><span><strong>1280 x 320</strong>, the same 4:1 strip as the still banner (1920 x 480 is the hard maximum)</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>8 MB</strong> at most, and less is better</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>20 seconds</strong> at most &mdash; it loops</span></li>
+            <li><span aria-hidden="true">&bull;</span><span>MP4 (H.264) or WebM, no sound needed &mdash; it is played muted</span></li>
+          </ul>
+          <p class="hint">Anything bigger is refused with a note saying
+          what to change. Export at a low bitrate: a banner at 1 Mbps
+          looks fine and a listener on a train will thank you.</p>
+          <input id="sbannervideo" type="file" accept="video/mp4,video/webm" data-upload data-check="banner-video" data-show="${esc(show.slug)}" data-target="bannerVideo" data-status="bannervideo-status">
+          <p class="hint" id="bannervideo-status">${show.bannerVideo ? 'Uploaded.' : 'None. The still banner is used.'}</p>
+          <input type="hidden" id="bannerVideo" name="bannerVideo" value="${esc(show.bannerVideo || '')}">
+          ${show.bannerVideo ? `<video class="banner-preview" src="${esc(show.bannerVideo)}" muted loop playsinline autoplay></video>
+          <p class="hint">The still banner is still worth keeping: it is
+          the poster shown while the video loads, and what a visitor who
+          asks their device for less motion sees instead.</p>` : ''}
         </section>
 
         <section class="panel" id="sec-people">
@@ -1495,6 +1517,9 @@ function createAdminRouter(ctx) {
         if (/^\/media\/[^/]+\/[^/]+$/.test(artwork)) entry.artwork = artwork;
         const banner = String(form.get('banner') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(banner)) entry.banner = banner;
+        const bannerVideo = String(form.get('bannerVideo') || '').trim();
+        if (/^\/media\/[^/]+\/[^/]+$/.test(bannerVideo)) entry.bannerVideo = bannerVideo;
+        else if (!bannerVideo) delete entry.bannerVideo;
         // web copies of the new artwork/banner are made just after save
         entry.social = {};
         for (const [key] of SOCIAL) {
