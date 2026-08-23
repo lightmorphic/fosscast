@@ -1231,17 +1231,20 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 /* ---------- Choosing what the banner looks at ---------- */
 /* The clip as it is, with the banner's own shape drawn over it in red.
    Whatever is inside the box is what the strip will show. */
+/* The same width as the strip underneath it: judging a crop against a
+   preview of a different size is guesswork, and the two sitting flush
+   makes the red box read as what it is - a window onto the picture. */
 .focus-picker {
   position: relative;
-  display: inline-block;
-  max-width: 100%;
+  display: block;
+  width: 100%;
   margin: 0.75rem 0;
   line-height: 0;
   border-radius: var(--radius);
   overflow: hidden;
   background: #000;
 }
-.focus-picker video { display: block; max-width: 100%; max-height: 22rem; }
+.focus-picker video { display: block; width: 100%; height: auto; }
 .focus-box {
   position: absolute;
   top: 0;
