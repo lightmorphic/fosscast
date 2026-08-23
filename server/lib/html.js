@@ -60,7 +60,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.15.0">
+<link rel="stylesheet" href="/css/site.css?v=0.15.1">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -332,7 +332,32 @@ document.addEventListener('change', (e) => {
   fetch('/admin/api/upload?show=' + encodeURIComponent(input.dataset.show) + '&filename=' + encodeURIComponent(file.name) + check, {
     method: 'PUT', body: file,
   }).then((r) => r.json()).then((d) => {
-    if (d.urlPath) { target.value = d.urlPath; say('Uploaded: ' + d.name, false); }
+    if (d.urlPath) {
+      target.value = d.urlPath;
+      say('Uploaded: ' + d.name, false);
+      // The hidden field changing is what the form saves; setting it in
+      // script fires nothing, so the upload has to say so itself. The
+      // change event on the picker fired before the file had finished
+      // arriving, which saved the previous value over the new one.
+      target.dispatchEvent(new Event('input', { bubbles: true }));
+      if (input.dataset.check === 'banner-video') {
+        if (window.fosscastFraming) {
+          window.fosscastFraming.show(d.urlPath);
+        } else {
+          // No framing picker on the page yet - this is the first video.
+          // Wait for the save to land, then let the server draw it.
+          const state = input.form && input.form.querySelector('.save-state');
+          let waited = 0;
+          const wait = setInterval(() => {
+            waited += 200;
+            if ((state && state.textContent === 'Saved') || waited > 6000) {
+              clearInterval(wait);
+              location.reload();
+            }
+          }, 200);
+        }
+      }
+    }
     else {
       say(d.error || 'That upload did not work, and the server did not say why.', true);
       input.value = '';   // so the same file can be picked again after fixing it
@@ -509,6 +534,18 @@ document.addEventListener('change', (e) => {
   window.addEventListener('resize', layout);
   if (video.readyState >= 1) layout();
   draw();
+
+  // A newly uploaded clip replaces the one being framed: the box has to
+  // be measured again, because the new file is very likely a different
+  // shape from the old one.
+  window.fosscastFraming = {
+    show: function (src) {
+      video.src = src;
+      video.load();
+      if (result) { result.src = src; result.load(); }
+      video.addEventListener('loadedmetadata', layout, { once: true });
+    },
+  };
 })();
 
 // Editing saves itself. Any form marked data-autosave stores what has
@@ -719,7 +756,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.15.0">
+<link rel="stylesheet" href="/css/site.css?v=0.15.1">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">

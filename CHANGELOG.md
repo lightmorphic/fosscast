@@ -4,6 +4,17 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Uploading a banner video now saves itself and refreshes what is on
+  screen. Two faults, one cause: the hidden field holding the path was
+  being set by script, which fires no event, so the form never learned
+  about it -- and the change event from the file picker had already
+  fired and saved the *previous* value before the new file finished
+  arriving. A replacement clip could be uploaded and simply lost. The
+  framing box and the preview strip now re-point at the new file and
+  re-measure it, since the new clip is rarely the same shape as the old
+  one; a first video, where the picker is not on the page yet, waits for
+  the save and reloads.
+
 - A refused upload now says so in red, in a panel with a warning sign,
   rather than in the same grey as the progress line above it. The
   message explains what to change about the file, which was worth
