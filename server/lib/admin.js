@@ -788,18 +788,20 @@ function createAdminRouter(ctx) {
           <h2>Words of your own</h2>
           <label for="tagline">Tagline</label>
           <input id="tagline" name="tagline" maxlength="200" value="${esc(t.tagline)}" placeholder="Two nerds, one microphone">
-          <label for="footer-text">Footer line</label>
+        </section>
+
+        <section class="panel" id="sec-footer">
+          <h2>Footer</h2>
+          <label for="footer-text">Your own line</label>
+          <p class="hint">Your copyright, your credit, whatever you like.</p>
           <input id="footer-text" name="footer" maxlength="300" value="${esc(t.footer)}" placeholder="&copy; ${new Date().getFullYear()} ${esc(show.name)}">
 
           <div class="subsection">
-            <label>The FOSSCast footer</label>
-            <p class="hint">Your pages carry a small FOSSCast mark and a
-            Lightmorphic one at the foot. Leaving them there is how other
-            podcasters find the software, and it is genuinely appreciated
-            &mdash; but this is your site, and if they do not suit it, take
-            them off. Nothing else changes either way, and your own footer
-            line stays.</p>
             <label class="check-label"><input type="checkbox" name="hideFooter" value="1" class="check"${t.hideFooter ? ' checked' : ''}> Remove the FOSSCast footer from my pages</label>
+            <p class="hint">A small FOSSCast mark sits at the foot of your
+            pages. Leaving it is how other podcasters find the software,
+            and we are grateful when you do &mdash; but it is your site.
+            Your own line above stays either way.</p>
           </div>
         </section>
 
