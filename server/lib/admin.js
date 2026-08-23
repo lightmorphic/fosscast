@@ -13,7 +13,7 @@ const fs = require('fs');
 const { esc, adminPage, ICONS } = require('./html');
 const auth = require('./auth');
 const CATEGORIES = require('./categories');
-const { probeDuration, ensureWebImage } = require('./media');
+const { probeDuration, ensureWebImage, ensureVideoPoster } = require('./media');
 const importer = require('./import');
 const { sendMail, configured: mailConfigured } = require('./mailer');
 const { APPS, SUPPORT, SOCIAL, showPage } = require('./public');
@@ -357,6 +357,14 @@ function createAdminRouter(ctx) {
         if (!show[field]) { if (show[`${field}Web`]) { delete show[`${field}Web`]; showsChanged = true; } continue; }
         const web = await ensureWebImage(dataDir, show[field], cap, suffix);
         if (web && show[`${field}Web`] !== web) { show[`${field}Web`] = web; showsChanged = true; }
+      }
+      // A banner video's own first frame stands in while it loads.
+      if (show.bannerVideo) {
+        const poster = await ensureVideoPoster(dataDir, show.bannerVideo);
+        if (poster && show.bannerVideoPoster !== poster) { show.bannerVideoPoster = poster; showsChanged = true; }
+      } else if (show.bannerVideoPoster) {
+        delete show.bannerVideoPoster;
+        showsChanged = true;
       }
       // A background image covers the whole screen, so its web copy is
       // the largest of the lot.

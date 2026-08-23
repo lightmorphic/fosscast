@@ -582,11 +582,9 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
   object-fit: cover;
   border-radius: var(--panel-radius);
 }
-/* Someone who has asked their device for less motion gets the still
-   banner instead: the video is left at its poster frame. */
-@media (prefers-reduced-motion: reduce) {
-  .show-banner video { animation-play-state: paused; }
-}
+/* Reduced motion is handled in script: pausing a video is not something
+   CSS can do, and animation-play-state here only ever looked like it
+   did. See stillBanner() in html.js. */
 .limits { margin: 0.5rem 0 0.75rem; }
 .limits li > span:first-child { color: var(--accent); }
 .show-banner img {
