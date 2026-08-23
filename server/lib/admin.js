@@ -750,20 +750,28 @@ function createAdminRouter(ctx) {
 
         <section class="panel" id="sec-layout">
           <h2>Layout</h2>
+          <div class="subsection">
           <p class="group-label">Page width</p>
           ${chips('width', themes.WIDTHS.map(([k, l]) => [k, l, '']), t.width)}
+          </div>
+          <div class="subsection">
           <p class="group-label">Episodes</p>
           ${chips('episodes', themes.EPISODE_LAYOUTS.map(([k, l]) => [k, l.replace(' the text', '').replace(', small thumbnails', ''), '']), t.episodes)}
           <label class="check-label"><input type="checkbox" name="bannerFull" value="1" class="check"${t.bannerFull ? ' checked' : ''}> Banner runs edge to edge</label>
+          </div>
         </section>
 
         <section class="panel" id="sec-photos">
           <h2>Photos &amp; artwork</h2>
+          <div class="subsection">
           <p class="group-label">Host photos</p>
           ${chips('imgShape', themes.IMAGE_SHAPES.map(([k, l]) => [k, l, '']), t.imgShape)}
           ${chips('photoSize', themes.IMAGE_SIZES.map(([k, l]) => [k, l, '']), t.photoSize)}
+          </div>
+          <div class="subsection">
           <p class="group-label">Cover on the front page</p>
           ${chips('artSize', themes.ART_SIZES.map(([k, l]) => [k, l, '']), t.artSize)}
+          </div>
         </section>
 
         <section class="panel" id="sec-mode">
@@ -1044,6 +1052,7 @@ function createAdminRouter(ctx) {
 
         <section class="panel" id="sec-artwork">
           <h2>Artwork &amp; banner</h2>
+          <div class="subsection">
           <label for="sart">Podcast artwork</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels (Apple
           accepts 1400 x 1400 upwards). JPG or PNG. The server makes a small
@@ -1052,6 +1061,9 @@ function createAdminRouter(ctx) {
           <p class="hint" id="art-status">${show.artwork ? 'Uploaded.' : 'None yet. Directories will not list a show without it.'}</p>
           <input type="hidden" id="artwork" name="artwork" value="${esc(show.artwork || '')}">
           <img class="art-preview" id="art-preview-img" alt="" src="${show.artwork ? esc(show.artworkWeb || show.artwork) : ''}"${show.artwork ? '' : ' style="display:none"'}>
+          </div>
+
+          <div class="subsection">
           <label for="sbanner">Website banner</label>
           <p class="hint">Wide strip across the top of your site.
           <strong>2560 x 640</strong> pixels (4:1) keeps it sharp; anything
@@ -1062,6 +1074,9 @@ function createAdminRouter(ctx) {
           <input type="hidden" id="banner" name="banner" value="${esc(show.banner || '')}">
           <img class="banner-preview" id="banner-preview-img" alt="" src="${show.banner ? esc(show.bannerWeb || show.banner) : ''}"${show.banner ? '' : ' style="display:none"'}>
 
+          </div>
+
+          <div class="subsection">
           <label for="sbannervideo">Banner video (optional)</label>
           <p class="hint">A few seconds of video in place of the still
           banner, playing silently on a loop. It has to be small: every
@@ -1079,10 +1094,12 @@ function createAdminRouter(ctx) {
           <input id="sbannervideo" type="file" accept="video/mp4,video/webm" data-upload data-check="banner-video" data-show="${esc(show.slug)}" data-target="bannerVideo" data-status="bannervideo-status">
           <p class="hint" id="bannervideo-status">${show.bannerVideo ? 'Uploaded.' : 'None. The still banner is used.'}</p>
           <input type="hidden" id="bannerVideo" name="bannerVideo" value="${esc(show.bannerVideo || '')}">
-          ${show.bannerVideo ? `<video class="banner-preview" src="${esc(show.bannerVideo)}" muted loop playsinline autoplay></video>
+          <label class="check-label"><input type="checkbox" name="bannerLoop" value="1" class="check"${show.bannerLoop === false ? '' : ' checked'}> Loop it &mdash; otherwise it plays once and holds on its last frame</label>
+          ${show.bannerVideo ? `<video class="banner-preview" src="${esc(show.bannerVideo)}" muted${show.bannerLoop === false ? '' : ' loop'} playsinline autoplay></video>
           <p class="hint">The still banner is still worth keeping: it is
           the poster shown while the video loads, and what a visitor who
           asks their device for less motion sees instead.</p>` : ''}
+          </div>
         </section>
 
         <section class="panel" id="sec-people">
@@ -1675,6 +1692,7 @@ function createAdminRouter(ctx) {
         if (/^\/media\/[^/]+\/[^/]+$/.test(artwork)) entry.artwork = artwork;
         const banner = String(form.get('banner') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(banner)) entry.banner = banner;
+        entry.bannerLoop = form.get('bannerLoop') === '1';
         const bannerVideo = String(form.get('bannerVideo') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(bannerVideo)) entry.bannerVideo = bannerVideo;
         else if (!bannerVideo) delete entry.bannerVideo;

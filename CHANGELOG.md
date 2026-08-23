@@ -4,6 +4,14 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Cards that hold more than one thing now rule them apart: artwork,
+  website banner and banner video are three parts of one card rather
+  than one run of fields, and the Look tab's Layout and Photos cards are
+  divided the same way.
+- A banner video can play once instead of looping. The checkbox sits
+  with the video field; unticked, it plays through and holds on its last
+  frame.
+
 - Listening, following and chipping in have a card of their own on the
   show page: three columns of equal width under Listen, Follow and
   Support, separated by a hairline, with the feed address along the
