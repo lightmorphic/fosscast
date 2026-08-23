@@ -440,7 +440,7 @@ function showPage(show, allEpisodes, domain) {
     footer: (show.theme || {}).footer || '',
     body: `
   ${show.bannerVideo
-    ? `<div class="show-banner"><video src="${esc(show.bannerVideo)}"${show.banner ? ` poster="${esc(showBannerWeb(show))}"` : ''} autoplay muted${show.bannerLoop === false ? '' : ' loop'} playsinline preload="metadata" aria-hidden="true"></video></div>`
+    ? `<div class="show-banner"><video src="${esc(show.bannerVideo)}"${show.banner ? ` poster="${esc(showBannerWeb(show))}"` : ''} autoplay muted${show.bannerLoop === false ? '' : ' loop'} playsinline preload="metadata" aria-hidden="true" style="object-position: ${Number(show.bannerFocusX ?? 50)}% ${Number(show.bannerFocusY ?? 50)}%"></video></div>`
     : show.banner ? `<div class="show-banner"><img src="${esc(showBannerWeb(show))}" alt=""></div>` : ''}
   <section class="panel hero show-hero">
     ${show.artwork ? `<img class="show-art" src="${esc(showArtWeb(show))}" alt="${esc(show.name)} artwork" width="160" height="160">` : ''}

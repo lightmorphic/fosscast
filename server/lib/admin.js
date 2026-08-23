@@ -1091,24 +1091,28 @@ function createAdminRouter(ctx) {
           you upload is exactly what your server sends and what their
           data allowance pays for. Small is the whole game.</p>
           <ul class="checks limits">
-            <li><span aria-hidden="true">&bull;</span><span><strong>1280 x 320</strong> (4:1). Refused past 1440 x 360</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>Keep the shape it came in</strong> and shrink it until the smaller side just clears <strong>1280 x 320</strong> &mdash; a 16:9 clip becomes 1280 x 720. Do not crop: you choose what shows below</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>Under 1 MB.</strong> Refused past 1.5 MB</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>5 to 8 seconds</strong>, looping. Refused past 10</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>About 1 Mbps</strong> &mdash; the rate is what costs you bandwidth. Refused past 1.5</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>No audio track.</strong> It plays muted, so sound is bytes nobody hears</span></li>
-            <li><span aria-hidden="true">&bull;</span><span>MP4 (H.264) or WebM</span></li>
+            <li><span aria-hidden="true">&bull;</span><span>MP4 (H.264) or WebM, no bigger than 1920 x 1080</span></li>
           </ul>
           <details class="recipe">
             <summary>Making one in HandBrake (free, on every platform)</summary>
             <p class="hint"><a href="/presets/fosscast-banner.json" download>Download the FOSSCast banner preset</a>
             and load it with <b>Presets &rarr; Import from file</b>: it sets
-            everything below in one go. Crop your clip to a 4:1 strip first,
-            though &mdash; only you know what has to stay in frame.</p>
+            everything below in one go. It only makes the clip smaller
+            &mdash; it never crops or stretches it, because which part of
+            the picture ends up in the banner is chosen here, not there.</p>
             <p class="hint">Or set it by hand:</p>
             <ol class="steps">
-              <li>Open your clip. Under <b>Dimensions</b>, set the width to
-              <b>1280</b> and crop until the height is <b>320</b> &mdash; the
-              banner is a 4:1 strip and anything else gets cropped anyway.</li>
+              <li>Open your clip. Under <b>Dimensions</b>, keep
+              <b>Anamorphic: off</b> and the aspect ratio <b>locked</b>, and
+              set the size to fit inside <b>1280 x 1080</b>. A 16:9 clip
+              comes out 1280 x 720; a strip comes out 1280 x 320. Never
+              smaller than 1280 across or 320 down, or it cannot fill the
+              banner.</li>
               <li>Under <b>Video</b>: encoder <b>H.264</b>, framerate
               <b>Same as source</b> with <b>Peak framerate</b>, and quality
               <b>RF 30</b>. Higher RF means a smaller file; 28 to 32 all look
@@ -1119,8 +1123,9 @@ function createAdminRouter(ctx) {
               <li>Encode, and check the result is comfortably under a
               megabyte. If it is not, raise the RF number and try again.</li>
             </ol>
-            <p class="hint">ffmpeg, if you prefer:
-            <code>ffmpeg -i in.mp4 -vf "scale=1280:-2,crop=1280:320" -c:v libx264 -crf 30 -preset slow -an -movflags +faststart out.mp4</code></p>
+            <p class="hint">ffmpeg, if you prefer &mdash; scales to 1280
+            across, keeps the shape, no crop:
+            <code>ffmpeg -i in.mp4 -vf "scale=1280:-2" -c:v libx264 -crf 30 -preset slow -an -movflags +faststart out.mp4</code></p>
           </details>
           <p class="hint">Anything past those limits is refused, with a note
           saying which one and by how much. Keep what matters central: the
@@ -1129,7 +1134,25 @@ function createAdminRouter(ctx) {
           <p class="hint" id="bannervideo-status">${show.bannerVideo ? 'Uploaded.' : 'None. The still banner is used.'}</p>
           <input type="hidden" id="bannerVideo" name="bannerVideo" value="${esc(show.bannerVideo || '')}">
           <label class="check-label"><input type="checkbox" name="bannerLoop" value="1" class="check"${show.bannerLoop === false ? '' : ' checked'}> Loop it &mdash; otherwise it plays once and holds on its last frame</label>
-          ${show.bannerVideo ? `<video class="banner-preview" src="${esc(show.bannerVideo)}" muted${show.bannerLoop === false ? '' : ' loop'} playsinline autoplay></video>
+          <input type="hidden" name="bannerFocusX" id="bannerFocusX" value="${Number(show.bannerFocusX ?? 50)}">
+          <input type="hidden" name="bannerFocusY" id="bannerFocusY" value="${Number(show.bannerFocusY ?? 50)}">
+          ${show.bannerVideo ? `
+          <p class="group-label">Which part shows</p>
+          <p class="hint">The whole clip is below, playing. The red box is
+          the banner: drag it to whatever part of the picture should be on
+          your front page. Nothing is cut from the file &mdash; the box only
+          decides what the strip looks at.</p>
+          <div class="focus-picker" id="focus-picker"
+               data-x="${Number(show.bannerFocusX ?? 50)}" data-y="${Number(show.bannerFocusY ?? 50)}">
+            <video id="focus-video" src="${esc(show.bannerVideo)}" muted loop playsinline autoplay preload="metadata"></video>
+            <div class="focus-box" id="focus-box" tabindex="0" role="slider"
+                 aria-label="The part of the video the banner shows"
+                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Number(show.bannerFocusX ?? 50)}"></div>
+          </div>
+          <p class="group-label">As it will look</p>
+          <div class="focus-result">
+            <video id="focus-result-video" src="${esc(show.bannerVideo)}" muted${show.bannerLoop === false ? '' : ' loop'} playsinline autoplay preload="metadata"></video>
+          </div>
           <p class="hint">The still banner is still worth keeping: it is
           the poster shown while the video loads, and what a visitor who
           asks their device for less motion sees instead.</p>` : ''}
@@ -1727,6 +1750,14 @@ function createAdminRouter(ctx) {
         const banner = String(form.get('banner') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(banner)) entry.banner = banner;
         entry.bannerLoop = form.get('bannerLoop') === '1';
+        // Where the banner looks, as a percentage across and down, the
+        // way CSS object-position reads it.
+        const focus = (name) => {
+          const n = Number(form.get(name));
+          return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n))) : 50;
+        };
+        entry.bannerFocusX = focus('bannerFocusX');
+        entry.bannerFocusY = focus('bannerFocusY');
         const bannerVideo = String(form.get('bannerVideo') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(bannerVideo)) entry.bannerVideo = bannerVideo;
         else if (!bannerVideo) delete entry.bannerVideo;

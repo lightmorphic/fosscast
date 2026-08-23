@@ -156,19 +156,19 @@ function ensureWebImage(dataDir, urlPath, maxSide = 1024, suffix = 'web') {
 // times, not by what looks nicest. 1280 x 320 at about 1 Mbps is a
 // sharp banner and a third of a megabyte; two megabytes is the point at
 // which a decorative strip costs more than it is worth.
-// The ceilings sit just above the recommendation rather than far above
-// it: a limit with generous headroom is not a limit, it is a target
-// people aim at. 1280 x 320, under a megabyte, six seconds, 1 Mbps is
-// the banner; the numbers below leave room for an export that lands
-// slightly over and refuse anything beyond that.
+// A banner video is not cropped before it is uploaded - the operator
+// chooses which part of it shows, in the dashboard, over the moving
+// picture. So the shape does not matter here; what matters is that it
+// is big enough to fill the strip (1280 x 320) and small enough to
+// serve a thousand times without thinking about it.
 const BANNER_VIDEO = {
-  width: 1440,          // the recommendation is 1280 x 320
-  height: 360,
+  minWidth: 1280,       // must cover the banner, which is drawn 976 wide
+  minHeight: 320,
+  maxWidth: 1920,       // past this it is pixels nobody will ever see
+  maxHeight: 1080,
   bytes: Math.round(1.5 * 1024 * 1024),
   seconds: 10,
   bitrate: 1500000,     // bits per second, averaged over the clip
-  ratio: 4,             // 4:1, the same strip as the still banner
-  ratioTolerance: 0.6,
 };
 
 // Read a video's dimensions and duration. ffprobe reads the header, so
@@ -208,8 +208,11 @@ function bannerVideoProblem(info) {
   if (info.bytes > BANNER_VIDEO.bytes) {
     return `That is ${(info.bytes / 1048576).toFixed(1)} MB. The limit is ${(BANNER_VIDEO.bytes / 1048576).toFixed(1)} MB, and under 1 MB is the aim: every visitor downloads this file, in full, every time.`;
   }
-  if (info.width > BANNER_VIDEO.width || info.height > BANNER_VIDEO.height) {
-    return `That is ${info.width} x ${info.height}. Make it 1280 x 320 - it is a strip across the top of a page, not a cinema screen - and ${BANNER_VIDEO.width} x ${BANNER_VIDEO.height} is as far past that as this will take.`;
+  if (info.width < BANNER_VIDEO.minWidth || info.height < BANNER_VIDEO.minHeight) {
+    return `That is ${info.width} x ${info.height}, and the banner needs at least ${BANNER_VIDEO.minWidth} x ${BANNER_VIDEO.minHeight} to fill without stretching. Scale it down until the smaller side just clears that - keep the shape it came in, the crop is chosen here.`;
+  }
+  if (info.width > BANNER_VIDEO.maxWidth || info.height > BANNER_VIDEO.maxHeight) {
+    return `That is ${info.width} x ${info.height}. Scale it down: past ${BANNER_VIDEO.maxWidth} x ${BANNER_VIDEO.maxHeight} it is pixels nobody sees, in a file everybody downloads.`;
   }
   if (info.duration > BANNER_VIDEO.seconds) {
     return `That is ${info.duration} seconds. The limit is ${BANNER_VIDEO.seconds} and five to eight is the aim: a banner loops, so a few seconds is all it needs.`;
@@ -219,10 +222,6 @@ function bannerVideoProblem(info) {
   const rate = info.duration ? (info.bytes * 8) / info.duration : 0;
   if (rate > BANNER_VIDEO.bitrate) {
     return `That runs at about ${(rate / 1000000).toFixed(1)} Mbps. A banner looks fine at 1, and ${BANNER_VIDEO.bitrate / 1000000} is the limit. In HandBrake, raise the quality slider's RF number (30 is about right) and delete the audio track: it is played muted.`;
-  }
-  const ratio = info.width / info.height;
-  if (Math.abs(ratio - BANNER_VIDEO.ratio) > BANNER_VIDEO.ratioTolerance) {
-    return `That is ${ratio.toFixed(1)}:1. The banner is a 4:1 strip, so anything much taller gets cropped to fit - crop it yourself and you decide what survives.`;
   }
   return null;
 }
