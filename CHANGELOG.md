@@ -4,6 +4,10 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- The framing picker is the same width as the banner preview under it.
+  Judging a crop against a preview of a different size is guesswork, and
+  the red box now spans exactly what the strip will show.
+
 - With both a banner image and a banner video uploaded, the podcast page
   asks which the front page uses -- Image, Video or Random -- at the top
   of the banner, where the decision belongs. Random tosses a coin on
