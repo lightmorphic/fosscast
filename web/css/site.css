@@ -685,7 +685,20 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
 .sub-btn svg { width: 1.05rem; height: 1.05rem; flex: none; }
 
 /* ---------- Feed check ---------- */
-.checks { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.375rem; }
+/* Ten short ticks down the left of a full-width card left the right
+   two thirds empty. They flow into columns instead, as many as fit. */
+.checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.375rem 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+/* A check that failed carries its remedy, so it wants a line to itself. */
+.checks li.check-bad { grid-column: 1 / -1; }
+/* The upload limits use the same marks but are sentences, not labels. */
+.limits { grid-template-columns: 1fr; }
 .checks li { display: flex; gap: 0.625rem; align-items: flex-start; font-size: 0.9375rem; }
 .checks li > span:first-child { font-weight: 700; flex: none; width: 1rem; text-align: center; }
 .check-ok > span:first-child { color: var(--success); }

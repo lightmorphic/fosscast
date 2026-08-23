@@ -115,8 +115,8 @@ const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp']);
 // The web copy of an uploaded image: a small, fast version for pages.
 // Lives next to the original as "<name>.web.jpg". The original (which
 // may be 3000x3000 for the directories) is kept for the RSS feed.
-function webPathFor(urlPath) {
-  return `${urlPath}.web.jpg`;
+function webPathFor(urlPath, suffix = 'web') {
+  return `${urlPath}.${suffix}.jpg`;
 }
 
 // Make the small web copy if it does not exist yet. Longest side capped
@@ -124,14 +124,14 @@ function webPathFor(urlPath) {
 // url path when one is available, else null. Never throws. maxSide moves
 // the cap down: a host photo is shown far smaller than cover art, so it
 // is made smaller still.
-function ensureWebImage(dataDir, urlPath, maxSide = 1024) {
+function ensureWebImage(dataDir, urlPath, maxSide = 1024, suffix = 'web') {
   return new Promise((resolve) => {
     if (typeof urlPath !== 'string' || !urlPath.startsWith('/media/')) return resolve(null);
     const ext = path.extname(urlPath).toLowerCase();
     if (!IMAGE_EXTS.has(ext)) return resolve(null);
     const file = path.join(dataDir, decodeURIComponent(urlPath.slice(1)));
-    const out = `${file}.web.jpg`;
-    if (fs.existsSync(out)) return resolve(webPathFor(urlPath));
+    const out = `${file}.${suffix}.jpg`;
+    if (fs.existsSync(out)) return resolve(webPathFor(urlPath, suffix));
     if (!fs.existsSync(file)) return resolve(null);
     // Fit within the cap, only shrinking (never enlarging a small one).
     const cap = Math.max(64, Math.min(4096, Number(maxSide) || 1024));
@@ -141,7 +141,7 @@ function ensureWebImage(dataDir, urlPath, maxSide = 1024) {
       '-q:v', '4', out,
     ], { stdio: 'ignore' });
     p.on('error', () => resolve(null));
-    p.on('close', (code) => resolve(code === 0 && fs.existsSync(out) ? webPathFor(urlPath) : null));
+    p.on('close', (code) => resolve(code === 0 && fs.existsSync(out) ? webPathFor(urlPath, suffix) : null));
   });
 }
 
