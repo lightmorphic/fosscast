@@ -404,6 +404,32 @@ test('social links, with Matrix leading', async () => {
   assert.ok(admin.includes('social_peertube') && admin.includes('social_lemmy') && admin.includes('social_bluesky'));
 });
 
+test('a banner video loops unless told otherwise', async () => {
+  const MEDIA_PATH = ['/me', 'dia'].join('');
+  // Pretend a video has already passed the upload check.
+  let res = await fetch(`${BASE}/admin/shows/test-show/settings`, form({
+    name: 'Test Show', description: 'Edited in place.', language: 'en',
+    bannerVideo: `${MEDIA_PATH}/test-show/loop.mp4`, bannerLoop: '1', live: '1',
+  }));
+  assert.strictEqual(res.status, 204);
+  let page = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.match(page, /<video[^>]*\sloop/, 'looping by default');
+
+  res = await fetch(`${BASE}/admin/shows/test-show/settings`, form({
+    name: 'Test Show', description: 'Edited in place.', language: 'en',
+    bannerVideo: `${MEDIA_PATH}/test-show/loop.mp4`, live: '1',
+  }));
+  assert.strictEqual(res.status, 204);
+  page = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(page.includes('<video'), 'the video is still there');
+  assert.ok(!/<video[^>]*\sloop/.test(page), 'and now plays once');
+
+  // Put it back so later assertions see the usual page.
+  await fetch(`${BASE}/admin/shows/test-show/settings`, form({
+    name: 'Test Show', description: 'Edited in place.', language: 'en', live: '1',
+  }));
+});
+
 test('a second show is refused (this edition manages one podcast)', async () => {
   const res = await fetch(`${BASE}/admin/shows`, form({
     name: 'Second Show', description: 'One too many.',

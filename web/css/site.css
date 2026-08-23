@@ -1177,3 +1177,14 @@ details.panel[open] > summary { margin-bottom: 0.75rem; }
 
 .table-scroll { overflow-x: auto; }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* A card can hold more than one thing - artwork, then a banner, then a
+   banner video - and a rule between them says where one ends and the
+   next begins without needing another card. */
+.subsection + .subsection {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.subsection > label:first-child,
+.subsection > .group-label:first-child { margin-top: 0; }
