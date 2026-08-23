@@ -1324,3 +1324,23 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   aspect-ratio: 4 / 1;
   object-fit: cover;
 }
+
+/* A refused upload says what to change about the file. That is worth
+   reading, so it does not get the same grey as a progress line. */
+.upload-failed {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin: 0.625rem 0;
+  padding: 0.75rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--danger);
+  background: var(--danger-bg);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  border-left: 3px solid var(--danger);
+  border-radius: var(--radius);
+}
+.upload-failed-icon { flex: none; line-height: 0; margin-top: 0.05rem; }
+.upload-failed-icon svg { width: 1.125rem; height: 1.125rem; }
