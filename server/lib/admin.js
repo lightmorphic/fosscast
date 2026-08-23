@@ -1067,6 +1067,20 @@ function createAdminRouter(ctx) {
           <img class="art-preview" id="art-preview-img" alt="" src="${show.artwork ? esc(show.artworkWeb || show.artwork) : ''}"${show.artwork ? '' : ' style="display:none"'}>
           </div>
 
+          ${show.bannerVideo && show.banner ? `
+          <div class="subsection">
+            <label>Banner</label>
+            <p class="hint">You have uploaded both, so choose which the
+            front page uses. <b>Random</b> tosses a coin on every visit.</p>
+            <div class="picks" role="radiogroup" aria-label="Which banner the front page uses">
+              ${[['image', 'Image'], ['video', 'Video'], ['random', 'Random']]
+                .map(([key, label]) => `<label class="pick${(show.bannerMode || 'video') === key ? ' current' : ''}">
+                  <input type="radio" name="bannerMode" value="${key}"${(show.bannerMode || 'video') === key ? ' checked' : ''}>
+                  <span>${label}</span>
+                </label>`).join('')}
+            </div>
+          </div>` : ''}
+
           <div class="subsection">
           <label for="sbanner">Website banner</label>
           <p class="hint">The strip across the top of your site. It is
@@ -1135,18 +1149,6 @@ function createAdminRouter(ctx) {
           <input type="hidden" id="bannerVideo" name="bannerVideo" value="${esc(show.bannerVideo || '')}">
           <label class="check-label"><input type="checkbox" name="bannerLoop" value="1" class="check"${show.bannerLoop === false ? '' : ' checked'}> Loop it &mdash; otherwise it plays once and holds on its last frame</label>
 
-          ${show.bannerVideo && show.banner ? `
-          <p class="group-label">Which one to show</p>
-          <div class="picks" role="radiogroup" aria-label="Which banner to show">
-            ${[['video', 'The video'], ['image', 'The still'], ['random', 'Either, at random']]
-              .map(([key, label]) => `<label class="pick${(show.bannerMode || 'video') === key ? ' current' : ''}">
-                <input type="radio" name="bannerMode" value="${key}"${(show.bannerMode || 'video') === key ? ' checked' : ''}>
-                <span>${esc(label)}</span>
-              </label>`).join('')}
-          </div>
-          <p class="hint">You have both, so take your pick. <b>At random</b>
-          tosses a coin on every visit, which is a cheap way to keep a
-          front page from looking the same twice.</p>` : ''}
           <input type="hidden" name="bannerFocusX" id="bannerFocusX" value="${Number(show.bannerFocusX ?? 50)}">
           <input type="hidden" name="bannerFocusY" id="bannerFocusY" value="${Number(show.bannerFocusY ?? 50)}">
           ${show.bannerVideo ? `

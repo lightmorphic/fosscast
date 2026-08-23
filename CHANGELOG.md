@@ -4,9 +4,10 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
-- With both a still banner and a banner video uploaded, the podcast page
-  asks which to show: the video, the still, or either at random -- a
-  coin toss on every visit. With only one of the two there is nothing to
+- With both a banner image and a banner video uploaded, the podcast page
+  asks which the front page uses -- Image, Video or Random -- at the top
+  of the banner, where the decision belongs. Random tosses a coin on
+  every visit. With only one of the two uploaded there is nothing to
   choose, so the question is not asked and whichever exists is used.
 
 - A banner video is no longer cropped before it is uploaded. Shrink it
