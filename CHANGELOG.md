@@ -4,6 +4,13 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- A refused upload now says so in red, in a panel with a warning sign,
+  rather than in the same grey as the progress line above it. The
+  message explains what to change about the file, which was worth
+  reading and easy to miss; the file picker is also cleared, so the
+  corrected file can be chosen without the browser ignoring it as a
+  duplicate.
+
 - A banner video may now run to 15 seconds and 2 MB, up from 10 and
   1.5 MB. Under a megabyte and five to eight seconds is still the aim,
   and the 1.5 Mbps rate limit is unchanged -- which is what keeps the

@@ -60,7 +60,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.14.1">
+<link rel="stylesheet" href="/css/site.css?v=0.15.0">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -305,14 +305,39 @@ document.addEventListener('change', (e) => {
     const preview = document.getElementById(input.dataset.preview);
     if (preview) { preview.src = URL.createObjectURL(file); preview.style.display = 'block'; }
   }
-  status.textContent = 'Uploading ' + file.name + ' (' + (file.size / 1048576).toFixed(1) + ' MB)...';
+  // A refusal explains what to change about the file, which is no use
+  // whispered in grey under the picker: it gets a red panel and a
+  // warning sign, so it cannot be mistaken for the progress line.
+  const say = (text, failed) => {
+    status.textContent = '';
+    status.className = failed ? 'upload-failed' : 'hint';
+    if (failed) {
+      const icon = document.createElement('span');
+      icon.className = 'upload-failed-icon';
+      icon.setAttribute('aria-hidden', 'true');
+      icon.innerHTML = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 3.5 1.8 21h20.4z"/><path d="M12 9.5v5"/><circle cx="12" cy="17.6" r="0.6" fill="currentColor" stroke="none"/></svg>';
+      status.appendChild(icon);
+      const words = document.createElement('span');
+      words.textContent = text;
+      status.appendChild(words);
+      status.setAttribute('role', 'alert');
+    } else {
+      status.removeAttribute('role');
+      status.textContent = text;
+    }
+  };
+
+  say('Uploading ' + file.name + ' (' + (file.size / 1048576).toFixed(1) + ' MB)...', false);
   var check = input.dataset.check ? '&check=' + encodeURIComponent(input.dataset.check) : '';
   fetch('/admin/api/upload?show=' + encodeURIComponent(input.dataset.show) + '&filename=' + encodeURIComponent(file.name) + check, {
     method: 'PUT', body: file,
   }).then((r) => r.json()).then((d) => {
-    if (d.urlPath) { target.value = d.urlPath; status.textContent = 'Uploaded: ' + d.name; }
-    else { status.textContent = 'Upload failed: ' + (d.error || 'unknown error'); }
-  }).catch(() => { status.textContent = 'Upload failed.'; });
+    if (d.urlPath) { target.value = d.urlPath; say('Uploaded: ' + d.name, false); }
+    else {
+      say(d.error || 'That upload did not work, and the server did not say why.', true);
+      input.value = '';   // so the same file can be picked again after fixing it
+    }
+  }).catch(() => say('That upload did not finish - check your connection and try again.', true));
 });
 // A page with a lot of cards gets a rail down the right-hand side: one
 // link per section, the one you are looking at marked. Built from
@@ -694,7 +719,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.14.1">
+<link rel="stylesheet" href="/css/site.css?v=0.15.0">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">
