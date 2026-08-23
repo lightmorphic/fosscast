@@ -4,6 +4,11 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- With both a still banner and a banner video uploaded, the podcast page
+  asks which to show: the video, the still, or either at random -- a
+  coin toss on every visit. With only one of the two there is nothing to
+  choose, so the question is not asked and whichever exists is used.
+
 - A banner video is no longer cropped before it is uploaded. Shrink it
   keeping its own shape -- a 16:9 clip becomes 1280 x 720 -- and choose
   what the banner shows by dragging a red 4:1 box over the playing video

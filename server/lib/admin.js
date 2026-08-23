@@ -1134,6 +1134,19 @@ function createAdminRouter(ctx) {
           <p class="hint" id="bannervideo-status">${show.bannerVideo ? 'Uploaded.' : 'None. The still banner is used.'}</p>
           <input type="hidden" id="bannerVideo" name="bannerVideo" value="${esc(show.bannerVideo || '')}">
           <label class="check-label"><input type="checkbox" name="bannerLoop" value="1" class="check"${show.bannerLoop === false ? '' : ' checked'}> Loop it &mdash; otherwise it plays once and holds on its last frame</label>
+
+          ${show.bannerVideo && show.banner ? `
+          <p class="group-label">Which one to show</p>
+          <div class="picks" role="radiogroup" aria-label="Which banner to show">
+            ${[['video', 'The video'], ['image', 'The still'], ['random', 'Either, at random']]
+              .map(([key, label]) => `<label class="pick${(show.bannerMode || 'video') === key ? ' current' : ''}">
+                <input type="radio" name="bannerMode" value="${key}"${(show.bannerMode || 'video') === key ? ' checked' : ''}>
+                <span>${esc(label)}</span>
+              </label>`).join('')}
+          </div>
+          <p class="hint">You have both, so take your pick. <b>At random</b>
+          tosses a coin on every visit, which is a cheap way to keep a
+          front page from looking the same twice.</p>` : ''}
           <input type="hidden" name="bannerFocusX" id="bannerFocusX" value="${Number(show.bannerFocusX ?? 50)}">
           <input type="hidden" name="bannerFocusY" id="bannerFocusY" value="${Number(show.bannerFocusY ?? 50)}">
           ${show.bannerVideo ? `
@@ -1750,6 +1763,8 @@ function createAdminRouter(ctx) {
         const banner = String(form.get('banner') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(banner)) entry.banner = banner;
         entry.bannerLoop = form.get('bannerLoop') === '1';
+        entry.bannerMode = ['video', 'image', 'random'].includes(form.get('bannerMode'))
+          ? form.get('bannerMode') : 'video';
         // Where the banner looks, as a percentage across and down, the
         // way CSS object-position reads it.
         const focus = (name) => {
