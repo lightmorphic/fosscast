@@ -173,6 +173,45 @@ function supportRow(show) {
 
 const RSS_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 3c8.8 0 16 7.2 16 16h-3C18 11.8 12.2 6 5 6V3zm0 6c5.5 0 10 4.5 10 10h-3c0-3.9-3.1-7-7-7V9zm1.5 6a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/></svg>';
 
+// Subscribing, following and chipping in were three loose rows tacked
+// under the description, each a different length, none of them looking
+// like anything. They are one card now: a column per thing a listener
+// might want to do, with the feed address along the bottom for the app
+// that asks for a URL.
+function listenCard(show, domain) {
+  const links = show.links || {};
+  const feedUrl = `https://${domain}/shows/${show.slug}/feed.xml`;
+  const apps = APPS.filter(([key]) => links[key])
+    .map(([key, label, icon]) => `<a class="sub-btn" href="${esc(links[key])}" target="_blank" rel="noopener noreferrer">${icon}<span>${esc(label)}</span></a>`)
+    .join('');
+  const social = socialLinks(show)
+    .map((l) => `<a class="sub-btn" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${l.icon}<span>${esc(l.label)}</span></a>`)
+    .join('');
+  const support = supportLinks(show)
+    .map((l) => `<a class="sub-btn" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${l.icon}<span>${esc(l.label)}</span></a>`)
+    .join('');
+
+  const groups = [
+    ['Listen', `${apps}<a class="sub-btn" href="/shows/${esc(show.slug)}/feed.xml">${RSS_ICON}<span>RSS</span></a>`],
+    ['Follow', social],
+    ['Support', support],
+  ].filter(([, content]) => content);
+
+  return `<section class="panel listen-card">
+    <div class="listen-groups" data-groups="${groups.length}">
+      ${groups.map(([title, content]) => `<div class="listen-group">
+        <h2 class="listen-title">${esc(title)}</h2>
+        <div class="sub-btns">${content}</div>
+      </div>`).join('')}
+    </div>
+    <div class="feed-row">
+      <span class="feed-label">${RSS_ICON} Feed address</span>
+      <code class="feed-url">${esc(feedUrl)}</code>
+      <button class="btn-secondary btn-small" type="button" data-copy-feed="${esc(feedUrl)}"><span>Copy</span></button>
+    </div>
+  </section>`;
+}
+
 function subscribeRow(show, domain) {
   const links = show.links || {};
   const feedUrl = `https://${domain}/shows/${show.slug}/feed.xml`;
@@ -409,12 +448,9 @@ function showPage(show, allEpisodes, domain) {
     <h1>${esc(show.name)}</h1>
     ${(show.theme || {}).tagline ? `<p class="tagline">${esc(show.theme.tagline)}</p>` : ''}
     <p class="lede">${esc(show.description)}</p>
-    ${subscribeRow(show, domain)}
-    ${socialRow(show)}
-    ${supportRow(show)}
-    <p class="feed-line">Paste this into any app: <code>https://${esc(domain)}/shows/${esc(show.slug)}/feed.xml</code></p>
     </div>
   </section>
+  ${listenCard(show, domain)}
   <section class="episodes">${items}</section>`,
   });
 }
@@ -596,4 +632,4 @@ function embedPage(show, episode) {
 `;
 }
 
-module.exports = { landing, showsIndex, showPage, episodePage, hostsPage, hostPage, hosts, hostSlug, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, supportRow, supportLinks, socialRow, socialLinks, slugify, APPS, SUPPORT, SOCIAL };
+module.exports = { landing, showsIndex, showPage, episodePage, hostsPage, hostPage, hosts, hostSlug, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, listenCard, supportRow, supportLinks, socialRow, socialLinks, slugify, APPS, SUPPORT, SOCIAL };

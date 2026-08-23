@@ -4,6 +4,13 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Listening, following and chipping in have a card of their own on the
+  show page: three columns of equal width under Listen, Follow and
+  Support, separated by a hairline, with the feed address along the
+  bottom in a field of its own beside a Copy button. They were three
+  loose rows of different lengths tacked under the description, ending
+  wherever they happened to end.
+
 - Host cards summarise the whole write-up rather than its first
   paragraph. A host who opens with "Hi there!" and puts their life story
   in the paragraphs after it was getting a one-line card beside

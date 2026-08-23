@@ -967,9 +967,88 @@ details.panel[open] > summary { margin-bottom: 0.75rem; }
 .tagline { margin: 0 0 0.5rem; font-size: 1.0625rem; font-weight: 500; color: var(--accent); }
 .foot-own { margin: 0; font-size: 0.8125rem; color: var(--muted-fg); }
 
-/* The three rows of buttons on a show page - listen, find us, support -
-   read as one block rather than three loose lines. */
-.social { margin-top: 0.75rem; }
+/* ---------- Listen, follow, support ---------- */
+/* One card, a column per thing a listener might do, and the feed
+   address along the bottom. Columns of equal width whatever their
+   contents, so the card reads as deliberate rather than as three rows
+   that happened to end where they ended. */
+.listen-card { padding: 1.5rem 1.75rem 1.25rem; }
+.listen-groups {
+  display: grid;
+  gap: 1.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+.listen-groups[data-groups="1"] { grid-template-columns: 1fr; }
+.listen-group + .listen-group { position: relative; }
+/* A hairline in the gap between columns - never a border, which would
+   shift the buttons. It appears only once the card is wide enough for
+   every group to share one row: with the columns wrapped, a divider
+   ends up floating at the left of whichever group starts the next one. */
+.listen-group + .listen-group::before {
+  content: '';
+  position: absolute;
+  left: -0.875rem;
+  top: 0.125rem;
+  bottom: 0.125rem;
+  width: 1px;
+  background: var(--border);
+  display: none;
+}
+@media (min-width: 60rem) {
+  .listen-groups[data-groups="3"] .listen-group + .listen-group::before { display: block; }
+}
+@media (min-width: 44rem) {
+  .listen-groups[data-groups="2"] .listen-group + .listen-group::before { display: block; }
+}
+.listen-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+}
+.sub-btns { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.feed-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+  padding-top: 1.125rem;
+  border-top: 1px solid var(--border);
+}
+.feed-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+}
+.feed-label svg { width: 0.875rem; height: 0.875rem; }
+.feed-url {
+  flex: 1;
+  min-width: 12rem;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.45rem 0.7rem;
+  font-size: 0.8125rem;
+  color: var(--muted-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.feed-row .btn-small { flex: none; }
+.btn-small { font-size: 0.8125rem; padding: 0.4rem 0.9rem; }
+@media (max-width: 40rem) {
+  .listen-card { padding: 1.25rem; }
+  .feed-url { width: 100%; }
+}
 
 /* ---------- Section rail ---------- */
 /* The long admin pages - the podcast details, the look - carry a rail
