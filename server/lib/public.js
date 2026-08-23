@@ -433,7 +433,12 @@ function bannerMarkup(show) {
   const kind = bannerKind(show);
   if (kind === 'none') return '';
   if (kind === 'image') return `<div class="show-banner"><img src="${esc(showBannerWeb(show))}" alt=""></div>`;
-  return `<div class="show-banner"><video src="${esc(show.bannerVideo)}"${show.banner ? ` poster="${esc(showBannerWeb(show))}"` : ''} autoplay muted${show.bannerLoop === false ? '' : ' loop'} playsinline preload="metadata" aria-hidden="true" style="object-position: ${Number(show.bannerFocusX ?? 50)}% ${Number(show.bannerFocusY ?? 50)}%"></video></div>`;
+  // The poster is the video's own first frame where we have one. Using
+  // the still banner instead meant a refresh showed the photograph and
+  // then swapped to the video a moment later: a flash of the wrong
+  // picture on every visit.
+  const poster = show.bannerVideoPoster || '';
+  return `<div class="show-banner"><video src="${esc(show.bannerVideo)}"${poster ? ` poster="${esc(poster)}"` : ''} autoplay muted${show.bannerLoop === false ? '' : ' loop'} playsinline preload="auto" aria-hidden="true" style="object-position: ${Number(show.bannerFocusX ?? 50)}% ${Number(show.bannerFocusY ?? 50)}%"></video></div>`;
 }
 
 function showPage(show, allEpisodes, domain) {

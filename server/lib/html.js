@@ -60,7 +60,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.15.1">
+<link rel="stylesheet" href="/css/site.css?v=0.15.2">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -169,6 +169,20 @@ ${(look && look.hideFooter) && !footer ? '' : `<footer class="foot site-foot">
   window.addEventListener('scroll', hide, true);
   window.addEventListener('resize', hide);
   document.addEventListener('click', function (e) { if (!e.target.closest('[data-tip]')) hide(); });
+})();
+
+// A banner video where the visitor has asked for less motion: hold it
+// on its first frame rather than looping it at them. The CSS rule that
+// used to claim to do this only pauses CSS animations, which a video
+// is not.
+(function stillBanner() {
+  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  var banner = document.querySelector('.show-banner video');
+  if (!banner) return;
+  banner.removeAttribute('autoplay');
+  banner.autoplay = false;
+  banner.pause();
+  banner.addEventListener('play', function () { banner.pause(); });
 })();
 
 var toggle = document.getElementById('theme-toggle');
@@ -756,7 +770,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.15.1">
+<link rel="stylesheet" href="/css/site.css?v=0.15.2">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">

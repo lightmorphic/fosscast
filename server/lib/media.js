@@ -204,6 +204,28 @@ function probeVideo(file) {
   });
 }
 
+// The first frame of a video, as a JPEG beside it. Used as the poster,
+// so the strip shows the frame the video is about to start on rather
+// than the still banner: with the still there, a refresh flashed the
+// photograph for a moment before the video took over. Extracting one
+// frame is a decode of a few kilobytes, not a transcode.
+function posterPathFor(urlPath) {
+  return `${urlPath}.poster.jpg`;
+}
+
+function ensureVideoPoster(dataDir, urlPath) {
+  return new Promise((resolve) => {
+    if (typeof urlPath !== 'string' || !urlPath.startsWith('/media/')) return resolve(null);
+    const file = path.join(dataDir, decodeURIComponent(urlPath.slice(1)));
+    const out = `${file}.poster.jpg`;
+    if (fs.existsSync(out)) return resolve(posterPathFor(urlPath));
+    if (!fs.existsSync(file)) return resolve(null);
+    const p = spawn('ffmpeg', ['-y', '-i', file, '-frames:v', '1', '-q:v', '4', out], { stdio: 'ignore' });
+    p.on('error', () => resolve(null));
+    p.on('close', (code) => resolve(code === 0 && fs.existsSync(out) ? posterPathFor(urlPath) : null));
+  });
+}
+
 // What is wrong with this video, in a sentence the operator can act on.
 // Returns null when nothing is.
 function bannerVideoProblem(info) {
@@ -239,4 +261,5 @@ module.exports = {
   saveUpload, serveMedia, typeFor, safeName, probeDuration,
   ensureWebImage, webPathFor, MEDIA_TYPES,
   probeVideo, bannerVideoProblem, BANNER_VIDEO,
+  ensureVideoPoster, posterPathFor,
 };
