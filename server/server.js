@@ -29,6 +29,8 @@ const MIME = {
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',
   '.txt': 'text/plain; charset=utf-8',
+  // The HandBrake preset offered on the podcast page.
+  '.json': 'application/json',
 };
 
 function send(res, status, body, headers = {}) {
@@ -295,7 +297,7 @@ const server = http.createServer((req, res) => {
     return sendHtml(res, publicSite.episodePage(show, episode, DOMAIN));
   }
 
-  if (p.startsWith('/css/') || p.startsWith('/fonts/') || p.startsWith('/img/') || p.startsWith('/js/')) {
+  if (p.startsWith('/css/') || p.startsWith('/fonts/') || p.startsWith('/img/') || p.startsWith('/js/') || p.startsWith('/presets/')) {
     return serveStatic(res, p);
   }
   send(res, 404, 'not found');

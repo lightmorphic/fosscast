@@ -1091,15 +1091,20 @@ function createAdminRouter(ctx) {
           you upload is exactly what your server sends and what their
           data allowance pays for. Small is the whole game.</p>
           <ul class="checks limits">
-            <li><span aria-hidden="true">&bull;</span><span><strong>1280 x 320</strong> (4:1) is the size to aim for &mdash; 1920 x 480 is allowed but twice the bytes for a strip most people glance at</span></li>
-            <li><span aria-hidden="true">&bull;</span><span><strong>Under 1 MB</strong> is a good banner. 4 MB is the point at which it is refused</span></li>
-            <li><span aria-hidden="true">&bull;</span><span><strong>5 to 8 seconds</strong>, looping. 15 is the maximum</span></li>
-            <li><span aria-hidden="true">&bull;</span><span><strong>Around 1 Mbps</strong>, and never above 2.5 &mdash; the rate is what costs you bandwidth</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>1280 x 320</strong> (4:1). Refused past 1440 x 360</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>Under 1 MB.</strong> Refused past 1.5 MB</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>5 to 8 seconds</strong>, looping. Refused past 10</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>About 1 Mbps</strong> &mdash; the rate is what costs you bandwidth. Refused past 1.5</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>No audio track.</strong> It plays muted, so sound is bytes nobody hears</span></li>
             <li><span aria-hidden="true">&bull;</span><span>MP4 (H.264) or WebM</span></li>
           </ul>
           <details class="recipe">
             <summary>Making one in HandBrake (free, on every platform)</summary>
+            <p class="hint"><a href="/presets/fosscast-banner.json" download>Download the FOSSCast banner preset</a>
+            and load it with <b>Presets &rarr; Import from file</b>: it sets
+            everything below in one go. Crop your clip to a 4:1 strip first,
+            though &mdash; only you know what has to stay in frame.</p>
+            <p class="hint">Or set it by hand:</p>
             <ol class="steps">
               <li>Open your clip. Under <b>Dimensions</b>, set the width to
               <b>1280</b> and crop until the height is <b>320</b> &mdash; the
