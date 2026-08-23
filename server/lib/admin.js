@@ -350,11 +350,10 @@ function createAdminRouter(ctx) {
     const showList = shows();
     let showsChanged = false;
     for (const show of showList) {
-      // Artwork is shown at 160px, so 1024 is generous. The banner is
-      // shown at 976 and wants twice that to stay sharp on a good
-      // screen, which is why it gets a copy of its own rather than
-      // sharing the default.
-      for (const [field, cap, suffix] of [['artwork', 1024, 'web'], ['banner', 1920, 'wide']]) {
+      // Artwork is shown at 160px and lands in directories at full size,
+      // so 1024 is a sensible copy. The banner is drawn 976 wide and is
+      // decoration: a copy at exactly that size is all it can ever show.
+      for (const [field, cap, suffix] of [['artwork', 1024, 'web'], ['banner', 976, 'strip']]) {
         if (!show[field]) { if (show[`${field}Web`]) { delete show[`${field}Web`]; showsChanged = true; } continue; }
         const web = await ensureWebImage(dataDir, show[field], cap, suffix);
         if (web && show[`${field}Web`] !== web) { show[`${field}Web`] = web; showsChanged = true; }
@@ -1095,13 +1094,12 @@ function createAdminRouter(ctx) {
 
           <div class="subsection">
           <label for="sbanner">Website banner</label>
-          <p class="hint">The strip across the top of your site. It is
-          drawn <strong>976 x 244</strong> points wide, so
-          <strong>1920 x 480</strong> (4:1) is exactly the size it needs on
-          a sharp screen. Bigger is fine &mdash; 2560 x 640 if you have it
-          &mdash; because the server makes the web copy itself. On a phone
-          the strip goes 3:1 and takes the sides off, so keep anything
-          that matters near the middle.</p>
+          <p class="hint">The strip across the top of your site, drawn
+          <strong>976 x 244</strong> (4:1) &mdash; make it that and it is
+          exactly right. Anything bigger is fine too: the server shrinks
+          it to 976 for the website and keeps your original for the
+          directories. On a phone the strip goes 3:1 and takes the sides
+          off, so keep anything that matters near the middle.</p>
           <input id="sbanner" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="banner" data-status="banner-status" data-preview="banner-preview-img">
           <p class="hint" id="banner-status">${show.banner ? 'Uploaded.' : 'None yet, so the page starts at the title.'}</p>
           <input type="hidden" id="banner" name="banner" value="${esc(show.banner || '')}">
@@ -1117,7 +1115,7 @@ function createAdminRouter(ctx) {
           you upload is exactly what your server sends and what their
           data allowance pays for. Small is the whole game.</p>
           <ul class="checks limits">
-            <li><span aria-hidden="true">&bull;</span><span><strong>Keep the shape it came in</strong> and shrink it until the smaller side just clears <strong>1000 x 250</strong>. That is the size the banner is actually drawn at, so anything larger is detail nobody sees in a file everybody downloads. A 16:9 clip comes out 1000 x 563. Do not crop: you choose what shows below</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>Keep the shape it came in</strong> and shrink it until the smaller side just clears <strong>976 x 244</strong> &mdash; the size the banner is drawn at. A 16:9 clip comes out 976 x 549. Do not crop: you choose what shows below</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>Under 1 MB.</strong> Refused past 1.5 MB</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>5 to 8 seconds</strong>, looping. Refused past 10</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>About 1 Mbps</strong> &mdash; the rate is what costs you bandwidth. Refused past 1.5</span></li>
@@ -1135,9 +1133,9 @@ function createAdminRouter(ctx) {
             <ol class="steps">
               <li>Open your clip. Under <b>Dimensions</b>, keep
               <b>Anamorphic: off</b> and the aspect ratio <b>locked</b>, and
-              set the size to fit inside <b>1000 x 1000</b>. A 16:9 clip
-              comes out 1000 x 563; a strip comes out 1000 x 250. Never
-              smaller than 1000 across or 250 down, or it cannot fill the
+              set the size to fit inside <b>976 x 976</b>. A 16:9 clip
+              comes out 976 x 549; a strip comes out 976 x 244. Never
+              smaller than 976 across or 244 down, or it cannot fill the
               banner.</li>
               <li>Under <b>Video</b>: encoder <b>H.264</b>, framerate
               <b>Same as source</b> with <b>Peak framerate</b>, and quality
@@ -1151,7 +1149,7 @@ function createAdminRouter(ctx) {
             </ol>
             <p class="hint">ffmpeg, if you prefer &mdash; scales to 1280
             across, keeps the shape, no crop:
-            <code>ffmpeg -i in.mp4 -vf "scale=1000:-2" -c:v libx264 -crf 30 -preset slow -an -movflags +faststart out.mp4</code></p>
+            <code>ffmpeg -i in.mp4 -vf "scale=976:-2" -c:v libx264 -crf 30 -preset slow -an -movflags +faststart out.mp4</code></p>
           </details>
           <p class="hint">Anything past those limits is refused, with a note
           saying which one and by how much. Keep what matters central: the

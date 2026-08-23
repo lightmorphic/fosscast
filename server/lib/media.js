@@ -162,13 +162,13 @@ function ensureWebImage(dataDir, urlPath, maxSide = 1024, suffix = 'web') {
 // is big enough to fill the strip (1280 x 320) and small enough to
 // serve a thousand times without thinking about it.
 const BANNER_VIDEO = {
-  // The banner is drawn 976 x 244, so 1000 x 250 covers it with a few
-  // pixels to spare for a browser at slightly larger text. Anything
-  // past that is detail nobody can see in a file everybody downloads -
-  // a still gets a 1920 copy because the server shrinks it for free,
-  // but a video is served exactly as it arrives.
-  minWidth: 1000,
-  minHeight: 250,
+  // The banner is drawn 976 x 244 and that is the whole requirement.
+  // It is a decorative strip, not a photograph anyone will study, so
+  // there is no case for carrying twice the pixels it can show.
+  // Anything larger is accepted - the ceiling is further down - but
+  // nothing about it will look better.
+  minWidth: 976,
+  minHeight: 244,
   maxWidth: 1920,       // past this it is pixels nobody will ever see
   maxHeight: 1080,
   bytes: Math.round(1.5 * 1024 * 1024),
@@ -214,7 +214,7 @@ function bannerVideoProblem(info) {
     return `That is ${(info.bytes / 1048576).toFixed(1)} MB. The limit is ${(BANNER_VIDEO.bytes / 1048576).toFixed(1)} MB, and under 1 MB is the aim: every visitor downloads this file, in full, every time.`;
   }
   if (info.width < BANNER_VIDEO.minWidth || info.height < BANNER_VIDEO.minHeight) {
-    return `That is ${info.width} x ${info.height}, and the banner needs at least ${BANNER_VIDEO.minWidth} x ${BANNER_VIDEO.minHeight} to fill without stretching - it is drawn 976 x 244. Scale it down until the smaller side just clears that, keeping the shape it came in: the crop is chosen here.`;
+    return `That is ${info.width} x ${info.height}. The banner is drawn ${BANNER_VIDEO.minWidth} x ${BANNER_VIDEO.minHeight}, so it needs at least that to fill without stretching. Scale it down until the smaller side just clears it, keeping the shape it came in: the crop is chosen here.`;
   }
   if (info.width > BANNER_VIDEO.maxWidth || info.height > BANNER_VIDEO.maxHeight) {
     return `That is ${info.width} x ${info.height}. Scale it down: past ${BANNER_VIDEO.maxWidth} x ${BANNER_VIDEO.maxHeight} it is pixels nobody sees, in a file everybody downloads.`;

@@ -7,7 +7,7 @@ const assert = require('node:assert');
 const { bannerVideoProblem, BANNER_VIDEO } = require('../lib/media');
 
 // The recommendation: 1280 x 320, six seconds, about 1 Mbps.
-const ok = { width: 1000, height: 250, duration: 6, bytes: 700 * 1024 };
+const ok = { width: 976, height: 244, duration: 6, bytes: 700 * 1024 };
 
 test('a sensible banner is accepted', () => {
   assert.strictEqual(bannerVideoProblem(ok), null);
@@ -20,7 +20,7 @@ test('a sensible banner is accepted', () => {
 test('any shape is welcome, so long as it covers the strip', () => {
   // The crop is chosen in the dashboard, so a video does not have to
   // arrive as a 4:1 strip - it only has to be big enough to fill one.
-  assert.strictEqual(bannerVideoProblem({ width: 1000, height: 563, duration: 6, bytes: 900 * 1024 }), null, '16:9 at the new floor');
+  assert.strictEqual(bannerVideoProblem({ width: 976, height: 549, duration: 6, bytes: 900 * 1024 }), null, '16:9 at the drawn size');
   assert.strictEqual(bannerVideoProblem({ width: 1280, height: 720, duration: 6, bytes: 900 * 1024 }), null, '16:9 larger');
   assert.strictEqual(bannerVideoProblem({ width: 1280, height: 960, duration: 6, bytes: 900 * 1024 }), null, '4:3');
   assert.strictEqual(bannerVideoProblem({ width: 1280, height: 1080, duration: 6, bytes: 900 * 1024 }), null, 'nearly square');
@@ -30,8 +30,7 @@ test('any shape is welcome, so long as it covers the strip', () => {
 test('too small to fill the strip is refused, and says by how much', () => {
   const problem = bannerVideoProblem({ width: 960, height: 540, duration: 6, bytes: 400 * 1024 });
   assert.match(problem, /960 x 540/);
-  assert.match(problem, /1000 x 250/, 'the size it has to clear');
-  assert.match(problem, /976 x 244/, 'and why that is the size');
+  assert.match(problem, /976 x 244/, 'the size it has to clear, which is the size it is drawn at');
   assert.match(problem, /keeping the shape/i, 'and that the shape is not the problem');
 });
 
