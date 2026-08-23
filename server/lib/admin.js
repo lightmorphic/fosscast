@@ -1116,8 +1116,8 @@ function createAdminRouter(ctx) {
           data allowance pays for. Small is the whole game.</p>
           <ul class="checks limits">
             <li><span aria-hidden="true">&bull;</span><span><strong>Keep the shape it came in</strong> and shrink it until the smaller side just clears <strong>976 x 244</strong> &mdash; the size the banner is drawn at. A 16:9 clip comes out 976 x 549. Do not crop: you choose what shows below</span></li>
-            <li><span aria-hidden="true">&bull;</span><span><strong>Under 1 MB.</strong> Refused past 1.5 MB</span></li>
-            <li><span aria-hidden="true">&bull;</span><span><strong>5 to 8 seconds</strong>, looping. Refused past 10</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>Under 1 MB.</strong> Refused past 2 MB</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>5 to 8 seconds</strong>, looping. Refused past 15</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>About 1 Mbps</strong> &mdash; the rate is what costs you bandwidth. Refused past 1.5</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>No audio track.</strong> It plays muted, so sound is bytes nobody hears</span></li>
             <li><span aria-hidden="true">&bull;</span><span>MP4 (H.264) or WebM, no bigger than 1920 x 1080</span></li>
