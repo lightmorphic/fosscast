@@ -1204,7 +1204,9 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
 /* A recipe folded into a card: shown when wanted, out of the way when
    not, and numbered because it is a sequence. */
-.recipe { margin: 0.75rem 0; }
+/* Clear of the limits list above it: the summary is a heading for the
+   thing you open, not the last line of the list. */
+.recipe { margin: 1.5rem 0 1rem; }
 .recipe > summary {
   cursor: pointer;
   font-size: 0.875rem;
