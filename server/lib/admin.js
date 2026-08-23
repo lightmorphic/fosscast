@@ -1117,7 +1117,7 @@ function createAdminRouter(ctx) {
           you upload is exactly what your server sends and what their
           data allowance pays for. Small is the whole game.</p>
           <ul class="checks limits">
-            <li><span aria-hidden="true">&bull;</span><span><strong>Keep the shape it came in</strong> and shrink it until the smaller side just clears <strong>1280 x 320</strong> &mdash; a 16:9 clip becomes 1280 x 720. Do not crop: you choose what shows below</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>Keep the shape it came in</strong> and shrink it until the smaller side just clears <strong>1000 x 250</strong>. That is the size the banner is actually drawn at, so anything larger is detail nobody sees in a file everybody downloads. A 16:9 clip comes out 1000 x 563. Do not crop: you choose what shows below</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>Under 1 MB.</strong> Refused past 1.5 MB</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>5 to 8 seconds</strong>, looping. Refused past 10</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>About 1 Mbps</strong> &mdash; the rate is what costs you bandwidth. Refused past 1.5</span></li>
@@ -1135,9 +1135,9 @@ function createAdminRouter(ctx) {
             <ol class="steps">
               <li>Open your clip. Under <b>Dimensions</b>, keep
               <b>Anamorphic: off</b> and the aspect ratio <b>locked</b>, and
-              set the size to fit inside <b>1280 x 1080</b>. A 16:9 clip
-              comes out 1280 x 720; a strip comes out 1280 x 320. Never
-              smaller than 1280 across or 320 down, or it cannot fill the
+              set the size to fit inside <b>1000 x 1000</b>. A 16:9 clip
+              comes out 1000 x 563; a strip comes out 1000 x 250. Never
+              smaller than 1000 across or 250 down, or it cannot fill the
               banner.</li>
               <li>Under <b>Video</b>: encoder <b>H.264</b>, framerate
               <b>Same as source</b> with <b>Peak framerate</b>, and quality
@@ -1151,7 +1151,7 @@ function createAdminRouter(ctx) {
             </ol>
             <p class="hint">ffmpeg, if you prefer &mdash; scales to 1280
             across, keeps the shape, no crop:
-            <code>ffmpeg -i in.mp4 -vf "scale=1280:-2" -c:v libx264 -crf 30 -preset slow -an -movflags +faststart out.mp4</code></p>
+            <code>ffmpeg -i in.mp4 -vf "scale=1000:-2" -c:v libx264 -crf 30 -preset slow -an -movflags +faststart out.mp4</code></p>
           </details>
           <p class="hint">Anything past those limits is refused, with a note
           saying which one and by how much. Keep what matters central: the

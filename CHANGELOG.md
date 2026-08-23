@@ -4,6 +4,12 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- A banner video only has to be 1000 x 250 now, down from 1280 x 320.
+  The strip is drawn 976 x 244, so the old floor was asking for 60% more
+  pixels than anyone can see, in a file that is served exactly as it
+  arrives. A still keeps its 1920 recommendation, because the server
+  shrinks that one itself.
+
 - The FOSSCast footer can be turned off. A checkbox on the Look tab,
   unticked by default, removes both marks from the public pages while
   leaving the show's own footer line where it is. The dashboard keeps
