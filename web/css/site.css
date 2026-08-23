@@ -737,7 +737,10 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
 .site-foot .foot-own { flex: 1; text-align: center; min-width: 10rem; }
 .foot-lm { display: inline-flex; line-height: 0; opacity: 0.85; }
 .foot-lm:hover { opacity: 1; }
-.foot-lm img { display: block; width: 2.125rem; height: 2.125rem; border-radius: 0.5rem; }
+/* Shown at the size it was drawn, 32px, so the animation stays crisp.
+   No rounding: the artwork has a transparent background, so there are
+   no corners to hide. */
+.foot-lm img { display: block; width: 2rem; height: 2rem; }
 @media (max-width: 34rem) {
   .site-foot { justify-content: center; }
   .site-foot .foot-own { order: 3; flex-basis: 100%; }
