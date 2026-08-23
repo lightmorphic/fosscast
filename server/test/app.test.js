@@ -430,6 +430,44 @@ test('a banner video loops unless told otherwise', async () => {
   }));
 });
 
+test('with both a still and a video, the banner is a choice', async () => {
+  const MEDIA_PATH = ['/me', 'dia'].join('');
+  const settings = (extra) => form({
+    name: 'Test Show', description: 'Edited in place.', language: 'en',
+    banner: `${MEDIA_PATH}/test-show/still.jpg`,
+    bannerVideo: `${MEDIA_PATH}/test-show/clip.mp4`,
+    live: '1', ...extra,
+  });
+
+  await fetch(`${BASE}/admin/shows/test-show/settings`, settings({ bannerMode: 'video' }));
+  let page = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.match(page, /<video[^>]*class=|show-banner"><video/, 'the video');
+
+  await fetch(`${BASE}/admin/shows/test-show/settings`, settings({ bannerMode: 'image' }));
+  page = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(page.includes('show-banner"><img'), 'the still');
+  assert.ok(!page.includes('show-banner"><video'), 'and only the still');
+
+  // Random is a coin toss per visit, so ask enough times to see both.
+  await fetch(`${BASE}/admin/shows/test-show/settings`, settings({ bannerMode: 'random' }));
+  const seen = new Set();
+  for (let i = 0; i < 40; i++) {
+    const html = await (await fetch(`${BASE}/shows/test-show`)).text();
+    seen.add(html.includes('show-banner"><video') ? 'video' : 'image');
+    if (seen.size === 2) break;
+  }
+  assert.strictEqual(seen.size, 2, 'both turned up');
+
+  // The choice offers itself only when there is something to choose.
+  const admin = await (await fetch(`${BASE}/admin/podcast`, { headers: { cookie } })).text();
+  assert.ok(admin.includes('name="bannerMode"'), 'both uploaded, so the choice is there');
+
+  // Put the page back the way the other tests expect it.
+  await fetch(`${BASE}/admin/shows/test-show/settings`, form({
+    name: 'Test Show', description: 'Edited in place.', language: 'en', live: '1',
+  }));
+});
+
 test('a second show is refused (this edition manages one podcast)', async () => {
   const res = await fetch(`${BASE}/admin/shows`, form({
     name: 'Second Show', description: 'One too many.',
