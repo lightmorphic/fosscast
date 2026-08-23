@@ -4,6 +4,12 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Every public page carries a footer: the FOSSCast mark and name on the
+  left linking to fosscast.org, the Lightmorphic mark on the right
+  linking to lightmorphic.com, and the show's own footer line between
+  them when it has set one. This replaces the single unbranded mark that
+  sat in the corner.
+
 - The framing picker is the same width as the banner preview under it.
   Judging a crop against a preview of a different size is guesswork, and
   the red box now spans exactly what the strip will show.

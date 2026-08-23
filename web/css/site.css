@@ -709,6 +709,40 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
 /* The show's site is theirs. Just a theme toggle up top, and a small
    FOSSCast mark bottom-right linking home. */
 .top-minimal { justify-content: flex-end; }
+/* The footer every public page carries: whose software this is on the
+   left, who made it on the right, and the show's own line between them
+   when it has one. */
+.site-foot {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 64rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+.foot-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted-fg);
+  text-decoration: none;
+}
+.foot-brand .mark { width: 1.25rem; height: 1.25rem; color: var(--accent); }
+.foot-brand:hover { color: var(--fg); }
+.site-foot .foot-own { flex: 1; text-align: center; min-width: 10rem; }
+.foot-lm { display: inline-flex; line-height: 0; opacity: 0.85; }
+.foot-lm:hover { opacity: 1; }
+.foot-lm img { display: block; width: 2.125rem; height: 2.125rem; border-radius: 0.5rem; }
+@media (max-width: 34rem) {
+  .site-foot { justify-content: center; }
+  .site-foot .foot-own { order: 3; flex-basis: 100%; }
+}
+
 .foot-minimal {
   flex-direction: row;
   justify-content: flex-end;
