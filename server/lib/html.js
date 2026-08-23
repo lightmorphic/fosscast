@@ -48,7 +48,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.13.1">
+<link rel="stylesheet" href="/css/site.css?v=0.14.0">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -63,10 +63,14 @@ ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-th
 <main class="wrap">
 ${body}
 </main>
-<footer class="foot foot-minimal">
+<footer class="foot site-foot">
+  <a class="foot-brand" href="https://fosscast.org" target="_blank" rel="noopener noreferrer" translate="no">
+    <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span>FOSSCast</span>
+  </a>
   ${footer ? `<p class="foot-own">${esc(footer)}</p>` : ''}
-  <a class="powered-by" href="https://fosscast.org" target="_blank" rel="noopener noreferrer" aria-label="Powered by FOSSCast">
-    <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+  <a class="foot-lm" href="https://lightmorphic.com" target="_blank" rel="noopener noreferrer" aria-label="Lightmorphic">
+    <img src="/img/lightmorphic-mark.webp" alt="Lightmorphic" width="34" height="34" loading="lazy">
   </a>
 </footer>
 <script>
@@ -678,7 +682,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.13.1">
+<link rel="stylesheet" href="/css/site.css?v=0.14.0">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">
