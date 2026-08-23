@@ -4,6 +4,16 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- A banner video is no longer cropped before it is uploaded. Shrink it
+  keeping its own shape -- a 16:9 clip becomes 1280 x 720 -- and choose
+  what the banner shows by dragging a red 4:1 box over the playing video
+  in the dashboard, with the result playing underneath as it will
+  appear. The choice is stored as a position, so nothing is cut from the
+  file and it can be changed at any time.
+- The upload rules follow: any shape is welcome so long as it covers the
+  strip (1280 x 320 minimum, 1920 x 1080 maximum). The HandBrake preset
+  only scales now, keeping the aspect ratio, and says so.
+
 - The banner video limits come down to what a small server can afford to
   send a thousand times, and the ceilings now sit just above the
   recommendation rather than far above it: aim for 1280 x 320, under
