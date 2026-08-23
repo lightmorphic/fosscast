@@ -4,6 +4,11 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- The FOSSCast footer can be turned off. A checkbox on the Look tab,
+  unticked by default, removes both marks from the public pages while
+  leaving the show's own footer line where it is. The dashboard keeps
+  its branding either way: that is our software, not their website.
+
 - Every public page carries a footer: the FOSSCast mark and name on the
   left linking to fosscast.org, the Lightmorphic mark on the right
   linking to lightmorphic.com, and the show's own footer line between

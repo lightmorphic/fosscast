@@ -98,6 +98,7 @@ const DEFAULTS = {
   bannerFull: false,
   tagline: '',
   footer: '',
+  hideFooter: false,
   css: '',
 };
 
@@ -266,6 +267,7 @@ function normalise(input = {}) {
     bannerFull: t.bannerFull === true,
     tagline: String(t.tagline || '').trim().slice(0, 200),
     footer: String(t.footer || '').trim().slice(0, 300),
+    hideFooter: t.hideFooter === true,
     css: safeCss(t.css),
   };
   if (!out.bgImage) { out.bgImageWeb = ''; if (out.bgMode === 'image') out.bgMode = 'default'; }

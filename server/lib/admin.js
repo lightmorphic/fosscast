@@ -662,6 +662,7 @@ function createAdminRouter(ctx) {
       bannerFull: form.get('bannerFull') === '1',
       tagline: form.get('tagline'),
       footer: form.get('footer'),
+      hideFooter: form.get('hideFooter') === '1',
       css: form.get('css'),
     });
   }
@@ -790,6 +791,17 @@ function createAdminRouter(ctx) {
           <input id="tagline" name="tagline" maxlength="200" value="${esc(t.tagline)}" placeholder="Two nerds, one microphone">
           <label for="footer-text">Footer line</label>
           <input id="footer-text" name="footer" maxlength="300" value="${esc(t.footer)}" placeholder="&copy; ${new Date().getFullYear()} ${esc(show.name)}">
+
+          <div class="subsection">
+            <label>The FOSSCast footer</label>
+            <p class="hint">Your pages carry a small FOSSCast mark and a
+            Lightmorphic one at the foot. Leaving them there is how other
+            podcasters find the software, and it is genuinely appreciated
+            &mdash; but this is your site, and if they do not suit it, take
+            them off. Nothing else changes either way, and your own footer
+            line stays.</p>
+            <label class="check-label"><input type="checkbox" name="hideFooter" value="1" class="check"${t.hideFooter ? ' checked' : ''}> Remove the FOSSCast footer from my pages</label>
+          </div>
         </section>
 
         <details class="panel" id="sec-css"${t.css ? ' open' : ''}>

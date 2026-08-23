@@ -251,6 +251,26 @@ test('the look: colours, background, type and words of your own', async () => {
   assert.ok(!page.includes('evil.example'), 'no off-site fetches survive');
   assert.ok(!page.includes('<script>alert'), 'no breaking out of the style element');
 
+  // The FOSSCast footer is on by default and can be turned off, without
+  // taking the show's own footer line with it.
+  let withBrand = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(withBrand.includes('foot-brand'), 'the mark is there to start with');
+  res = await fetch(`${BASE}/admin/look`, form({
+    accent: '#e91e63', bgMode: 'default', panel: 'solid', radius: '22',
+    font: 'manrope', width: 'standard', episodes: 'row', mode: 'auto', toggle: '1',
+    footer: 'Made in a shed', hideFooter: '1',
+  }));
+  assert.strictEqual(res.status, 200);
+  const withoutBrand = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(!withoutBrand.includes('foot-brand'), 'and gone when asked');
+  assert.ok(!withoutBrand.includes('foot-lm'), 'both marks, not just ours');
+  assert.ok(withoutBrand.includes('Made in a shed'), 'their own line stays');
+  // The admin keeps its own branding regardless: that is our software,
+  // not their website.
+  const adminPage = await (await fetch(`${BASE}/admin/podcast`, { headers: { cookie } })).text();
+  assert.ok(adminPage.includes('FOSSCast <span class="admin-tag">admin</span>'), 'the dashboard is unaffected');
+  await fetch(`${BASE}/admin/look`, form({ reset: '1' }));
+
   // Editing saves as it goes: one request stores the change and answers
   // with the page as it now stands, which is what the preview shows.
   const live = await (await fetch(`${BASE}/admin/look`, form({
