@@ -60,7 +60,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.14.0">
+<link rel="stylesheet" href="/css/site.css?v=0.14.1">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -82,7 +82,7 @@ ${(look && look.hideFooter) && !footer ? '' : `<footer class="foot site-foot">
   </a>`}
   ${footer ? `<p class="foot-own">${esc(footer)}</p>` : ''}
   ${(look && look.hideFooter) ? '' : `<a class="foot-lm" href="https://lightmorphic.com" target="_blank" rel="noopener noreferrer" aria-label="Lightmorphic">
-    <img src="${LM_MARK}" alt="Lightmorphic" width="34" height="34" loading="lazy">
+    <img src="${LM_MARK}" alt="Lightmorphic" width="32" height="32" loading="lazy">
   </a>`}
 </footer>`}
 <script>
@@ -694,7 +694,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.14.0">
+<link rel="stylesheet" href="/css/site.css?v=0.14.1">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">
