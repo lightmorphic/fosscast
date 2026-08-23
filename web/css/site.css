@@ -1227,3 +1227,60 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .steps b { color: var(--fg); font-weight: 600; }
 .recipe code { display: inline-block; margin-top: 0.25rem; white-space: pre-wrap; }
+
+/* ---------- Choosing what the banner looks at ---------- */
+/* The clip as it is, with the banner's own shape drawn over it in red.
+   Whatever is inside the box is what the strip will show. */
+.focus-picker {
+  position: relative;
+  display: inline-block;
+  max-width: 100%;
+  margin: 0.75rem 0;
+  line-height: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #000;
+}
+.focus-picker video { display: block; max-width: 100%; max-height: 22rem; }
+.focus-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  border: 2px solid #ff3b30;
+  border-radius: 2px;
+  cursor: grab;
+  touch-action: none;
+  /* Everything outside the box is dimmed by an enormous shadow, so the
+     framing reads at a glance rather than needing to be worked out. */
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+}
+.focus-box::after {
+  content: 'Banner';
+  position: absolute;
+  top: 0.25rem;
+  left: 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  line-height: 1.2;
+}
+.focus-box:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.dragging .focus-box { cursor: grabbing; }
+.locked-x.locked-y .focus-box { cursor: default; }
+
+.focus-result {
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin: 0.5rem 0 0.75rem;
+  background: var(--muted);
+}
+.focus-result video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 1;
+  object-fit: cover;
+}

@@ -48,7 +48,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.12.2">
+<link rel="stylesheet" href="/css/site.css?v=0.13.0">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -365,6 +365,111 @@ document.addEventListener('change', (e) => {
   update();
 })();
 
+// Choosing what the banner looks at. The whole clip plays; a red 4:1
+// box sits over it; dragging the box picks the part of the picture the
+// strip shows. The box is the banner's shape, so what you frame is
+// exactly what appears - and the result plays underneath as proof.
+//
+// The numbers stored are CSS object-position percentages, which is the
+// same thing said in the language the public page speaks: 0% puts the
+// left (or top) edge of the picture against the left (or top) edge of
+// the strip, 100% the right (or bottom).
+(function bannerFraming() {
+  var picker = document.getElementById('focus-picker');
+  var video = document.getElementById('focus-video');
+  var box = document.getElementById('focus-box');
+  if (!picker || !video || !box) return;
+  var result = document.getElementById('focus-result-video');
+  var fieldX = document.getElementById('bannerFocusX');
+  var fieldY = document.getElementById('bannerFocusY');
+  var x = Number(picker.dataset.x);
+  var y = Number(picker.dataset.y);
+  var slackX = 0;
+  var slackY = 0;
+
+  // The box is the largest 4:1 rectangle that fits the clip as shown,
+  // so it can only travel along the axis with room to spare.
+  function layout() {
+    var w = video.clientWidth;
+    var h = video.clientHeight;
+    if (!w || !h) return;
+    var boxW = Math.min(w, h * 4);
+    var boxH = boxW / 4;
+    box.style.width = boxW + 'px';
+    box.style.height = boxH + 'px';
+    slackX = Math.max(0, w - boxW);
+    slackY = Math.max(0, h - boxH);
+    picker.classList.toggle('locked-x', slackX < 1);
+    picker.classList.toggle('locked-y', slackY < 1);
+    draw();
+  }
+
+  function draw() {
+    box.style.left = (slackX * x / 100) + 'px';
+    box.style.top = (slackY * y / 100) + 'px';
+    box.setAttribute('aria-valuenow', String(slackX >= 1 ? x : y));
+    if (result) result.style.objectPosition = x + '% ' + y + '%';
+  }
+
+  function set(nextX, nextY, save) {
+    x = Math.max(0, Math.min(100, nextX));
+    y = Math.max(0, Math.min(100, nextY));
+    draw();
+    if (fieldX) fieldX.value = Math.round(x);
+    if (fieldY) fieldY.value = Math.round(y);
+    // The form saves itself; tell it something changed.
+    if (save && fieldX && fieldX.form) fieldX.form.dispatchEvent(new Event('input', { bubbles: true }));
+  }
+
+  var dragging = false;
+  function fromPointer(e) {
+    var area = video.getBoundingClientRect();
+    var boxRect = box.getBoundingClientRect();
+    var left = e.clientX - area.left - boxRect.width / 2;
+    var top = e.clientY - area.top - boxRect.height / 2;
+    set(slackX ? (left / slackX) * 100 : 50, slackY ? (top / slackY) * 100 : 50, false);
+  }
+
+  box.addEventListener('pointerdown', function (e) {
+    dragging = true;
+    box.setPointerCapture(e.pointerId);
+    picker.classList.add('dragging');
+    e.preventDefault();
+  });
+  box.addEventListener('pointermove', function (e) { if (dragging) fromPointer(e); });
+  box.addEventListener('pointerup', function (e) {
+    if (!dragging) return;
+    dragging = false;
+    picker.classList.remove('dragging');
+    box.releasePointerCapture(e.pointerId);
+    set(x, y, true);
+  });
+  // A click anywhere on the clip centres the box there.
+  picker.addEventListener('click', function (e) {
+    if (e.target === box) return;
+    fromPointer(e);
+    set(x, y, true);
+  });
+  // And the keyboard moves it, for anyone not using a mouse.
+  box.addEventListener('keydown', function (e) {
+    var step = e.shiftKey ? 10 : 2;
+    var handled = true;
+    if (e.key === 'ArrowLeft') set(x - step, y, true);
+    else if (e.key === 'ArrowRight') set(x + step, y, true);
+    else if (e.key === 'ArrowUp') set(x, y - step, true);
+    else if (e.key === 'ArrowDown') set(x, y + step, true);
+    else if (e.key === 'Home') set(0, 0, true);
+    else if (e.key === 'End') set(100, 100, true);
+    else handled = false;
+    if (handled) e.preventDefault();
+  });
+
+  video.addEventListener('loadedmetadata', layout);
+  window.addEventListener('resize', layout);
+  if (video.readyState >= 1) layout();
+  draw();
+})();
+
 // Editing saves itself. Any form marked data-autosave stores what has
 // been typed half a second after the typing stops, so there is no Save
 // button to find and nothing is lost by wandering off. Forms that
@@ -573,7 +678,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.12.2">
+<link rel="stylesheet" href="/css/site.css?v=0.13.0">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin">
