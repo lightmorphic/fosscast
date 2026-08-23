@@ -4,6 +4,11 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- The "remove the FOSSCast footer" checkbox has a section of its own on
+  the Look tab, called Footer, so it appears in the side rail instead of
+  hiding under the tagline. The note beside it is shorter and quieter:
+  the checkbox comes first, the reason second.
+
 - Uploading a banner video now saves itself and refreshes what is on
   screen. Two faults, one cause: the hidden field holding the path was
   being set by script, which fires no event, so the form never learned
