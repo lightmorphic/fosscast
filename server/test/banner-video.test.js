@@ -11,10 +11,13 @@ const ok = { width: 976, height: 244, duration: 6, bytes: 700 * 1024 };
 
 test('a sensible banner is accepted', () => {
   assert.strictEqual(bannerVideoProblem(ok), null);
-  assert.strictEqual(bannerVideoProblem({ ...ok, duration: 10, bytes: 1.2 * 1024 * 1024 }), null, 'the maximum length is fine');
-  // The ceilings sit near the recommendation, not far above it.
-  assert.ok(BANNER_VIDEO.bytes <= 1.5 * 1024 * 1024);
-  assert.ok(BANNER_VIDEO.seconds <= 10 && BANNER_VIDEO.bitrate <= 1500000);
+  assert.strictEqual(bannerVideoProblem({ ...ok, duration: 15, bytes: 1.9 * 1024 * 1024 }), null, 'the maximum length and size together');
+  // The ceilings still sit near the recommendation, and the three of
+  // them agree: 2 MB spread over 15 seconds is about 1.1 Mbps, inside
+  // the rate limit rather than fighting it.
+  assert.strictEqual(BANNER_VIDEO.bytes, 2 * 1024 * 1024);
+  assert.strictEqual(BANNER_VIDEO.seconds, 15);
+  assert.ok((BANNER_VIDEO.bytes * 8) / BANNER_VIDEO.seconds < BANNER_VIDEO.bitrate);
 });
 
 test('any shape is welcome, so long as it covers the strip', () => {
@@ -49,14 +52,14 @@ test('too many pixels is refused, and says so in pixels', () => {
 });
 
 test('too many megabytes is refused, and says whose bandwidth it costs', () => {
-  const problem = bannerVideoProblem({ ...ok, duration: 10, bytes: 20 * 1024 * 1024 });
+  const problem = bannerVideoProblem({ ...ok, duration: 15, bytes: 20 * 1024 * 1024 });
   assert.match(problem, /20\.0 MB/);
   assert.match(problem, /every visitor/);
 });
 
 test('too long is refused, since it loops anyway', () => {
   // Small and slow, so only the length is wrong.
-  assert.match(bannerVideoProblem({ ...ok, duration: 45, bytes: 1.2 * 1024 * 1024 }), /45 seconds/);
+  assert.match(bannerVideoProblem({ ...ok, duration: 45, bytes: 1.9 * 1024 * 1024 }), /45 seconds/);
 });
 
 

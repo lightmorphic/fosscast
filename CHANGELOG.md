@@ -4,6 +4,11 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- A banner video may now run to 15 seconds and 2 MB, up from 10 and
+  1.5 MB. Under a megabyte and five to eight seconds is still the aim,
+  and the 1.5 Mbps rate limit is unchanged -- which is what keeps the
+  longer allowance from turning into a heavier file.
+
 - Banner image and banner video are both 976 x 244 -- the size the strip
   is drawn at, and nothing more. It is decoration, not a photograph
   anyone will study, so carrying two or four times the pixels it can

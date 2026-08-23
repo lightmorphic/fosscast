@@ -171,8 +171,8 @@ const BANNER_VIDEO = {
   minHeight: 244,
   maxWidth: 1920,       // past this it is pixels nobody will ever see
   maxHeight: 1080,
-  bytes: Math.round(1.5 * 1024 * 1024),
-  seconds: 10,
+  bytes: 2 * 1024 * 1024,
+  seconds: 15,
   bitrate: 1500000,     // bits per second, averaged over the clip
 };
 
@@ -211,7 +211,11 @@ function bannerVideoProblem(info) {
     return 'That file could not be read as a video. MP4 (H.264) or WebM, please.';
   }
   if (info.bytes > BANNER_VIDEO.bytes) {
-    return `That is ${(info.bytes / 1048576).toFixed(1)} MB. The limit is ${(BANNER_VIDEO.bytes / 1048576).toFixed(1)} MB, and under 1 MB is the aim: every visitor downloads this file, in full, every time.`;
+    // Rounded up, and the limit printed without a pointless .0, so a
+    // file barely over never reads as "2.0 MB, limit 2.0 MB".
+    const mb = Math.ceil((info.bytes / 1048576) * 10) / 10;
+    const cap = BANNER_VIDEO.bytes / 1048576;
+    return `That is ${mb.toFixed(1)} MB. The limit is ${Number.isInteger(cap) ? cap : cap.toFixed(1)} MB, and under 1 MB is the aim: every visitor downloads this file, in full, every time.`;
   }
   if (info.width < BANNER_VIDEO.minWidth || info.height < BANNER_VIDEO.minHeight) {
     return `That is ${info.width} x ${info.height}. The banner is drawn ${BANNER_VIDEO.minWidth} x ${BANNER_VIDEO.minHeight}, so it needs at least that to fill without stretching. Scale it down until the smaller side just clears it, keeping the shape it came in: the crop is chosen here.`;
