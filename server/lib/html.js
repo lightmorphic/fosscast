@@ -1,6 +1,18 @@
 'use strict';
 // HTML helpers and the two page shells (public site and admin).
 
+const fs = require('fs');
+const path = require('path');
+
+// The Lightmorphic mark in the footer. Drop an animated GIF in as
+// web/img/lightmorphic-mark.gif and it is used instead of the still
+// one, no code change and no deploy-time flag: an <img> animates a GIF
+// by itself. Checked once at startup rather than per request.
+const WEB_DIR = path.resolve(process.env.WEB_DIR || path.join(__dirname, '..', '..', 'web'));
+const LM_MARK = fs.existsSync(path.join(WEB_DIR, 'img', 'lightmorphic-mark.gif'))
+  ? '/img/lightmorphic-mark.gif'
+  : '/img/lightmorphic-mark.webp';
+
 function esc(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -70,7 +82,7 @@ ${(look && look.hideFooter) && !footer ? '' : `<footer class="foot site-foot">
   </a>`}
   ${footer ? `<p class="foot-own">${esc(footer)}</p>` : ''}
   ${(look && look.hideFooter) ? '' : `<a class="foot-lm" href="https://lightmorphic.com" target="_blank" rel="noopener noreferrer" aria-label="Lightmorphic">
-    <img src="/img/lightmorphic-mark.webp" alt="Lightmorphic" width="34" height="34" loading="lazy">
+    <img src="${LM_MARK}" alt="Lightmorphic" width="34" height="34" loading="lazy">
   </a>`}
 </footer>`}
 <script>
