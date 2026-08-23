@@ -1,8 +1,8 @@
 {
   "PresetList": [
     {
-      "PresetName": "FOSSCast banner (1000px, shape kept)",
-      "PresetDescription": "Shrinks a clip to the smallest size a FOSSCast banner can use, keeping its original shape: it fits inside 1000 x 1000, so a 16:9 clip lands at 1000 x 563 and a strip at 1000 x 250. The banner is drawn 976 x 244, so anything larger is bytes nobody sees. H.264 at RF 30, no audio, web optimised. Do not crop - choose which part of the picture the banner shows in the dashboard, over the moving video. Aim for under 1 MB; over 1.5 MB, 10 seconds or 1.5 Mbps is refused on upload.",
+      "PresetName": "FOSSCast banner (976px, shape kept)",
+      "PresetDescription": "Shrinks a clip to the size a FOSSCast banner is actually drawn at, keeping its original shape: it fits inside 976 x 976, so a 16:9 clip lands at 976 x 549 and a strip at 976 x 244. H.264 at RF 30, no audio, web optimised. Do not crop - choose which part of the picture the banner shows in the dashboard, over the moving video. Aim for under 1 MB; over 1.5 MB, 10 seconds or 1.5 Mbps is refused on upload.",
       "Type": 1,
       "Default": false,
       "FileFormat": "av_mp4",
@@ -24,8 +24,8 @@
       "VideoFramerateMode": "pfr",
       "VideoScaler": "swscale",
       "VideoColorMatrixCode": 0,
-      "PictureWidth": 1000,
-      "PictureHeight": 1000,
+      "PictureWidth": 976,
+      "PictureHeight": 976,
       "PictureKeepRatio": true,
       "PicturePAR": "off",
       "PictureAutoCrop": false,
