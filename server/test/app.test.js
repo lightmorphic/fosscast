@@ -192,7 +192,8 @@ test('funding services show as buttons and as feed funding links', async () => {
   assert.strictEqual(res.status, 303);
 
   const page = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(page.includes('Support the show'));
+  assert.ok(page.includes('listen-card'), 'the buttons live in their own card');
+  assert.ok(page.includes('>Support</h2>'), 'under a Support heading');
   assert.ok(page.includes('https://www.patreon.com/testshow'));
   assert.ok(page.includes('Buy Me a Coffee'));
   assert.ok(!page.includes('not a url'), 'a bad URL is dropped, not shown');
@@ -388,7 +389,7 @@ test('social links, with Matrix leading', async () => {
   assert.strictEqual(res.status, 204);
 
   const page = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(page.includes('Find us on'));
+  assert.ok(page.includes('>Follow</h2>'), 'the social buttons sit under Follow');
   assert.ok(page.includes('matrix:r/testshow:example.org'), 'a matrix: URI is kept, not only https');
   assert.ok(page.includes('mastodon.social/@testshow'));
   assert.ok(page.includes('youtube.com/@testshow'));
