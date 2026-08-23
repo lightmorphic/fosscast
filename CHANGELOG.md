@@ -4,6 +4,15 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- The banner video limits come down to what a small server can afford to
+  send a thousand times: 1280 x 320 and under 1 MB is the aim, and a
+  file is refused past 1920 x 480, 4 MB, 15 seconds, or 2.5 Mbps. The
+  bitrate rule is new -- two seconds at 6 Mbps costs the same to serve
+  as ten sensible ones, and the file-size cap alone never caught it.
+- The podcast page carries a HandBrake recipe: dimensions, RF 30, delete
+  the audio track, tick web optimised. There is an ffmpeg one-liner for
+  anyone who would rather type it.
+
 - The banner is drawn 976 x 244 points wide, so its web copy is now made
   at 1920 rather than 1024: it was being shown at very nearly the size it
   was stored at, which is soft on any decent screen. Artwork keeps its

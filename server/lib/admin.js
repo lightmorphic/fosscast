@@ -1086,19 +1086,39 @@ function createAdminRouter(ctx) {
           <div class="subsection">
           <label for="sbannervideo">Banner video (optional)</label>
           <p class="hint">A few seconds of video in place of the still
-          banner, playing silently on a loop. It has to be small: every
-          visitor downloads it, and nothing is re-encoded here &mdash; the
-          file you upload is the file they get.</p>
+          banner, playing silently. Every visitor downloads it in full,
+          every visit, and nothing here re-encodes it &mdash; so the file
+          you upload is exactly what your server sends and what their
+          data allowance pays for. Small is the whole game.</p>
           <ul class="checks limits">
-            <li><span aria-hidden="true">&bull;</span><span><strong>1920 x 480</strong> is the size to aim for: the banner is drawn 976 x 244 points wide, so that is exactly twice it, and it is also the hard maximum. <strong>1280 x 320</strong> is lighter and still looks fine</span></li>
-            <li><span aria-hidden="true">&bull;</span><span><strong>8 MB</strong> at most, and less is better</span></li>
-            <li><span aria-hidden="true">&bull;</span><span><strong>20 seconds</strong> at most &mdash; it loops</span></li>
-            <li><span aria-hidden="true">&bull;</span><span>MP4 (H.264) or WebM, no sound needed &mdash; it is played muted</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>1280 x 320</strong> (4:1) is the size to aim for &mdash; 1920 x 480 is allowed but twice the bytes for a strip most people glance at</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>Under 1 MB</strong> is a good banner. 4 MB is the point at which it is refused</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>5 to 8 seconds</strong>, looping. 15 is the maximum</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>Around 1 Mbps</strong>, and never above 2.5 &mdash; the rate is what costs you bandwidth</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>No audio track.</strong> It plays muted, so sound is bytes nobody hears</span></li>
+            <li><span aria-hidden="true">&bull;</span><span>MP4 (H.264) or WebM</span></li>
           </ul>
-          <p class="hint">Anything bigger is refused with a note saying
-          what to change, because nothing here is re-encoded. Export at a
-          low bitrate: a banner at 1 Mbps looks fine and a listener on a
-          train will thank you. Keep the important part central &mdash; the
+          <details class="recipe">
+            <summary>Making one in HandBrake (free, on every platform)</summary>
+            <ol class="steps">
+              <li>Open your clip. Under <b>Dimensions</b>, set the width to
+              <b>1280</b> and crop until the height is <b>320</b> &mdash; the
+              banner is a 4:1 strip and anything else gets cropped anyway.</li>
+              <li>Under <b>Video</b>: encoder <b>H.264</b>, framerate
+              <b>Same as source</b> with <b>Peak framerate</b>, and quality
+              <b>RF 30</b>. Higher RF means a smaller file; 28 to 32 all look
+              fine at this size.</li>
+              <li>Under <b>Audio</b>, remove every track. It is played muted.</li>
+              <li>Tick <b>Web optimised</b> so playback starts before the
+              file has finished arriving.</li>
+              <li>Encode, and check the result is comfortably under a
+              megabyte. If it is not, raise the RF number and try again.</li>
+            </ol>
+            <p class="hint">ffmpeg, if you prefer:
+            <code>ffmpeg -i in.mp4 -vf "scale=1280:-2,crop=1280:320" -c:v libx264 -crf 30 -preset slow -an -movflags +faststart out.mp4</code></p>
+          </details>
+          <p class="hint">Anything past those limits is refused, with a note
+          saying which one and by how much. Keep what matters central: the
           sides crop on a phone, exactly as the still banner does.</p>
           <input id="sbannervideo" type="file" accept="video/mp4,video/webm" data-upload data-check="banner-video" data-show="${esc(show.slug)}" data-target="bannerVideo" data-status="bannervideo-status">
           <p class="hint" id="bannervideo-status">${show.bannerVideo ? 'Uploaded.' : 'None. The still banner is used.'}</p>

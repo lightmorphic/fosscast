@@ -1201,3 +1201,27 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .subsection > label:first-child,
 .subsection > .group-label:first-child { margin-top: 0; }
+
+/* A recipe folded into a card: shown when wanted, out of the way when
+   not, and numbered because it is a sequence. */
+.recipe { margin: 0.75rem 0; }
+.recipe > summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--link);
+  list-style: none;
+}
+.recipe > summary::-webkit-details-marker { display: none; }
+.recipe > summary::before { content: '+ '; font-weight: 700; }
+.recipe[open] > summary::before { content: '\2212 '; }
+.steps {
+  margin: 0.75rem 0 0.5rem;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted-fg);
+}
+.steps b { color: var(--fg); font-weight: 600; }
+.recipe code { display: inline-block; margin-top: 0.25rem; white-space: pre-wrap; }

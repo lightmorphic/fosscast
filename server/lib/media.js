@@ -151,12 +151,18 @@ function ensureWebImage(dataDir, urlPath, maxSide = 1024, suffix = 'web') {
 // the file is measured and kept or refused, because transcoding a video
 // on the box the site runs on is exactly the kind of work a small
 // server cannot spare.
+// Every visit downloads this file in full - it autoplays - so the
+// ceilings are set by what a small server can afford to send a thousand
+// times, not by what looks nicest. 1280 x 320 at about 1 Mbps is a
+// sharp banner and a third of a megabyte; the maximums below exist for
+// the occasional showpiece, not as a target.
 const BANNER_VIDEO = {
-  width: 1920,      // hard maximum; 1280 x 320 is the recommendation
+  width: 1920,          // hard maximum. 1280 x 320 is the recommendation
   height: 480,
-  bytes: 8 * 1024 * 1024,
-  seconds: 20,
-  ratio: 4,         // 4:1, the same strip as the still banner
+  bytes: 4 * 1024 * 1024,
+  seconds: 15,
+  bitrate: 2500000,     // bits per second, averaged over the clip
+  ratio: 4,             // 4:1, the same strip as the still banner
   ratioTolerance: 0.6,
 };
 
@@ -195,13 +201,19 @@ function bannerVideoProblem(info) {
     return 'That file could not be read as a video. MP4 (H.264) or WebM, please.';
   }
   if (info.bytes > BANNER_VIDEO.bytes) {
-    return `That is ${(info.bytes / 1048576).toFixed(1)} MB. The limit is ${BANNER_VIDEO.bytes / 1048576} MB: every visitor downloads this file.`;
+    return `That is ${(info.bytes / 1048576).toFixed(1)} MB. The limit is ${BANNER_VIDEO.bytes / 1048576} MB, and under 1 MB is a better aim: every visitor downloads this file, in full, every time.`;
   }
   if (info.width > BANNER_VIDEO.width || info.height > BANNER_VIDEO.height) {
     return `That is ${info.width} x ${info.height}. The maximum is ${BANNER_VIDEO.width} x ${BANNER_VIDEO.height}, and 1280 x 320 is plenty - it is a strip across the top of a page, not a cinema screen.`;
   }
   if (info.duration > BANNER_VIDEO.seconds) {
-    return `That is ${info.duration} seconds. The limit is ${BANNER_VIDEO.seconds}: it loops, so a few seconds is all it needs.`;
+    return `That is ${info.duration} seconds. The limit is ${BANNER_VIDEO.seconds}: a banner loops, so a few seconds is all it needs.`;
+  }
+  // The rate is what actually costs money: a short clip at a silly
+  // bitrate is as expensive to serve as a long one at a sensible rate.
+  const rate = info.duration ? (info.bytes * 8) / info.duration : 0;
+  if (rate > BANNER_VIDEO.bitrate) {
+    return `That runs at about ${(rate / 1000000).toFixed(1)} Mbps. Keep it under ${BANNER_VIDEO.bitrate / 1000000} - a banner looks fine at 1. In HandBrake, raise the quality slider's RF number (30 is about right) and delete the audio track: it is played muted.`;
   }
   const ratio = info.width / info.height;
   if (Math.abs(ratio - BANNER_VIDEO.ratio) > BANNER_VIDEO.ratioTolerance) {
