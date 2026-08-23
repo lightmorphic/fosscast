@@ -350,9 +350,13 @@ function createAdminRouter(ctx) {
     const showList = shows();
     let showsChanged = false;
     for (const show of showList) {
-      for (const field of ['artwork', 'banner']) {
+      // Artwork is shown at 160px, so 1024 is generous. The banner is
+      // shown at 976 and wants twice that to stay sharp on a good
+      // screen, which is why it gets a copy of its own rather than
+      // sharing the default.
+      for (const [field, cap, suffix] of [['artwork', 1024, 'web'], ['banner', 1920, 'wide']]) {
         if (!show[field]) { if (show[`${field}Web`]) { delete show[`${field}Web`]; showsChanged = true; } continue; }
-        const web = await ensureWebImage(dataDir, show[field]);
+        const web = await ensureWebImage(dataDir, show[field], cap, suffix);
         if (web && show[`${field}Web`] !== web) { show[`${field}Web`] = web; showsChanged = true; }
       }
       // A background image covers the whole screen, so its web copy is
@@ -1065,10 +1069,13 @@ function createAdminRouter(ctx) {
 
           <div class="subsection">
           <label for="sbanner">Website banner</label>
-          <p class="hint">Wide strip across the top of your site.
-          <strong>2560 x 640</strong> pixels (4:1) keeps it sharp; anything
-          from 1920 x 480 works. Keep the important part central: the edges
-          crop on phones.</p>
+          <p class="hint">The strip across the top of your site. It is
+          drawn <strong>976 x 244</strong> points wide, so
+          <strong>1920 x 480</strong> (4:1) is exactly the size it needs on
+          a sharp screen. Bigger is fine &mdash; 2560 x 640 if you have it
+          &mdash; because the server makes the web copy itself. On a phone
+          the strip goes 3:1 and takes the sides off, so keep anything
+          that matters near the middle.</p>
           <input id="sbanner" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="banner" data-status="banner-status" data-preview="banner-preview-img">
           <p class="hint" id="banner-status">${show.banner ? 'Uploaded.' : 'None yet, so the page starts at the title.'}</p>
           <input type="hidden" id="banner" name="banner" value="${esc(show.banner || '')}">
@@ -1083,14 +1090,16 @@ function createAdminRouter(ctx) {
           visitor downloads it, and nothing is re-encoded here &mdash; the
           file you upload is the file they get.</p>
           <ul class="checks limits">
-            <li><span aria-hidden="true">&bull;</span><span><strong>1280 x 320</strong>, the same 4:1 strip as the still banner (1920 x 480 is the hard maximum)</span></li>
+            <li><span aria-hidden="true">&bull;</span><span><strong>1920 x 480</strong> is the size to aim for: the banner is drawn 976 x 244 points wide, so that is exactly twice it, and it is also the hard maximum. <strong>1280 x 320</strong> is lighter and still looks fine</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>8 MB</strong> at most, and less is better</span></li>
             <li><span aria-hidden="true">&bull;</span><span><strong>20 seconds</strong> at most &mdash; it loops</span></li>
             <li><span aria-hidden="true">&bull;</span><span>MP4 (H.264) or WebM, no sound needed &mdash; it is played muted</span></li>
           </ul>
           <p class="hint">Anything bigger is refused with a note saying
-          what to change. Export at a low bitrate: a banner at 1 Mbps
-          looks fine and a listener on a train will thank you.</p>
+          what to change, because nothing here is re-encoded. Export at a
+          low bitrate: a banner at 1 Mbps looks fine and a listener on a
+          train will thank you. Keep the important part central &mdash; the
+          sides crop on a phone, exactly as the still banner does.</p>
           <input id="sbannervideo" type="file" accept="video/mp4,video/webm" data-upload data-check="banner-video" data-show="${esc(show.slug)}" data-target="bannerVideo" data-status="bannervideo-status">
           <p class="hint" id="bannervideo-status">${show.bannerVideo ? 'Uploaded.' : 'None. The still banner is used.'}</p>
           <input type="hidden" id="bannerVideo" name="bannerVideo" value="${esc(show.bannerVideo || '')}">

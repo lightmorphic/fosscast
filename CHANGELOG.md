@@ -4,6 +4,17 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- The banner is drawn 976 x 244 points wide, so its web copy is now made
+  at 1920 rather than 1024: it was being shown at very nearly the size it
+  was stored at, which is soft on any decent screen. Artwork keeps its
+  1024 copy, being shown at 160.
+- The sizes are stated where they are needed: 1920 x 480 for a banner
+  image or video, which is exactly twice the drawn size, with a note
+  that a phone crops the strip to 3:1 so the middle is what survives.
+- The feed check flows into columns. Ten short ticks down the left of a
+  full-width card left two thirds of it empty; the card is now 259px
+  tall instead of 460.
+
 - Cards that hold more than one thing now rule them apart: artwork,
   website banner and banner video are three parts of one card rather
   than one run of fields, and the Look tab's Layout and Photos cards are
