@@ -4,6 +4,24 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Episodes whose media lives elsewhere are counted at last. The feed and
+  the player publish a link back to this server, which records the
+  download and then sends the listener on to the real file. No audio
+  passes through the server -- only the request does -- so a show
+  hosting its own files finally has a statistics page that fills up.
+- Two faults found while reviewing that work, both older than it: a
+  request for a badly escaped path threw inside the request handler and
+  **ended the process** -- one request, site down until the container
+  restarted. Decoding is safe now, and nothing thrown while routing can
+  take the server with it.
+- The redirect only answers for episodes the public can already see. A
+  draft or a dated-ahead episode would otherwise have had its audio
+  handed out to anyone with the link, which is the opposite of
+  scheduling.
+- `CONTRIBUTING.md`: bug reports yes, pull requests no, and the
+  licensing reason why.
+- The bundled Manrope typeface now ships with its OFL licence text.
+
 - The "remove the FOSSCast footer" checkbox has a section of its own on
   the Look tab, called Footer, so it appears in the side rail instead of
   hiding under the tagline. The note beside it is shorter and quieter:
