@@ -325,6 +325,11 @@ The app is plain Node with zero runtime npm dependencies. The web
 assets are plain CSS and inline SVG, one self-hosted variable font, no
 framework, no build step, no CDN, no trackers.
 
+## Fonts
+
+The bundled Manrope typeface is licensed under the SIL Open Font
+License 1.1; the full text is in `web/fonts/OFL.txt`.
+
 ## License
 
 Free software under the [GNU GPL v3](LICENSE).
