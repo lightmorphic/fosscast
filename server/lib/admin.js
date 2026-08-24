@@ -10,7 +10,7 @@
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
-const { esc, adminPage, ICONS, PRODUCT } = require('./html');
+const { esc, adminPage, ICONS } = require('./html');
 const auth = require('./auth');
 const CATEGORIES = require('./categories');
 const { probeDuration, ensureWebImage, ensureVideoPoster } = require('./media');
@@ -538,7 +538,7 @@ function createAdminRouter(ctx) {
         &middot; <a href="/admin/episodes">shows</a></p>
       </section>`
       : `<section class="panel hero">
-        <h1>Welcome to FOSSCast Community Edition</h1>
+        <h1>Welcome to FOSSCast</h1>
         <p class="lede">One thing to do first: create your podcast. Its
         public pages and RSS feed all follow from it, and then you add as
         many shows (episodes) as you like.</p>

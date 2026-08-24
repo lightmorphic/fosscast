@@ -4,11 +4,6 @@
 const fs = require('fs');
 const path = require('path');
 
-// The edition this build is. The free, self-hosted software is FOSSCast
-// Community Edition; "FOSSCast" alone stays the name of the project a
-// listener sees in a footer. Named once here so the two cannot drift.
-const PRODUCT = 'FOSSCast Community Edition';
-
 // The Lightmorphic mark in the footer. Drop an animated GIF in as
 // web/img/lightmorphic-mark.gif and it is used instead of the still
 // one, no code change and no deploy-time flag: an <img> animates a GIF
@@ -772,7 +767,7 @@ function adminPage({ title, body, active = '', authed = true }) {
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(title)} - ${PRODUCT}</title>
+<title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/site.css?v=0.15.2">
@@ -781,9 +776,9 @@ function adminPage({ title, body, active = '', authed = true }) {
 <body class="admin">
 ${process.env.DEMO_MODE === '1' ? '<div class="demo-bar">Demo instance: you can look around, but nothing can be changed.</div>' : ''}
 <header class="top">
-  <a class="wordmark" href="/admin" aria-label="${PRODUCT} dashboard">
+  <a class="wordmark" href="/admin" aria-label="FOSSCast admin">
     <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    <span>FOSSCast <span class="admin-tag">community edition</span></span>
+    <span>FOSSCast <span class="admin-tag">admin</span></span>
   </a>
   ${nav}
 </header>
@@ -796,4 +791,4 @@ ${body}
 `;
 }
 
-module.exports = { esc, publicPage, adminPage, ICONS, PRODUCT };
+module.exports = { esc, publicPage, adminPage, ICONS };

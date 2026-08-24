@@ -1,4 +1,4 @@
-# FOSSCast Community Edition architecture and decisions record
+# FOSSCast architecture and decisions record
 
 Decisions made at kickoff (August 2026), kept here so future work
 doesn't have to rediscover them.

@@ -33,7 +33,7 @@ test('feed carries the Podcasting 2.0 and iTunes tags', () => {
     '<itunes:name>Jo Host</itunes:name>',
     '<managingEditor>jo@x.y (Jo Host)</managingEditor>',
     '<itunes:type>episodic</itunes:type>',
-    '<generator>FOSSCast Community Edition</generator>',
+    '<generator>FOSSCast</generator>',
     '<podcast:funding url="https://pay.example/jo">Support</podcast:funding>',
     '<podcast:person role="host">Jo Host</podcast:person>',
     'url="https://pod.example/media/my-show/ep1.mp3" length="999" type="audio/mpeg"',
