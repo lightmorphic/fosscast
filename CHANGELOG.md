@@ -4,6 +4,14 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Episodes can be sent to the Internet Archive in one click. Add your own
+  archive.org key pair on the account page and an episode's audio goes to
+  archive.org under your own account, with the title, author, description,
+  date and language it already has here. The media address follows it
+  there; the feed does not change, and downloads are still counted,
+  because the counting redirect handles offsite media. Together those two
+  mean a podcast can outlive its server without losing its statistics.
+
 - Episodes whose media lives elsewhere are counted at last. The feed and
   the player publish a link back to this server, which records the
   download and then sends the listener on to the real file. No audio

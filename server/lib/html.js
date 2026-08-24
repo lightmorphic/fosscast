@@ -716,6 +716,84 @@ document.addEventListener('change', (e) => {
   labels();
 })();
 
+// Sending an episode to the Internet Archive. The upload runs on the
+// server and can take a while, so the button starts it and the page asks
+// every couple of seconds how far it has got.
+(() => {
+  const panel = document.querySelector('[data-archive-panel]');
+  if (!panel) return;
+  const id = panel.dataset.archivePanel;
+  const status = panel.querySelector('.archive-status');
+  const button = panel.querySelector('[data-archive]');
+  let polling = null;
+
+  const size = (n) => (n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB');
+
+  function show(job) {
+    if (job.state === 'running') {
+      status.className = 'hint archive-status';
+      status.textContent = job.total
+        ? 'Uploading \u2013 ' + size(job.sent) + ' of ' + size(job.total)
+          + ' (' + Math.round((job.sent / job.total) * 100) + '%)'
+        : 'Starting the upload\u2026';
+      return true;
+    }
+    if (job.state === 'done') {
+      status.className = 'hint archive-status';
+      status.textContent = 'Done. Reloading\u2026';
+      setTimeout(() => window.location.reload(), 800);
+      return false;
+    }
+    if (job.state === 'failed') {
+      status.className = 'hint archive-status form-error';
+      status.textContent = job.error || 'That did not work.';
+      if (button) { button.disabled = false; button.textContent = 'Try again'; }
+      return false;
+    }
+    return false;
+  }
+
+  function poll() {
+    polling = setInterval(() => {
+      fetch('/admin/episodes/' + id + '/archive')
+        .then((r) => r.json())
+        .then((job) => { if (!show(job)) clearInterval(polling); })
+        .catch(() => {});
+    }, 2000);
+  }
+
+  if (button) {
+    button.addEventListener('click', () => {
+      button.disabled = true;
+      button.textContent = 'Sending\u2026';
+      status.className = 'hint archive-status';
+      status.textContent = 'Starting the upload\u2026';
+      fetch('/admin/episodes/' + id + '/archive', { method: 'POST' })
+        .then((r) => r.json())
+        .then((job) => { if (show(job)) poll(); })
+        .catch(() => {
+          status.className = 'hint archive-status form-error';
+          status.textContent = 'Could not reach this server to start the upload.';
+          button.disabled = false;
+          button.textContent = 'Try again';
+        });
+    });
+  }
+
+  // An upload already running when the page was opened (a reload, or a
+  // second tab) is picked up rather than started again.
+  fetch('/admin/episodes/' + id + '/archive')
+    .then((r) => r.json())
+    .then((job) => {
+      if (job.state === 'running') {
+        if (button) { button.disabled = true; button.textContent = 'Sending\u2026'; }
+        show(job);
+        poll();
+      }
+    })
+    .catch(() => {});
+})();
+
 document.addEventListener('click', (e) => {
   const confirmBtn = e.target.closest('.btn-confirm');
   if (confirmBtn) {
