@@ -1,7 +1,7 @@
 'use strict';
 // The public site: landing page, show pages with players, RSS feeds.
 
-const { esc, publicPage } = require('./html');
+const { esc, publicPage, PRODUCT } = require('./html');
 
 const MEDIA_TYPES = {
   '.mp4': 'video/mp4', '.m4v': 'video/mp4', '.webm': 'video/webm',
@@ -235,13 +235,14 @@ function player(episode) {
 
 function landing() {
   return publicPage({
-    title: 'FOSSCast',
+    title: PRODUCT,
     description: 'A home for an independent show: every published episode, playable in the browser and subscribable anywhere podcasts go.',
     body: `
   <section class="panel hero">
     <p class="status"><span aria-hidden="true">&#9679;</span> Being built in the open. First shows soon.</p>
     <h1>Your show, kept properly.</h1>
-    <p class="lede">FOSSCast is the public home of an independent show:
+    <p class="lede">FOSSCast Community Edition is the public home of an
+    independent show:
     every published episode on its own page, playable here and
     subscribable anywhere podcasts go, served from hardware you
     control.</p>
@@ -279,8 +280,8 @@ function showsIndex(shows, episodes) {
       }).join('')
     : '<div class="panel"><p class="hint">No shows yet. They are coming.</p></div>';
   return publicPage({
-    title: 'Shows - FOSSCast',
-    description: 'All shows on FOSSCast.',
+    title: `Shows - ${PRODUCT}`,
+    description: 'Every show on this instance.',
     body: `<h1 class="page-title">Shows</h1><section class="grid">${cards}</section>`,
   });
 }
@@ -459,7 +460,7 @@ function showPage(show, allEpisodes, domain) {
       }).join('')
     : '<div class="panel"><p class="hint">No episodes published yet.</p></div>';
   return publicPage({
-    title: `${show.name} - FOSSCast`,
+    title: `${show.name} - ${PRODUCT}`,
     description: show.description,
     image: show.banner || show.artwork || '',
     icon: showArtWeb(show),
@@ -621,7 +622,7 @@ function feed(show, episodes, domain) {
     <itunes:type>${show.serial ? 'serial' : 'episodic'}</itunes:type>
     ${show.copyright ? `<copyright>${escXml(show.copyright)}</copyright>` : ''}
     <lastBuildDate>${new Date().toUTCString()}</lastBuildDate>
-    <generator>FOSSCast</generator>
+    <generator>FOSSCast Community Edition</generator>
     ${show.artwork ? `<itunes:image href="${escXml(absolute(show.artwork, domain))}"/><image><url>${escXml(absolute(show.artwork, domain))}</url><title>${escXml(show.name)}</title><link>${escXml(`${base}/shows/${show.slug}`)}</link></image>` : ''}
     ${show.category ? `<itunes:category text="${escXml(show.category)}"/>` : ''}
     <itunes:explicit>${show.explicit ? 'true' : 'false'}</itunes:explicit>

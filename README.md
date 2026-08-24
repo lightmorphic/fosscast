@@ -1,6 +1,6 @@
-# FOSSCast
+# FOSSCast Community Edition
 
-A self-hosted home for a podcast: every published episode on its own
+The free, self-hosted edition of FOSSCast: a home for a podcast, every published episode on its own
 page, playable in the browser and subscribable by RSS in any podcast
 app.
 

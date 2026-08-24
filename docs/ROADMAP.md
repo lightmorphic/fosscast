@@ -1,4 +1,4 @@
-# FOSSCast roadmap
+# FOSSCast Community Edition roadmap
 
 Where this is going: the best free podcast platform anywhere.
 Everything below ships in the one open codebase; a self-hoster gets it

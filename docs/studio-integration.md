@@ -1,4 +1,4 @@
-# Linking a studio to FOSSCast
+# Linking a studio to FOSSCast Community Edition
 
 How a recording studio publishes finished episodes to a FOSSCast
 instance. Live streaming and chat are FOSSStudio's own territory (see
