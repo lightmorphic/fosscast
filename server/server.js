@@ -1,6 +1,5 @@
 'use strict';
-// FOSSCast Community Edition server: the public site, the admin area,
-// the publish API
+// FOSSCast server: the public site, the admin area, the publish API
 // and the MediaMTX auth hook. Zero runtime npm dependencies.
 
 const http = require('http');
@@ -306,7 +305,7 @@ const server = http.createServer((req, res) => {
 });
 
 server.listen(HTTP_PORT, () => {
-  console.log(`FOSSCast Community Edition ${VERSION} listening on :${HTTP_PORT}`);
+  console.log(`FOSSCast ${VERSION} listening on :${HTTP_PORT}`);
 });
 
 for (const sig of ['SIGTERM', 'SIGINT']) {

@@ -268,7 +268,7 @@ test('the look: colours, background, type and words of your own', async () => {
   // The admin keeps its own branding regardless: that is our software,
   // not their website.
   const adminPage = await (await fetch(`${BASE}/admin/podcast`, { headers: { cookie } })).text();
-  assert.ok(adminPage.includes('community edition'), 'the dashboard keeps its own branding');
+  assert.ok(adminPage.includes('FOSSCast <span class="admin-tag">admin</span>'), 'the dashboard is unaffected');
   await fetch(`${BASE}/admin/look`, form({ reset: '1' }));
 
   // Editing saves as it goes: one request stores the change and answers

@@ -65,7 +65,7 @@ function sendMail({ to, subject, text }) {
       if (step === 6) { write('DATA'); step = 7; return; }
       if (step === 7) {
         const body = [
-          `From: FOSSCast Community Edition <${from}>`,
+          `From: FOSSCast <${from}>`,
           `To: ${recipients.join(', ')}`,
           `Subject: ${subject}`,
           'MIME-Version: 1.0',
