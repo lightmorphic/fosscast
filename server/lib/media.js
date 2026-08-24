@@ -60,7 +60,13 @@ function saveUpload(req, mediaDir, slug, filename) {
 
 // Serve /media/* with Range support.
 function serveMedia(req, res, mediaDir, urlPath) {
-  const rel = decodeURIComponent(urlPath.replace(/^\/media\//, ''));
+  let rel;
+  try {
+    rel = decodeURIComponent(urlPath.replace(/^\/media\//, ''));
+  } catch {
+    // A malformed escape is not a file we have.
+    res.writeHead(404); return res.end('not found');
+  }
   const file = path.resolve(path.join(mediaDir, rel));
   if (!file.startsWith(path.resolve(mediaDir) + path.sep)) { res.writeHead(404); return res.end(); }
   fs.stat(file, (err, stat) => {
