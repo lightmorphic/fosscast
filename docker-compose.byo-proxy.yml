@@ -1,4 +1,4 @@
-# FOSSCast without the bundled Caddy, for hosts that already terminate
+# FOSSCast Community Edition without the bundled Caddy, for hosts that already terminate
 # TLS themselves: nginx, Apache, a Cloudflare Tunnel, Tailscale Serve.
 # Identical to docker-compose.yml minus the caddy service, so keep the
 # two in step when either changes.

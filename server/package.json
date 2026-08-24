@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "license": "GPL-3.0-only",
-  "description": "The public home of shows recorded on FOSSStudio: live streams, chat and an episode archive.",
+  "description": "FOSSCast Community Edition: the free, self-hosted edition. Every published episode on its own page, playable in the browser and subscribable by RSS.",
   "scripts": {
     "start": "node server.js",
     "test": "node --test"

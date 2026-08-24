@@ -4,6 +4,17 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- The free, self-hosted software is **FOSSCast Community Edition**. The
+  name appears wherever the software identifies itself: the dashboard,
+  page titles, the feed's generator tag, the README, the docs, the
+  compose files and the marketing page. It is defined once, in
+  `html.js`, so the two names cannot drift apart.
+- "FOSSCast" on its own stays the name of the project: the mark in a
+  listener's footer, the link to fosscast.org, and prose after the first
+  mention. Identifiers are untouched -- the image is still
+  `ghcr.io/lightmorphic/fosscast`, the cookie is still `fosscast_admin`,
+  and no existing install notices anything.
+
 - The "remove the FOSSCast footer" checkbox has a section of its own on
   the Look tab, called Footer, so it appears in the side rail instead of
   hiding under the tagline. The note beside it is shorter and quieter:

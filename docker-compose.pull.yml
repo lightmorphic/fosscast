@@ -1,4 +1,4 @@
-# FOSSCast, the whole thing, from a single file.
+# FOSSCast Community Edition, the whole thing, from a single file.
 #
 # Everything you need to change is in the block at the top. Paste this
 # into docker-compose.yml, edit those four lines, and run:
