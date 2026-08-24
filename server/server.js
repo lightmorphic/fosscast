@@ -92,6 +92,14 @@ function studioAuthed(req) {
 const crypto = require('crypto');
 
 
+// decodeURIComponent throws on a malformed escape - "%" on its own is
+// enough - and an exception in a request handler takes the whole
+// process down with it. Anything decoding a path from a stranger goes
+// through here.
+function safeDecode(value) {
+  try { return decodeURIComponent(value); } catch { return null; }
+}
+
 function serveStatic(res, urlPath) {
   const file = path.resolve(path.join(WEB_DIR, urlPath));
   if (!file.startsWith(WEB_DIR + path.sep)) return send(res, 404, 'not found');
@@ -108,7 +116,20 @@ function serveStatic(res, urlPath) {
   });
 }
 
+// One bad request should cost that request, not the site: without this,
+// anything thrown while routing ends the process and every listener
+// gets nothing until the container restarts.
 const server = http.createServer((req, res) => {
+  try {
+    route(req, res);
+  } catch (err) {
+    console.error('request failed:', err.message);
+    if (!res.headersSent) send(res, 500, 'server error');
+    else res.end();
+  }
+});
+
+function route(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const p = url.pathname;
 
@@ -135,6 +156,40 @@ const server = http.createServer((req, res) => {
         return sendJson(res, 200, result);
       })
       .catch((err) => sendJson(res, 400, { error: err.message }));
+    return;
+  }
+
+  // An episode whose media lives elsewhere. The listener's app asks us
+  // first, we count that exactly as we count a file we serve ourselves,
+  // then we tell it where the file really is and it goes and gets it.
+  // No audio passes through this server; we only see the request.
+  if (p.startsWith('/d/') && (req.method === 'GET' || req.method === 'HEAD')) {
+    const decoded = safeDecode(p.slice(3));
+    const id = decoded === null ? '' : decoded.replace(/\.[a-z0-9]+$/i, '');
+    const episode = store.load('episodes', []).find((e) => e.id === id);
+    // Only ever forward to a real web address, and never to media we
+    // hold ourselves: that has its own route, which serves byte ranges.
+    // And only for an episode the public can already see - a draft or a
+    // dated-ahead episode is not published yet, and handing out its
+    // address here would publish it.
+    const published = episode && publicSite.visible([episode]).length === 1;
+    if (!published || !/^https?:\/\//i.test(episode.mediaUrl || '')) {
+      send(res, 404, 'not found');
+      return;
+    }
+    if (req.method === 'GET') {
+      const range = req.headers.range;
+      if (!range || /^bytes=0-/.test(range)) {
+        stats.record(episode.id, clientIp(req), req.headers['user-agent'] || '', {
+          headers: req.headers,
+          published: episode.date,
+        });
+      }
+    }
+    // Temporary on purpose: a permanent redirect would be cached by the
+    // app, and the next download would never be seen.
+    res.writeHead(302, { Location: episode.mediaUrl, 'Cache-Control': 'no-store' });
+    res.end();
     return;
   }
 
@@ -302,7 +357,7 @@ const server = http.createServer((req, res) => {
     return serveStatic(res, p);
   }
   send(res, 404, 'not found');
-});
+}
 
 server.listen(HTTP_PORT, () => {
   console.log(`FOSSCast ${VERSION} listening on :${HTTP_PORT}`);

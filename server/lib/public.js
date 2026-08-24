@@ -21,6 +21,31 @@ function mediaType(url) {
   }
 }
 
+// Where a listener actually fetches an episode from.
+//
+// Media this server holds is linked straight at: the media route counts
+// the download as it goes past. Media that lives somewhere else - the
+// show's own host, an archive.org item - would never touch this server,
+// so nothing could be counted and the statistics page would sit empty
+// however many people listened. Those are published as a link back
+// here, and /d hands the listener onward.
+//
+// Either way this server carries no audio: the difference is only
+// whether it gets to see that the request happened.
+//
+// The extension is cosmetic but load-bearing: some apps read the file
+// type off the URL rather than trusting the enclosure's type attribute.
+function mediaPath(episode) {
+  if (episode.mediaUrl.startsWith('/')) return episode.mediaUrl;
+  let ext = '';
+  try {
+    const pathname = new URL(episode.mediaUrl, 'http://relative').pathname.toLowerCase();
+    const dot = pathname.lastIndexOf('.');
+    if (dot !== -1 && MEDIA_TYPES[pathname.slice(dot)]) ext = pathname.slice(dot);
+  } catch { /* no usable extension */ }
+  return `/d/${episode.id}${ext}`;
+}
+
 // Episodes the public can see: published and not future-dated.
 function visible(episodes) {
   const today = new Date().toISOString().slice(0, 10);
@@ -230,7 +255,7 @@ function subscribeRow(show, domain) {
 function player(episode) {
   const type = mediaType(episode.mediaUrl);
   const tag = type.startsWith('video/') ? 'video' : 'audio';
-  return `<${tag} controls preload="none" src="${esc(episode.mediaUrl)}"></${tag}>`;
+  return `<${tag} controls preload="none" src="${esc(mediaPath(episode))}"></${tag}>`;
 }
 
 function landing() {
@@ -590,7 +615,7 @@ function feed(show, episodes, domain) {
       <guid isPermaLink="false">${escXml(episode.guid || episode.id)}</guid>
       <pubDate>${new Date(episode.date + 'T00:00:00Z').toUTCString()}</pubDate>
       <description>${escXml(episode.description)}</description>
-      <enclosure url="${escXml(absolute(episode.mediaUrl, domain))}" length="${Number(episode.bytes) || 0}" type="${escXml(mediaType(episode.mediaUrl))}"/>
+      <enclosure url="${escXml(absolute(mediaPath(episode), domain))}" length="${Number(episode.bytes) || 0}" type="${escXml(mediaType(episode.mediaUrl))}"/>
       ${episode.episode ? `<itunes:episode>${Number(episode.episode)}</itunes:episode>` : ''}
       ${episode.season ? `<itunes:season>${Number(episode.season)}</itunes:season>` : ''}
       <itunes:episodeType>${escXml(episode.type || 'full')}</itunes:episodeType>
