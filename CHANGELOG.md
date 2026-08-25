@@ -4,6 +4,26 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- Tests that hold FOSSCast to standing on its own: no source file may
+  mention a hosted service, the one-file install may reference nothing
+  but the published image, no page may fetch anything from a third
+  party, and every hook - the Archive, the analytics prefix, the studio
+  publish API - must stay inert until somebody configures it. The
+  promise was already true; now it cannot quietly stop being true.
+
+## 0.2.0 - 2026-08-25
+
+Everything since the first release. The short version: a podcast can be
+run entirely from the dashboard and look like its own site rather than a
+template, and downloads are counted wherever the audio actually lives,
+including at the Internet Archive.
+
+- An analytics prefix field, for OP3, Podtrac and the rest. Set it and
+  every enclosure - and the player on your own site - goes through them
+  first. Left empty, nobody but this server ever sees a download.
+- A mail server that offers STARTTLS and then cannot speak TLS used to
+  take the whole site down with it. Now it costs one unsent email.
+
 - Episodes can be sent to the Internet Archive in one click. Add your own
   archive.org key pair on the account page and an episode's audio goes to
   archive.org under your own account, with the title, author, description,
