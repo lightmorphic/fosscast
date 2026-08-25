@@ -119,6 +119,12 @@ function serveStatic(res, urlPath) {
 // One bad request should cost that request, not the site: without this,
 // anything thrown while routing ends the process and every listener
 // gets nothing until the container restarts.
+// Somebody typing addresses into the subscribe box over and over is
+// either a bot or a nuisance; either way the mail server should not wear
+// it. Sign-ups are rate-limited per address-source the same way logins
+// are.
+const subscribeLimiter = new (require('./lib/auth').RateLimiter)({ max: 5, windowMs: 10 * 60 * 1000 });
+
 const server = http.createServer((req, res) => {
   try {
     route(req, res);
@@ -338,7 +344,7 @@ function route(req, res) {
     const episode = store.load('episodes', []).find((e) => e.id === embedMatch[1]);
     const show = episode && store.load('shows', []).find((s) => s.id === episode.showId);
     if (!episode || !show || episode.draft) return send(res, 404, 'not found');
-    return sendHtml(res, publicSite.embedPage(show, episode));
+    return sendHtml(res, publicSite.embedPage(show, episode, DOMAIN));
   }
 
   // An episode's own page: what podcast apps link to from the feed.

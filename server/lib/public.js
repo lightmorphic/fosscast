@@ -46,6 +46,23 @@ function mediaPath(episode) {
   return `/d/${episode.id}${ext}`;
 }
 
+// An analytics prefix, the way the podcast world actually does it.
+// OP3, Podtrac, Podscribe and the rest all work by having the enclosure
+// point at them, with the real address appended raw and its scheme
+// dropped:
+//
+//   https://op3.dev/e/ + fossnerds.org/d/abc.mp3
+//
+// Not percent-encoded - encoding it would break every one of them - and
+// they chain, so a podcaster can paste several prefixes into the one
+// field and the whole lot is prepended in order.
+function prefixed(url, prefix) {
+  const clean = String(prefix || '').trim();
+  if (!clean) return url;
+  if (!/^https?:\/\//i.test(clean)) return url;
+  return `${clean.replace(/\/+$/, '')}/${String(url).replace(/^https?:\/\//i, '')}`;
+}
+
 // Episodes the public can see: published and not future-dated.
 function visible(episodes) {
   const today = new Date().toISOString().slice(0, 10);
@@ -252,10 +269,16 @@ function subscribeRow(show, domain) {
   </div>`;
 }
 
-function player(episode) {
+function player(episode, show, domain) {
   const type = mediaType(episode.mediaUrl);
   const tag = type.startsWith('video/') ? 'video' : 'audio';
-  return `<${tag} controls preload="none" src="${esc(mediaPath(episode))}"></${tag}>`;
+  // With a prefix set, the page's own player goes the same way as the
+  // feed, so the podcaster's numbers do not come out of two halves that
+  // disagree.
+  const src = show && show.mediaPrefix
+    ? prefixed(absolute(mediaPath(episode), domain), show.mediaPrefix)
+    : mediaPath(episode);
+  return `<${tag} controls preload="none" src="${esc(src)}"></${tag}>`;
 }
 
 function landing() {
@@ -478,7 +501,7 @@ function showPage(show, allEpisodes, domain) {
           <h2><a href="${esc(episodeUrl(show, episode, ''))}">${esc(episode.title)}</a></h2>
           <p class="hint">${esc(episode.date)}${episode.episode ? ` &middot; episode ${Number(episode.episode)}` : ''}${episode.duration ? ` &middot; ${Math.round(episode.duration / 60)} min` : ''}</p>
           ${episode.description ? `<p>${esc(episode.description)}</p>` : ''}
-          ${player(episode)}
+          ${player(episode, show, domain)}
         </div>
       </article>`;
       }).join('')
@@ -541,7 +564,7 @@ function episodePage(show, episode, domain) {
         <p class="hint">${esc(episode.date)}${episode.episode ? ` &middot; episode ${Number(episode.episode)}` : ''}${episode.season ? ` &middot; season ${Number(episode.season)}` : ''}${episode.duration ? ` &middot; ${Math.round(episode.duration / 60)} min` : ''}</p>
       </div>
     </div>
-    ${player(episode)}
+    ${player(episode, show, domain)}
     ${episode.description ? `<p>${esc(episode.description)}</p>` : ''}
     ${subscribeRow(show, domain)}
     <p class="hint">
@@ -615,7 +638,7 @@ function feed(show, episodes, domain) {
       <guid isPermaLink="false">${escXml(episode.guid || episode.id)}</guid>
       <pubDate>${new Date(episode.date + 'T00:00:00Z').toUTCString()}</pubDate>
       <description>${escXml(episode.description)}</description>
-      <enclosure url="${escXml(absolute(mediaPath(episode), domain))}" length="${Number(episode.bytes) || 0}" type="${escXml(mediaType(episode.mediaUrl))}"/>
+      <enclosure url="${escXml(prefixed(absolute(mediaPath(episode), domain), show.mediaPrefix))}" length="${Number(episode.bytes) || 0}" type="${escXml(mediaType(episode.mediaUrl))}"/>
       ${episode.episode ? `<itunes:episode>${Number(episode.episode)}</itunes:episode>` : ''}
       ${episode.season ? `<itunes:season>${Number(episode.season)}</itunes:season>` : ''}
       <itunes:episodeType>${escXml(episode.type || 'full')}</itunes:episodeType>
@@ -660,7 +683,7 @@ function feed(show, episodes, domain) {
 }
 
 // Minimal embeddable player page for one episode.
-function embedPage(show, episode) {
+function embedPage(show, episode, domain = '') {
   return `<!doctype html>
 <html lang="en" data-accent="deep_orange">
 <head>
@@ -675,7 +698,7 @@ function embedPage(show, episode) {
   <div class="embed-meta">
     <strong>${esc(episode.title)}</strong>
     <span class="hint">${esc(show.name)}</span>
-    ${player(episode)}
+    ${player(episode, show, domain)}
   </div>
 </div>
 </body>
@@ -683,4 +706,4 @@ function embedPage(show, episode) {
 `;
 }
 
-module.exports = { bannerKind, bannerMarkup, landing, showsIndex, showPage, episodePage, hostsPage, hostPage, hosts, hostSlug, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, listenCard, supportRow, supportLinks, socialRow, socialLinks, slugify, APPS, SUPPORT, SOCIAL };
+module.exports = { prefixed, bannerKind, bannerMarkup, landing, showsIndex, showPage, episodePage, hostsPage, hostPage, hosts, hostSlug, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, listenCard, supportRow, supportLinks, socialRow, socialLinks, slugify, APPS, SUPPORT, SOCIAL };

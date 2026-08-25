@@ -16,7 +16,7 @@ const CATEGORIES = require('./categories');
 const { probeDuration, ensureWebImage, ensureVideoPoster, typeFor } = require('./media');
 const importer = require('./import');
 const { sendMail, configured: mailConfigured } = require('./mailer');
-const { APPS, SUPPORT, SOCIAL, showPage } = require('./public');
+const { APPS, SUPPORT, SOCIAL, showPage, prefixed } = require('./public');
 const themes = require('./theme');
 const charts = require('./charts');
 const archiveorg = require('./archiveorg');
@@ -1310,6 +1310,27 @@ function createAdminRouter(ctx) {
           </div>
         </section>
 
+        <section class="panel" id="sec-prefix">
+          <h2>Analytics prefix</h2>
+          <p class="hint">Third-party download measurement, the way the
+          rest of the podcast world does it. Services such as
+          <a href="https://op3.dev" target="_blank" rel="noopener noreferrer">OP3</a>
+          (open, free) or Podtrac work by sitting in front of the audio:
+          paste their prefix here and every enclosure in your feed points
+          at them first, then on to you.</p>
+          <label for="smediaprefix">Prefix URL</label>
+          <input id="smediaprefix" name="mediaPrefix" maxlength="300" value="${esc(show.mediaPrefix || '')}" placeholder="https://op3.dev/e/">
+          <p class="hint">Several can be chained by pasting them one after
+          another, longest-lived first. Leave it empty and nobody but this
+          server ever sees a download.</p>
+          ${show.mediaPrefix ? `<p class="hint">Your enclosures now read
+          <code>${esc(prefixed(`https://${process.env.DOMAIN || 'example.org'}/d/EPISODE.mp3`, show.mediaPrefix))}</code></p>
+          <p class="hint">This does send your listeners through somebody
+          else on their way to the audio, the player on your own site
+          included. That is what a prefix is for, but it is a third party
+          in the path and worth deciding on purpose.</p>` : ''}
+        </section>
+
         <section class="panel" id="sec-support">
           <h2>Memberships &amp; tips</h2>
           <p class="hint">The services listeners already use to back a
@@ -1969,6 +1990,11 @@ function createAdminRouter(ctx) {
         entry.description = String(form.get('description') || '').trim().slice(0, 2000);
         entry.author = String(form.get('author') || '').trim().slice(0, 120);
         entry.language = String(form.get('language') || 'en').trim().slice(0, 10);
+        // Only a real http(s) prefix is kept: anything else would quietly
+        // break every enclosure in the feed.
+        const prefix = String(form.get('mediaPrefix') || '').trim().slice(0, 300);
+        if (!prefix) delete entry.mediaPrefix;
+        else if (/^https?:\/\//i.test(prefix)) entry.mediaPrefix = prefix;
         entry.category = CATEGORIES.includes(form.get('category')) ? form.get('category') : entry.category;
         entry.explicit = form.get('explicit') === '1';
         entry.ownerName = String(form.get('ownerName') || '').trim().slice(0, 120);
