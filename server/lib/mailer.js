@@ -6,11 +6,20 @@
 const net = require('net');
 const tls = require('tls');
 
+// A header may only carry ASCII, so anything else is encoded the way
+// mail has always done it. Without this, a subject with an accent or an
+// em dash arrives as mojibake.
+function encodeHeader(value) {
+  const text = String(value == null ? '' : value).replace(/[\r\n]+/g, ' ');
+  if (/^[\x20-\x7e]*$/.test(text)) return text;
+  return `=?UTF-8?B?${Buffer.from(text, 'utf8').toString('base64')}?=`;
+}
+
 function configured() {
   return !!(process.env.SMTP_HOST && process.env.SMTP_FROM);
 }
 
-function sendMail({ to, subject, text }) {
+function sendMail({ to, subject, text, headers = {}, from: fromName }) {
   if (!configured()) return Promise.resolve(false);
   const host = process.env.SMTP_HOST;
   const port = Number(process.env.SMTP_PORT || 587);
@@ -20,6 +29,8 @@ function sendMail({ to, subject, text }) {
   const recipients = Array.isArray(to) ? to : [to];
 
   return new Promise((resolve) => {
+    // Email is never worth a crash. Whatever goes wrong below, the
+    // answer to the caller is "it did not send".
     let socket = port === 465
       ? tls.connect(port, host, { servername: host })
       : net.connect(port, host);
@@ -27,7 +38,14 @@ function sendMail({ to, subject, text }) {
     let step = 0;
     let upgraded = port === 465;
     let rcptLeft = recipients.length;
-    const fail = () => { try { socket.destroy(); } catch {} resolve(false); };
+    let settled = false;
+    const fail = () => {
+      if (settled) return;
+      settled = true;
+      clearTimeout(timer);
+      try { socket.destroy(); } catch {}
+      resolve(false);
+    };
     const timer = setTimeout(fail, 20000);
 
     const write = (line) => socket.write(line + '\r\n');
@@ -46,6 +64,11 @@ function sendMail({ to, subject, text }) {
           write('EHLO fosscast');
           step = 3;
         });
+        // Attached before the handshake, not inside its callback: a mail
+        // server that answers STARTTLS and then cannot speak TLS throws
+        // here, and an unhandled throw ends the process. Nobody's
+        // podcast should go down because their mail host is misbehaving.
+        socket.on('error', fail);
         return;
       }
       if (step === 3) {
@@ -65,11 +88,14 @@ function sendMail({ to, subject, text }) {
       if (step === 6) { write('DATA'); step = 7; return; }
       if (step === 7) {
         const body = [
-          `From: FOSSCast <${from}>`,
+          `From: ${encodeHeader(fromName || 'FOSSCast')} <${from}>`,
           `To: ${recipients.join(', ')}`,
-          `Subject: ${subject}`,
+          `Subject: ${encodeHeader(subject)}`,
           'MIME-Version: 1.0',
           'Content-Type: text/plain; charset=utf-8',
+          ...Object.entries(headers)
+            .filter(([, v]) => v)
+            .map(([k, v]) => `${k}: ${String(v).replace(/[\r\n]+/g, ' ')}`),
           '',
           text.replace(/^\./gm, '..'),
           '.',
@@ -77,10 +103,16 @@ function sendMail({ to, subject, text }) {
         socket.write(body + '\r\n');
         step = 8; return;
       }
-      if (step === 8) { write('QUIT'); clearTimeout(timer); resolve(true); return; }
+      if (step === 8) {
+        write('QUIT');
+        clearTimeout(timer);
+        if (!settled) { settled = true; resolve(true); }
+        return;
+      }
     };
 
     function onData(chunk) {
+      if (settled) return;
       buffer += chunk.toString();
       // process complete reply lines; act on final line of each reply
       if (!/\r\n$/.test(buffer)) return;
@@ -89,7 +121,11 @@ function sendMail({ to, subject, text }) {
       const last = lines[lines.length - 1];
       const code = Number(last.slice(0, 3));
       if (code >= 400) return fail();
-      steps();
+      try {
+        steps();
+      } catch (err) {
+        fail();
+      }
     }
     function attach() {
       socket.on('data', onData);
@@ -100,4 +136,4 @@ function sendMail({ to, subject, text }) {
   });
 }
 
-module.exports = { sendMail, configured };
+module.exports = { sendMail, configured, encodeHeader };
