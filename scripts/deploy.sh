@@ -14,7 +14,7 @@
 set -euo pipefail
 
 HOST="${FOSSCAST_HOST:?Set FOSSCAST_HOST, e.g. root@1.2.3.4}"
-SSH_KEY="${FOSSCAST_SSH_KEY:-/home/charlie/2-Data/SSH/lightmorphic-fosscast-vps-deploy}"
+SSH_KEY="${FOSSCAST_SSH_KEY:-/home/charlie/9-Claude/ssh/lightmorphic-fosscast-vps-deploy}"
 RELEASE="$(date +%Y%m%d-%H%M%S)"
 REPO_ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 

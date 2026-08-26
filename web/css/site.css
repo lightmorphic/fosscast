@@ -557,6 +557,24 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
 }
 .demo-creds code { background: var(--panel); }
 
+/* ---------- Embedded: another shell owns the chrome ---------- */
+/* An embedding application draws its own navigation around the frame,
+   so the page starts closer to its content and keeps a quiet way out
+   of the session at the foot. */
+body.embedded .wrap { padding-top: 0.5rem; }
+.embedded-out { margin-top: 3rem; text-align: right; }
+.link-button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--muted-fg);
+  font: inherit;
+  font-size: 0.875rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.link-button:hover { color: var(--fg); }
+
 
 /* ---------- Theme toggle ---------- */
 .theme-toggle .icon-dark { display: none; }

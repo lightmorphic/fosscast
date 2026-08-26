@@ -10,7 +10,7 @@
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
-const { esc, adminPage, ICONS } = require('./html');
+const { esc, adminPage, ICONS, withEmbedded } = require('./html');
 const auth = require('./auth');
 const CATEGORIES = require('./categories');
 const { probeDuration, ensureWebImage, ensureVideoPoster, typeFor } = require('./media');
@@ -88,12 +88,21 @@ function redirect(res, to, extraHeaders = {}) {
   res.end();
 }
 
+// The dashboard must never render inside a stranger's iframe, but an
+// operator may name the one shell allowed to hold it - their own
+// portal, a homelab wall, an agency panel. FRAME_ANCESTORS is that
+// name (a CSP source list, e.g. https://portal.example.com); unset
+// means what it has always meant: nobody.
+const FRAME_ANCESTORS = (process.env.FRAME_ANCESTORS || '').trim();
+
 function html(res, page, status = 200) {
   res.writeHead(status, {
     'Content-Type': 'text/html; charset=utf-8',
-    // The dashboard must never render inside anyone's iframe.
-    'Content-Security-Policy': "frame-ancestors 'none'",
-    'X-Frame-Options': 'DENY',
+    'Content-Security-Policy': `frame-ancestors ${FRAME_ANCESTORS || "'none'"}`,
+    // X-Frame-Options cannot say "this origin only", so when an
+    // ancestor is allowed the CSP directive speaks alone. Every
+    // browser that honours X-Frame-Options honours frame-ancestors.
+    ...(FRAME_ANCESTORS ? {} : { 'X-Frame-Options': 'DENY' }),
   });
   res.end(page);
 }
@@ -1599,8 +1608,17 @@ function createAdminRouter(ctx) {
     });
   }
 
-  // Returns true when the request was handled.
+  // Returns true when the request was handled. The X-Embedded header
+  // is how an embedding shell's proxy asks for pages without our own
+  // chrome - a header rather than a query parameter so it survives
+  // every link and form post without URL churn. It hides a menu and
+  // nothing more; every permission check runs exactly as before, so a
+  // visitor sending it by hand merely tidies their own view.
   async function handle(req, res, url) {
+    return withEmbedded(req.headers['x-embedded'] === '1', () => route(req, res, url));
+  }
+
+  async function route(req, res, url) {
     const p = url.pathname;
     if (!p.startsWith('/admin')) return false;
     const domain = (process.env.DOMAIN || 'localhost').trim();
