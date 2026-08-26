@@ -22,6 +22,23 @@ function esc(value) {
     .replaceAll("'", '&#39;');
 }
 
+// Whether the page being built right now was asked for by an embedding
+// shell. It travels with the request rather than through every page
+// function's arguments, and AsyncLocalStorage rather than a module
+// variable because the router awaits: two requests in flight would
+// otherwise read each other's answer.
+const { AsyncLocalStorage } = require('async_hooks');
+const requestScope = new AsyncLocalStorage();
+
+function withEmbedded(embedded, run) {
+  return requestScope.run({ embedded }, run);
+}
+
+function isEmbedded() {
+  const store = requestScope.getStore();
+  return Boolean(store && store.embedded);
+}
+
 const ICONS = {
   trash: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6h18"/><path d="M8 6V4a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2"/><path d="M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/><path d="M10 11v6M14 11v6"/></svg>',
   tick: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12.5l5 5L20 6.5"/></svg>',
@@ -60,7 +77,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.15.2">
+<link rel="stylesheet" href="/css/site.css?v=0.15.3">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -825,8 +842,14 @@ document.addEventListener('click', (e) => {
 });
 `;
 
-function adminPage({ title, body, active = '', authed = true }) {
-  const nav = authed
+// Some operators run the dashboard inside their own shell - a homelab
+// wall, an agency panel, somebody's portal. Drawing our own top bar
+// inside a page that already has navigation is chrome within chrome, so
+// an embedded request gets the content and nothing around it. What is
+// dropped is decoration; what carries information - page titles, the
+// in-page section rails, the demo notice - stays.
+function adminPage({ title, body, active = '', authed = true, embedded = isEmbedded() }) {
+  const nav = authed && !embedded
     ? `<nav class="admin-nav">
         ${[['', 'Dashboard'], ['podcast', 'Podcast'], ['hosts', 'Hosts'], ['episodes', 'Shows'], ['look', 'Look'], ['stats', 'Stats'], ['account', 'Account']]
           .map(([slug, label]) => `<a class="admin-link${active === (slug || 'dashboard') || (active === '' && slug === '') ? ' current' : ''}" href="/admin${slug ? '/' + slug : ''}">${label}</a>`)
@@ -848,20 +871,25 @@ function adminPage({ title, body, active = '', authed = true }) {
 <title>${esc(title)} - FOSSCast admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.15.2">
+<link rel="stylesheet" href="/css/site.css?v=0.15.3">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
-<body class="admin">
+<body class="admin${embedded ? ' embedded' : ''}">
 ${process.env.DEMO_MODE === '1' ? '<div class="demo-bar">Demo instance: you can look around, but nothing can be changed.</div>' : ''}
-<header class="top">
+${embedded ? '' : `<header class="top">
   <a class="wordmark" href="/admin" aria-label="FOSSCast admin">
     <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     <span>FOSSCast <span class="admin-tag">admin</span></span>
   </a>
   ${nav}
-</header>
+</header>`}
 <main class="wrap">
 ${body}
+${embedded && authed ? `<footer class="embedded-out">
+  <form method="post" action="/admin/logout" class="logout-form">
+    <button class="link-button" type="submit">Sign out of FOSSCast</button>
+  </form>
+</footer>` : ''}
 </main>
 <script>${ADMIN_SCRIPT}</script>
 </body>
@@ -869,4 +897,4 @@ ${body}
 `;
 }
 
-module.exports = { esc, publicPage, adminPage, ICONS };
+module.exports = { esc, publicPage, adminPage, ICONS, withEmbedded, isEmbedded };

@@ -4,6 +4,14 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- The dashboard can live inside your own shell. Set `FRAME_ANCESTORS`
+  to the one origin allowed to frame the admin - a homelab wall, an
+  agency panel, a portal - and it may; unset means what it always
+  meant: nobody. Separately, a request carrying `X-Embedded: 1`
+  (inject it from your reverse proxy) renders admin pages without
+  FOSSCast's own top bar, since the shell around the frame already
+  has navigation. Content, page titles, the demo notice and a
+  sign-out link all stay, and every permission check runs unchanged.
 - Tests that hold FOSSCast to standing on its own: no source file may
   mention a hosted service, the one-file install may reference nothing
   but the published image, no page may fetch anything from a third
