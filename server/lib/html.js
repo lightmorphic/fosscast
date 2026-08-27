@@ -95,7 +95,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.15.4">
+<link rel="stylesheet" href="/css/site.css?v=0.15.6">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -248,6 +248,25 @@ document.addEventListener('click', function (e) {
 // The tiny bit of client behaviour the admin needs: two-click delete
 // confirmation, reveal/copy for secrets. No framework, no build step.
 const ADMIN_SCRIPT = `
+// A chart is drawn in its own units and then stretched sideways to
+// fill the card. Text stretches with it, so a label goes wide and flat
+// and a figure on top of a column becomes unreadable. Measure how much
+// wider than taller the stretch is and give the text the inverse.
+function fitChartText() {
+  document.querySelectorAll('svg.chart').forEach(function (svg) {
+    var box = svg.viewBox && svg.viewBox.baseVal;
+    var w = svg.clientWidth, h = svg.clientHeight;
+    if (!box || !box.width || !box.height || !w || !h) return;
+    svg.style.setProperty('--tx', String((h / box.height) / (w / box.width)));
+  });
+}
+fitChartText();
+addEventListener('resize', fitChartText);
+// A chart inside a frame is often measured before the frame has
+// settled on its width; one more pass costs nothing and catches it.
+addEventListener('load', fitChartText);
+`.trim() + `
+
 
 // Tooltips: one bubble, appended to the body, positioned in viewport
 // coordinates. Anything drawn inside its trigger can be clipped by a
@@ -890,7 +909,7 @@ function adminPage({ title, body, active = '', authed = true, embedded = isEmbed
 <title>${esc(title)} - ${esc(BRAND)} admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.15.4">
+<link rel="stylesheet" href="/css/site.css?v=0.15.6">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin${embedded ? ' embedded' : ''}">

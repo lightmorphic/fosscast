@@ -1214,6 +1214,14 @@ details.panel[open] > summary { margin-bottom: 0.75rem; }
 .chart-base { stroke: var(--border); stroke-width: 0.4; vector-effect: non-scaling-stroke; }
 .chart-tick { font-size: 3px; fill: var(--muted-fg); text-anchor: middle; }
 .chart-value { font-size: 3.2px; fill: var(--fg); font-weight: 600; text-anchor: middle; }
+/* These charts stretch to whatever width they are given, which is what
+   makes the bars fill the card - and what flattened every label and
+   figure on them, worse the wider the card got. The stretch is undone
+   for the text alone, by the factor the script measures. */
+.chart text { transform-box: fill-box; transform-origin: center; transform: scaleX(var(--tx, 1)); }
+/* The same stretch turns a 1-unit corner radius into a lozenge. Narrow
+   the horizontal radius by the same factor so a corner is a corner. */
+.chart rect { rx: calc(1px * var(--tx, 1)); ry: 1px; }
 .heatmap { height: 150px; }
 
 .donut-wrap { display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap; }
