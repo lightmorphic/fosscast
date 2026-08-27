@@ -750,7 +750,7 @@ body.embedded .wrap { padding-top: 0.5rem; }
 }
 .foot-brand .mark { width: 1.25rem; height: 1.25rem; color: var(--accent); }
 .foot-brand:hover { color: var(--fg); }
-.site-foot .foot-own { flex: 1; text-align: center; min-width: 10rem; }
+.site-foot .foot-own { flex: 1; text-align: left; min-width: 10rem; }
 .foot-lm { display: inline-flex; line-height: 0; opacity: 0.85; }
 .foot-lm:hover { opacity: 1; }
 /* Shown at the size it was drawn, 32px, so the animation stays crisp.
