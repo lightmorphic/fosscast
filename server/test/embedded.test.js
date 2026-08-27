@@ -17,6 +17,7 @@ const PORT = 4600 + Math.floor(Math.random() * 100);
 const PORT2 = 4700 + Math.floor(Math.random() * 100);
 const PASSWORD = 'a long embedded password';
 const children = [];
+const dataDirs = {};
 
 async function until(fn, ms = 5000) {
   const end = Date.now() + ms;
@@ -28,6 +29,7 @@ async function until(fn, ms = 5000) {
 
 function start(port, extraEnv = {}) {
   const data = fs.mkdtempSync(path.join(os.tmpdir(), 'fosscast-embedded-'));
+  dataDirs[port] = data;
   const child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
     env: {
       ...process.env,
@@ -110,4 +112,24 @@ test('embedding changes nothing about who gets in', async () => {
   });
   assert.equal(res.status, 303);
   assert.match(res.headers.get('location'), /login/);
+});
+
+test('a sign-in link can say where it was going, within reason', async () => {
+  const { signLoginLink } = require('../lib/auth');
+  const dir = dataDirs[PORT];
+  const settings = JSON.parse(fs.readFileSync(path.join(dir, 'settings.json'), 'utf8'));
+  const users = JSON.parse(fs.readFileSync(path.join(dir, 'users.json'), 'utf8'));
+  const mint = (next) => `http://127.0.0.1:${PORT}/admin/session`
+    + `?token=${encodeURIComponent(signLoginLink(users[0].id, settings.secret))}`
+    + (next ? `&next=${encodeURIComponent(next)}` : '');
+
+  const wanted = await fetch(mint('/admin/stats'), { redirect: 'manual' });
+  assert.equal(wanted.headers.get('location'), '/admin/stats');
+
+  // Anywhere that is not a local admin page is quietly ignored, so a
+  // link that signs somebody in can never carry them off the site.
+  for (const bad of ['https://evil.example/x', '//evil.example/x', '/wp-admin']) {
+    const res = await fetch(mint(bad), { redirect: 'manual' });
+    assert.equal(res.headers.get('location'), '/admin', `refused ${bad}`);
+  }
 });

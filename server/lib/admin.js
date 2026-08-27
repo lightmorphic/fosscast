@@ -1628,7 +1628,16 @@ function createAdminRouter(ctx) {
       used.push({ jti: parsed.jti, exp: Date.now() + 20 * 60 * 1000 });
       store.save('login-nonces', used);
       const session = auth.signSession(parsed.userId, settings().secret);
-      redirect(res, '/admin', { 'Set-Cookie': sessionCookie(req, session, 7 * 24 * 3600) });
+      // A shell that sends somebody here was showing them a particular
+      // page, and landing them on the dashboard instead loses the thing
+      // they clicked. `next` says where they were going. Only a local
+      // admin path is honoured: anything else - another host, a
+      // protocol-relative address, a path outside /admin - is ignored
+      // rather than argued with, so this can never become an open
+      // redirect wearing a session cookie.
+      const asked = String(url.searchParams.get('next') || '');
+      const next = /^\/admin(\/[A-Za-z0-9/_-]*)?$/.test(asked) ? asked : '/admin';
+      redirect(res, next, { 'Set-Cookie': sessionCookie(req, session, 7 * 24 * 3600) });
       return true;
     }
 
