@@ -415,7 +415,7 @@ function hostsPage(show, domain) {
     icon: showArtWeb(show),
     nav: siteNav(show, 'hosts'),
     theme: show.theme,
-    footer: (show.theme || {}).footer || '',
+    footer: (show.theme || {}).footer || `© ${show.name} ${new Date().getFullYear()}`,
     body: `
   <section class="panel hero hosts-hero">
     <h1>Hosts</h1>
@@ -437,7 +437,7 @@ function hostPage(show, host, domain) {
     icon: showArtWeb(show),
     nav: siteNav(show, 'hosts'),
     theme: show.theme,
-    footer: (show.theme || {}).footer || '',
+    footer: (show.theme || {}).footer || `© ${show.name} ${new Date().getFullYear()}`,
     body: `
   <article class="panel host-page">
     <div class="host-side">
@@ -513,7 +513,7 @@ function showPage(show, allEpisodes, domain) {
     icon: showArtWeb(show),
     nav: siteNav(show, 'home'),
     theme: show.theme,
-    footer: (show.theme || {}).footer || '',
+    footer: (show.theme || {}).footer || `© ${show.name} ${new Date().getFullYear()}`,
     body: `
   ${bannerMarkup(show)}
   <section class="panel hero show-hero">
@@ -553,7 +553,7 @@ function episodePage(show, episode, domain) {
     icon: showArtWeb(show),
     nav: siteNav(show),
     theme: show.theme,
-    footer: (show.theme || {}).footer || '',
+    footer: (show.theme || {}).footer || `© ${show.name} ${new Date().getFullYear()}`,
     body: `
   <article class="panel episode-page">
     <div class="episode-head">

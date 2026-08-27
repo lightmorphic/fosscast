@@ -101,11 +101,12 @@ test('the public footer follows the brand too', async () => {
   assert.ok(plain.includes('<span>FOSSCast</span>'));
 
   const branded = await (await fetch(`http://127.0.0.1:${BRANDED}/shows`)).text();
+  // Renamed, the corner mark carries the operator's name and address,
+  // and FOSSCast's own roundel and address are nowhere on the page.
   assert.ok(branded.includes('https://example.com'));
-  assert.ok(branded.includes(`<span>${BRAND}</span>`));
-  // The roundel is FOSSCast's own: a renamed instance shows a name,
-  // never somebody else's logo.
+  assert.ok(branded.includes(`alt="${BRAND}"`));
   assert.ok(!branded.includes('https://fosscast.org'));
+  assert.ok(!branded.includes('https://lightmorphic.com'));
   assert.ok(!branded.includes('M6.3 17.7a8 8 0 0 1 0-11.4'));
 });
 

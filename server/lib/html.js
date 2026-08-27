@@ -13,6 +13,12 @@ const LM_MARK = fs.existsSync(path.join(WEB_DIR, 'img', 'lightmorphic-mark.gif')
   ? '/img/lightmorphic-mark.gif'
   : '/img/lightmorphic-mark.webp';
 
+// The mark in the footer's right-hand corner. An operator running
+// this for other people puts their own there - a path, or a data URI
+// so nothing has to be fetched from anybody else. Unset, it is
+// Lightmorphic's, as it has always been.
+const BRAND_MARK = (process.env.BRAND_MARK || '').trim() || LM_MARK;
+
 function esc(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -104,16 +110,16 @@ ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-th
 <main class="wrap">
 ${body}
 </main>
-${(look && look.hideFooter) && !footer ? '' : `<footer class="foot site-foot">
-  ${(look && look.hideFooter) ? '' : `<a class="foot-brand" href="${esc(BRAND_URL)}" target="_blank" rel="noopener noreferrer" translate="no">
-    ${BRANDED ? '' : '<svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'}
+<footer class="foot site-foot">
+  ${BRANDED ? '' : `<a class="foot-brand" href="${esc(BRAND_URL)}" target="_blank" rel="noopener noreferrer" translate="no">
+    <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
     <span>${esc(BRAND)}</span>
   </a>`}
   ${footer ? `<p class="foot-own">${esc(footer)}</p>` : ''}
-  ${(look && look.hideFooter) ? '' : `<a class="foot-lm" href="https://lightmorphic.com" target="_blank" rel="noopener noreferrer" aria-label="Lightmorphic">
-    <img src="${LM_MARK}" alt="Lightmorphic" width="32" height="32" loading="lazy">
-  </a>`}
-</footer>`}
+  <a class="foot-lm" href="${esc(BRANDED ? BRAND_URL : 'https://lightmorphic.com')}" target="_blank" rel="noopener noreferrer" aria-label="${esc(BRANDED ? BRAND : 'Lightmorphic')}">
+    <img src="${BRAND_MARK}" alt="${esc(BRANDED ? BRAND : 'Lightmorphic')}" width="32" height="32" loading="lazy">
+  </a>
+</footer>
 <script>
 
 // Tooltips: one bubble, appended to the body, positioned in viewport
