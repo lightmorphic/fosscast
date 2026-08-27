@@ -108,3 +108,10 @@ test('the public footer follows the brand too', async () => {
   assert.ok(!branded.includes('https://fosscast.org'));
   assert.ok(!branded.includes('M6.3 17.7a8 8 0 0 1 0-11.4'));
 });
+
+test('a renamed dashboard does not wear the FOSSCast roundel', async () => {
+  const plain = await dashboard(PLAIN);
+  assert.ok(plain.includes('M6.3 17.7a8 8 0 0 1 0-11.4'), 'unbranded keeps its own mark');
+  const branded = await dashboard(BRANDED);
+  assert.ok(!branded.includes('M6.3 17.7a8 8 0 0 1 0-11.4'));
+});
