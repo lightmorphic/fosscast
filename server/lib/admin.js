@@ -1450,10 +1450,14 @@ function createAdminRouter(ctx) {
     const audio = /^https?:\/\//i.test(episode.mediaUrl || '')
       ? episode.mediaUrl
       : `https://${domain}${episode.mediaUrl || ''}`;
+    // No `origin` here on purpose. The reply address is whatever host
+    // this dashboard is actually being served at, which the server
+    // cannot know: an instance may answer at its own domain and at
+    // another name at the same time, and naming the wrong one means the
+    // browser silently drops the answer. The page adds its own.
     const toolUrl = tool
       ? `${tool.url}${tool.url.includes('?') ? '&' : '?'}episode=${encodeURIComponent(episode.id)}`
         + `&audio=${encodeURIComponent(audio)}&title=${encodeURIComponent(episode.title)}`
-        + `&origin=${encodeURIComponent(`https://${domain}`)}`
       : '';
 
     // An episode whose transcript is a file we cannot read back as text -
