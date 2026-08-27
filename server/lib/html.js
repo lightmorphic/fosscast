@@ -95,7 +95,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.15.6">
+<link rel="stylesheet" href="/css/site.css?v=0.16.0">
 ${look ? require('./theme').styleTag(look) : ''}
 ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
 </head>
@@ -672,6 +672,68 @@ document.addEventListener('change', (e) => {
   });
 })();
 
+// The transcript panel. Two jobs: an uploaded file has to be adopted by
+// the episode and the page reloaded so the box shows what was uploaded,
+// and - only where an instance has been given a transcribing tool - the
+// tool is opened in a frame and its answer accepted.
+//
+// The origin check is the whole security of the second half. A page
+// that takes text from whoever posts at it is a page anybody can write
+// on, so the message must come from the exact origin this instance was
+// configured with AND from the frame we opened ourselves. Everything
+// else is dropped without a word.
+(function transcript() {
+  var panel = document.getElementById('transcript-panel');
+  if (!panel) return;
+  var action = panel.dataset.action;
+
+  var uploaded = document.getElementById('transcriptPath');
+  if (uploaded) {
+    uploaded.addEventListener('input', function () {
+      if (!uploaded.value) return;
+      var body = new URLSearchParams();
+      body.set('transcript', uploaded.value);
+      body.set('live', '1');
+      fetch(action, { method: 'POST', body: body })
+        .then(function () { location.reload(); });
+    });
+  }
+
+  var open = document.getElementById('transcribe-open');
+  var slot = document.getElementById('transcribe-frame');
+  var box = document.getElementById('transcriptText');
+  if (!open || !slot || !panel.dataset.origin) return;
+
+  var shut = 'Transcribe this episode';
+  open.addEventListener('click', function () {
+    if (slot.firstChild) {
+      slot.textContent = '';
+      open.textContent = shut;
+      return;
+    }
+    var frame = document.createElement('iframe');
+    frame.className = 'transcribe-frame';
+    frame.src = panel.dataset.tool;
+    frame.title = 'Transcribe this episode';
+    slot.appendChild(frame);
+    open.textContent = 'Close the transcriber';
+  });
+
+  window.addEventListener('message', function (e) {
+    if (e.origin !== panel.dataset.origin) return;
+    var frame = slot.firstChild;
+    if (!frame || e.source !== frame.contentWindow) return;
+    var d = e.data;
+    if (!d || d.type !== 'transcript') return;
+    if (d.episode !== panel.dataset.episode) return;
+    if (typeof d.text !== 'string' || !d.text.trim()) return;
+    box.value = d.text;
+    // The autosave listens on the form, so saying so is what stores it.
+    box.dispatchEvent(new Event('input', { bubbles: true }));
+    box.scrollIntoView({ block: 'nearest' });
+  });
+})();
+
 // The Look page: swatches, live labels, fields that appear only when
 // they apply, and a preview that is the real page rendered by the
 // server with the pending theme - so it cannot drift from the result.
@@ -909,7 +971,7 @@ function adminPage({ title, body, active = '', authed = true, embedded = isEmbed
 <title>${esc(title)} - ${esc(BRAND)} admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.15.6">
+<link rel="stylesheet" href="/css/site.css?v=0.16.0">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin${embedded ? ' embedded' : ''}">

@@ -20,6 +20,7 @@ const { APPS, SUPPORT, SOCIAL, showPage, prefixed } = require('./public');
 const themes = require('./theme');
 const charts = require('./charts');
 const archiveorg = require('./archiveorg');
+const transcripts = require('./transcripts');
 
 // This edition manages one podcast.
 const MAX_SHOWS = 1;
@@ -1431,6 +1432,75 @@ function createAdminRouter(ctx) {
   }
 
 
+  // The transcript panel on an episode. The words live in a file beside
+  // the audio - that is what the public page links to and what the feed
+  // advertises - and this box is that file, read out and parsed back.
+  // There is no second copy anywhere, so there is nothing to fall out of
+  // step.
+  //
+  // The "transcribe this" control appears only when somebody has named a
+  // tool with TRANSCRIBE_URL. Unset, this panel is a text box, a switch
+  // and a file picker, and says nothing about a tool that does not exist.
+  function transcriptPanel(episode, show) {
+    const stored = episode.transcript ? transcripts.read(mediaDir, episode.transcript) : null;
+    const editable = stored !== null;
+    const text = editable ? transcripts.toLines(stored) : '';
+    const tool = transcripts.transcriber();
+    const domain = (process.env.DOMAIN || 'localhost').trim();
+    const audio = /^https?:\/\//i.test(episode.mediaUrl || '')
+      ? episode.mediaUrl
+      : `https://${domain}${episode.mediaUrl || ''}`;
+    const toolUrl = tool
+      ? `${tool.url}${tool.url.includes('?') ? '&' : '?'}episode=${encodeURIComponent(episode.id)}`
+        + `&audio=${encodeURIComponent(audio)}&title=${encodeURIComponent(episode.title)}`
+        + `&origin=${encodeURIComponent(`https://${domain}`)}`
+      : '';
+
+    // An episode whose transcript is a file we cannot read back as text -
+    // somebody's uploaded .srt or .json - is not silently overwritten.
+    // It is named, and the box says what typing in it would do.
+    const foreign = episode.transcript && !editable;
+
+    return `<section class="panel" id="transcript-panel"
+      data-action="/admin/episodes/${esc(episode.id)}/transcript"
+      data-episode="${esc(episode.id)}"${tool ? `
+      data-tool="${esc(toolUrl)}" data-origin="${esc(tool.origin)}"` : ''}>
+      <h2>Transcript</h2>
+      <p class="hint">Podcast apps show this, search engines read it, and
+      people who would rather read than listen need it. Fix the words the
+      way you would fix a typo - the timings in brackets stay where they
+      are and keep the file in step with the audio.</p>
+      ${tool ? `<p class="hint">Nothing is uploaded: the tool below works in
+      this browser, on this machine, and hands the words straight back to
+      this box.</p>
+      <button class="btn-secondary" type="button" id="transcribe-open">Transcribe this episode</button>
+      <div id="transcribe-frame"></div>` : ''}
+      ${foreign ? `<p class="hint">This episode's transcript is
+      <code>${esc(episode.transcript)}</code>, which is not a format this box
+      reads. Typing here and saving would replace it.</p>` : ''}
+      <form method="post" action="/admin/episodes/${esc(episode.id)}/transcript" data-autosave>
+        <label for="transcriptText">The words</label>
+        <textarea id="transcriptText" name="text" rows="14" spellcheck="true"
+          placeholder="[0:00] Anything you type here becomes the episode's transcript.">${esc(text)}</textarea>
+        <label class="switch-label">
+          <input type="checkbox" name="public" value="1" class="switch-input"${episode.transcriptPublic ? ' checked' : ''}>
+          <span class="switch" aria-hidden="true"></span>
+          <span>Show the words on the episode's own page</span>
+        </label>
+        <p class="hint">Off, the transcript is still offered to podcast
+        apps and still has its own address - a transcript is a public
+        thing either way. This decides whether the episode's page also
+        prints it underneath the player.</p>
+        <p class="save-state transcript-save" aria-live="polite"></p>
+      </form>
+      <label for="transcriptFile">Or upload one you already have (.vtt, .srt, .txt, .json)</label>
+      <input id="transcriptFile" type="file" accept=".vtt,.srt,.txt,.json,.html"
+        data-upload data-show="${esc(show.slug)}" data-target="transcriptPath" data-status="tr-status">
+      <p class="hint" id="tr-status">${episode.transcript ? `Current: ${esc(episode.transcript)}` : 'None yet.'}</p>
+      <input type="hidden" id="transcriptPath" value="">
+    </section>`;
+  }
+
   // The Internet Archive panel on an episode. It knows four situations:
   // no keys yet, media that lives somewhere else already, ready to go,
   // and already there.
@@ -1498,16 +1568,13 @@ function createAdminRouter(ctx) {
           <p class="hint" id="epart-status">${episode.artwork ? `Current: ${esc(episode.artwork)}` : "Using the podcast's artwork."}</p>
           <input type="hidden" id="epArtwork" name="artwork" value="${esc(episode.artwork || '')}">
           ${episode.artwork ? `<img class="art-preview" src="${esc(episode.artwork)}" alt="Episode artwork" width="120" height="120">` : ''}
-          <label for="transcriptFile">Transcript (.vtt, .srt, .txt or .json; podcast apps show it)</label>
-          <input id="transcriptFile" type="file" accept=".vtt,.srt,.txt,.json,.html" data-upload data-show="${esc(show.slug)}" data-target="transcript" data-status="tr-status">
-          <p class="hint" id="tr-status">${episode.transcript ? `Current: ${esc(episode.transcript)}` : 'None yet.'}</p>
-          <input type="hidden" id="transcript" name="transcript" value="${esc(episode.transcript || '')}">
           <label for="chapters">Chapters (one per line: HH:MM:SS Title)</label>
           <textarea id="chapters" name="chapters" rows="5" placeholder="00:00 Intro&#10;05:30 The main topic">${esc(formatChapters(episode.chapters))}</textarea>
           <label class="check-label"><input type="checkbox" name="draft" value="1" class="check"${episode.draft ? ' checked' : ''}> Draft (hidden from the public site and feed)</label>
           <div class="save-bar"><span class="save-state" aria-live="polite"></span></div>
         </form>
       </section>
+      ${transcriptPanel(episode, show)}
       ${archivePanel(episode)}`,
     });
   }
@@ -2120,7 +2187,7 @@ function createAdminRouter(ctx) {
       }
     }
 
-    const episodeMatch = p.match(/^\/admin\/episodes\/([a-f0-9-]+)(\/delete|\/archive)?$/);
+    const episodeMatch = p.match(/^\/admin\/episodes\/([a-f0-9-]+)(\/delete|\/archive|\/transcript)?$/);
     if (episodeMatch) {
       const episode = episodes().find((e) => e.id === episodeMatch[1]);
       if (!episode) { redirect(res, '/admin/episodes'); return true; }
@@ -2135,6 +2202,44 @@ function createAdminRouter(ctx) {
         html(res, episodeEditPage(episode, show));
         return true;
       }
+      // The transcript, saved as a file rather than as a field. The
+      // episode record keeps only the path, exactly as it did when the
+      // only way to get one here was to upload it - so the public link
+      // and the feed tag go on working without knowing any of this
+      // happened.
+      if (episodeMatch[2] === '/transcript' && req.method === 'POST') {
+        if (DEMO) return sendJson(res, 403, { error: 'demo instance is read-only' });
+        // The transcript is filed under the show's slug, so an episode
+        // with no show left is nowhere to put one. Bounce rather than
+        // throw: a save route that 500s loses somebody's typing.
+        if (!show) { redirect(res, '/admin/episodes'); return true; }
+        // A transcript is far larger than a form: forty-five minutes of
+        // speech is tens of kilobytes of words, and the default body
+        // limit is a form's limit.
+        const form = new URLSearchParams((await readBody(req, 4 * 1024 * 1024)).toString());
+        const list = episodes();
+        const entry = list.find((e) => e.id === episode.id);
+
+        // An uploaded file speaks for itself: adopt the path and leave
+        // its contents alone, whatever format they are in.
+        const uploaded = String(form.get('transcript') || '').trim();
+        if (uploaded) {
+          if (!/^\/media\/[^/]+\/[^/]+$/.test(uploaded)) return sendJson(res, 400, { error: 'not a media path' });
+          entry.transcript = uploaded;
+        } else {
+          const written = transcripts.write(mediaDir, show.slug, entry.slug || entry.id,
+            form.get('text') || '', entry.title);
+          if (written) entry.transcript = written;
+          else delete entry.transcript;
+          entry.transcriptPublic = form.get('public') === '1';
+        }
+        if (!entry.transcript) delete entry.transcriptPublic;
+        store.save('episodes', list);
+        if (form.get('live')) { noContent(res); return true; }
+        redirect(res, `/admin/episodes/${entry.id}`);
+        return true;
+      }
+
       // Start an upload to the Internet Archive, and answer with where it
       // has got to. The page asks again every couple of seconds rather
       // than holding a request open for the length of the transfer.
@@ -2169,8 +2274,6 @@ function createAdminRouter(ctx) {
         const artwork = String(form.get('artwork') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(artwork)) entry.artwork = artwork;
         else if (!artwork) delete entry.artwork;
-        const transcript = String(form.get('transcript') || '').trim();
-        entry.transcript = /^\/media\/[^/]+\/[^/]+$/.test(transcript) ? transcript : entry.transcript;
         entry.chapters = parseChapters(form.get('chapters') || '');
         store.save('episodes', list);
         measure(entry.id);
