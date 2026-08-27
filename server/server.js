@@ -11,6 +11,7 @@ const { createAdminRouter } = require('./lib/admin');
 const { Stats } = require('./lib/stats');
 const media = require('./lib/media');
 const publicSite = require('./lib/public');
+const transcripts = require('./lib/transcripts');
 
 const HTTP_PORT = Number(process.env.HTTP_PORT || 3100);
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
@@ -214,6 +215,12 @@ function route(req, res) {
         }
       }
     }
+    // Published media is public by definition, and saying so lets a
+    // browser read it: an embedded player on somebody else's page, a
+    // waveform drawn in a tab, a transcriber working on the podcaster's
+    // own machine. Without this a script can play the file but never
+    // look at it, which is a distinction no listener benefits from.
+    res.setHeader('Access-Control-Allow-Origin', '*');
     return media.serveMedia(req, res, MEDIA_DIR, p);
   }
 
@@ -356,7 +363,14 @@ function route(req, res) {
     const episode = publicSite.visible(store.load('episodes', []).filter((e) => e.showId === show.id))
       .find((e) => publicSite.episodeSlug(e) === wanted || e.id === wanted);
     if (!episode) return send(res, 404, 'not found');
-    return sendHtml(res, publicSite.episodePage(show, episode, DOMAIN));
+    // The transcript is a file, so reading it is the server's job; the
+    // page is handed cues and does no file work of its own. Only when
+    // the episode has been switched to show it, so an instance that has
+    // not is doing no extra reading at all.
+    const said = episode.transcriptPublic && episode.transcript
+      ? transcripts.parseCues(transcripts.read(MEDIA_DIR, episode.transcript) || '')
+      : null;
+    return sendHtml(res, publicSite.episodePage(show, episode, DOMAIN, said));
   }
 
   if (p.startsWith('/css/') || p.startsWith('/fonts/') || p.startsWith('/img/') || p.startsWith('/js/') || p.startsWith('/presets/')) {

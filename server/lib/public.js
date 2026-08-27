@@ -529,8 +529,23 @@ function showPage(show, allEpisodes, domain) {
   });
 }
 
-function episodePage(show, episode, domain) {
+// `transcript` is the episode's transcript already read off disk and
+// parsed into cues - the page does no file work of its own. Empty, or
+// the switch off, and the page is exactly what it always was.
+function episodePage(show, episode, domain, transcript = null) {
   const art = artFor(episode, show);
+  const said = episode.transcriptPublic && transcript && transcript.length
+    ? `<section class="panel transcript">
+        <h2>Transcript</h2>
+        <p class="hint">Machine-made and corrected by hand, so it may
+        still have the odd word wrong.</p>
+        <div class="transcript-body">
+          ${transcript.map((c) => (c.at == null
+            ? `<p>${esc(c.text)}</p>`
+            : `<p><span class="transcript-time">${esc(clock(c.at))}</span> ${esc(c.text)}</p>`)).join('')}
+        </div>
+      </section>`
+    : '';
   const chapters = (episode.chapters || []).length
     ? `<section class="panel">
         <h2>Chapters</h2>
@@ -572,8 +587,16 @@ function episodePage(show, episode, domain) {
       <a href="/embed/${esc(episode.id)}">Embed this episode</a>
     </p>
   </article>
-  ${chapters}`,
+  ${chapters}
+  ${said}`,
   });
+}
+
+function clock(seconds) {
+  const total = Math.max(0, Math.floor(seconds));
+  const h = Math.floor(total / 3600);
+  const m = String(Math.floor((total % 3600) / 60)).padStart(h ? 2 : 1, '0');
+  return `${h ? `${h}:` : ''}${m}:${String(total % 60).padStart(2, '0')}`;
 }
 
 function escXml(value) {
