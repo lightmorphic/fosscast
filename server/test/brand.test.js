@@ -54,7 +54,7 @@ async function dashboard(port) {
 
 before(async () => {
   start(PLAIN);
-  start(BRANDED, { BRAND_NAME: BRAND });
+  start(BRANDED, { BRAND_NAME: BRAND, BRAND_URL: 'https://example.com' });
   await until(async () => {
     for (const p of [PLAIN, BRANDED]) {
       const res = await fetch(`http://127.0.0.1:${p}/healthz`);
@@ -93,4 +93,18 @@ test('the feed still says what the software actually is', async () => {
   assert.equal(res.status, 200);
   const source = fs.readFileSync(path.join(__dirname, '..', 'lib', 'public.js'), 'utf8');
   assert.ok(source.includes('<generator>FOSSCast</generator>'));
+});
+
+test('the public footer follows the brand too', async () => {
+  const plain = await (await fetch(`http://127.0.0.1:${PLAIN}/shows`)).text();
+  assert.ok(plain.includes('https://fosscast.org'));
+  assert.ok(plain.includes('<span>FOSSCast</span>'));
+
+  const branded = await (await fetch(`http://127.0.0.1:${BRANDED}/shows`)).text();
+  assert.ok(branded.includes('https://example.com'));
+  assert.ok(branded.includes(`<span>${BRAND}</span>`));
+  // The roundel is FOSSCast's own: a renamed instance shows a name,
+  // never somebody else's logo.
+  assert.ok(!branded.includes('https://fosscast.org'));
+  assert.ok(!branded.includes('M6.3 17.7a8 8 0 0 1 0-11.4'));
 });

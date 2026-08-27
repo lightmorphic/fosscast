@@ -39,6 +39,12 @@ function withEmbedded(embedded, run) {
 // still FOSSCast, its source still says so and its feed still declares
 // it; this is the label on the door, not a fork. Unset, it is FOSSCast.
 const BRAND = (process.env.BRAND_NAME || '').trim() || 'FOSSCast';
+// Where the footer mark points, and whether there is a built-in mark to
+// draw at all. An operator who has put their own name on the software
+// gets their name in the footer; the FOSSCast roundel belongs to
+// FOSSCast, so it is drawn only when nobody has renamed anything.
+const BRANDED = Boolean((process.env.BRAND_NAME || '').trim());
+const BRAND_URL = (process.env.BRAND_URL || '').trim() || 'https://fosscast.org';
 
 function isEmbedded() {
   const store = requestScope.getStore();
@@ -99,9 +105,9 @@ ${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-th
 ${body}
 </main>
 ${(look && look.hideFooter) && !footer ? '' : `<footer class="foot site-foot">
-  ${(look && look.hideFooter) ? '' : `<a class="foot-brand" href="https://fosscast.org" target="_blank" rel="noopener noreferrer" translate="no">
-    <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    <span>FOSSCast</span>
+  ${(look && look.hideFooter) ? '' : `<a class="foot-brand" href="${esc(BRAND_URL)}" target="_blank" rel="noopener noreferrer" translate="no">
+    ${BRANDED ? '' : '<svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'}
+    <span>${esc(BRAND)}</span>
   </a>`}
   ${footer ? `<p class="foot-own">${esc(footer)}</p>` : ''}
   ${(look && look.hideFooter) ? '' : `<a class="foot-lm" href="https://lightmorphic.com" target="_blank" rel="noopener noreferrer" aria-label="Lightmorphic">
