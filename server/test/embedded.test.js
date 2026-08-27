@@ -89,7 +89,7 @@ test('a plain request wears the full chrome', async () => {
   assert.ok(!page.includes('body class="admin embedded"'));
 });
 
-test('X-Embedded drops the top bar but keeps content and a way out', async () => {
+test('X-Embedded drops the top bar and leaves the content', async () => {
   const cookie = await login(`http://127.0.0.1:${PORT}`);
   const page = await (await fetch(`http://127.0.0.1:${PORT}/admin`, {
     headers: { cookie, 'X-Embedded': '1' },
@@ -97,7 +97,10 @@ test('X-Embedded drops the top bar but keeps content and a way out', async () =>
   assert.ok(!page.includes('<header class="top">'));
   assert.ok(!page.includes('class="admin-nav"'));
   assert.ok(page.includes('body class="admin embedded"'));
-  assert.ok(page.includes('Sign out of FOSSCast'));
+  // The page itself survives; only what wrapped it is gone.
+  assert.ok(page.includes('<main class="wrap">'));
+  // Signing out belongs to the shell around the frame, not to us.
+  assert.ok(!page.includes('/admin/logout'));
 });
 
 test('embedding changes nothing about who gets in', async () => {
