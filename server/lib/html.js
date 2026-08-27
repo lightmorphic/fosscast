@@ -713,7 +713,11 @@ document.addEventListener('change', (e) => {
     }
     var frame = document.createElement('iframe');
     frame.className = 'transcribe-frame';
-    frame.src = panel.dataset.tool;
+    // Where to send the answer: this page's own address, whichever of
+    // the instance's names it happens to be open at.
+    frame.src = panel.dataset.tool
+      + (panel.dataset.tool.indexOf('?') === -1 ? '?' : '&')
+      + 'origin=' + encodeURIComponent(location.origin);
     frame.title = 'Transcribe this episode';
     slot.appendChild(frame);
     open.textContent = 'Close the transcriber';
