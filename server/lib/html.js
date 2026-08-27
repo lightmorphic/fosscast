@@ -865,7 +865,8 @@ document.addEventListener('click', (e) => {
 // inside a page that already has navigation is chrome within chrome, so
 // an embedded request gets the content and nothing around it. What is
 // dropped is decoration; what carries information - page titles, the
-// in-page section rails, the demo notice - stays.
+// in-page section rails, the demo notice - stays. Signing out belongs
+// to the shell as well: it owns the session the visitor thinks in.
 function adminPage({ title, body, active = '', authed = true, embedded = isEmbedded() }) {
   const nav = authed && !embedded
     ? `<nav class="admin-nav">
@@ -903,11 +904,6 @@ ${embedded ? '' : `<header class="top">
 </header>`}
 <main class="wrap">
 ${body}
-${embedded && authed ? `<footer class="embedded-out">
-  <form method="post" action="/admin/logout" class="logout-form">
-    <button class="link-button" type="submit">Sign out of ${esc(BRAND)}</button>
-  </form>
-</footer>` : ''}
 </main>
 <script>${ADMIN_SCRIPT}</script>
 </body>
