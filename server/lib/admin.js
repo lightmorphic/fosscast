@@ -920,8 +920,8 @@ function createAdminRouter(ctx) {
           <input id="footer-text" name="footer" maxlength="300" value="${esc(t.footer)}" placeholder="&copy; ${new Date().getFullYear()} ${esc(show.name)}">
 
           <div class="subsection">
-            <label class="check-label"><input type="checkbox" name="hideFooter" value="1" class="check"${t.hideFooter ? ' checked' : ''}> Remove the FOSSCast footer from my pages</label>
-            <p class="hint">A small FOSSCast mark sits at the foot of your
+            <label class="check-label"><input type="checkbox" name="hideFooter" value="1" class="check"${t.hideFooter ? ' checked' : ''}> Remove the ${esc(BRAND)} footer from my pages</label>
+            <p class="hint">A small ${esc(BRAND)} mark sits at the foot of your
             pages. Leaving it is how other podcasters find the software,
             and we are grateful when you do &mdash; but it is your site.
             Your own line above stays either way.</p>
