@@ -34,6 +34,12 @@ function withEmbedded(embedded, run) {
   return requestScope.run({ embedded }, run);
 }
 
+// An operator may run this for somebody else - a host, an agency, a
+// club - and put their own name on the dashboard. The software is
+// still FOSSCast, its source still says so and its feed still declares
+// it; this is the label on the door, not a fork. Unset, it is FOSSCast.
+const BRAND = (process.env.BRAND_NAME || '').trim() || 'FOSSCast';
+
 function isEmbedded() {
   const store = requestScope.getStore();
   return Boolean(store && store.embedded);
@@ -868,7 +874,7 @@ function adminPage({ title, body, active = '', authed = true, embedded = isEmbed
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>${esc(title)} - FOSSCast admin</title>
+<title>${esc(title)} - ${esc(BRAND)} admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/site.css?v=0.15.3">
@@ -877,9 +883,9 @@ function adminPage({ title, body, active = '', authed = true, embedded = isEmbed
 <body class="admin${embedded ? ' embedded' : ''}">
 ${process.env.DEMO_MODE === '1' ? '<div class="demo-bar">Demo instance: you can look around, but nothing can be changed.</div>' : ''}
 ${embedded ? '' : `<header class="top">
-  <a class="wordmark" href="/admin" aria-label="FOSSCast admin">
+  <a class="wordmark" href="/admin" aria-label="${esc(BRAND)} admin">
     <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    <span>FOSSCast <span class="admin-tag">admin</span></span>
+    <span>${esc(BRAND)} <span class="admin-tag">admin</span></span>
   </a>
   ${nav}
 </header>`}
@@ -887,7 +893,7 @@ ${embedded ? '' : `<header class="top">
 ${body}
 ${embedded && authed ? `<footer class="embedded-out">
   <form method="post" action="/admin/logout" class="logout-form">
-    <button class="link-button" type="submit">Sign out of FOSSCast</button>
+    <button class="link-button" type="submit">Sign out of ${esc(BRAND)}</button>
   </form>
 </footer>` : ''}
 </main>
@@ -897,4 +903,4 @@ ${embedded && authed ? `<footer class="embedded-out">
 `;
 }
 
-module.exports = { esc, publicPage, adminPage, ICONS, withEmbedded, isEmbedded };
+module.exports = { esc, publicPage, adminPage, ICONS, withEmbedded, isEmbedded, BRAND };
