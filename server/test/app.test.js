@@ -251,20 +251,20 @@ test('the look: colours, background, type and words of your own', async () => {
   assert.ok(!page.includes('evil.example'), 'no off-site fetches survive');
   assert.ok(!page.includes('<script>alert'), 'no breaking out of the style element');
 
-  // The FOSSCast footer is on by default and can be turned off, without
-  // taking the show's own footer line with it.
-  let withBrand = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(withBrand.includes('foot-brand'), 'the mark is there to start with');
+  // The footer is not optional any more: the mark stays, and the line
+  // beside it is the show's own words when it has set any.
+  const withBrand = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(withBrand.includes('foot-brand'), 'the mark is there');
   res = await fetch(`${BASE}/admin/look`, form({
     accent: '#e91e63', bgMode: 'default', panel: 'solid', radius: '22',
     font: 'manrope', width: 'standard', episodes: 'row', mode: 'auto', toggle: '1',
-    footer: 'Made in a shed', hideFooter: '1',
+    footer: 'Made in a shed',
   }));
   assert.strictEqual(res.status, 200);
-  const withoutBrand = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(!withoutBrand.includes('foot-brand'), 'and gone when asked');
-  assert.ok(!withoutBrand.includes('foot-lm'), 'both marks, not just ours');
-  assert.ok(withoutBrand.includes('Made in a shed'), 'their own line stays');
+  const stillBranded = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(stillBranded.includes('foot-brand'), 'and cannot be asked away');
+  assert.ok(stillBranded.includes('foot-lm'), 'nor can the mark beside it');
+  assert.ok(stillBranded.includes('Made in a shed'), 'their own line stays');
   // The admin keeps its own branding regardless: that is our software,
   // not their website.
   const adminPage = await (await fetch(`${BASE}/admin/podcast`, { headers: { cookie } })).text();
