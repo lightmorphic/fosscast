@@ -10,7 +10,7 @@
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
-const { esc, adminPage, ICONS, withEmbedded } = require('./html');
+const { esc, adminPage, ICONS, withEmbedded, BRAND } = require('./html');
 const auth = require('./auth');
 const CATEGORIES = require('./categories');
 const { probeDuration, ensureWebImage, ensureVideoPoster, typeFor } = require('./media');
@@ -276,7 +276,7 @@ function createAdminRouter(ctx) {
           <h2>Where they are</h2>
           ${countries.length
             ? `<p class="hint">As reported by your proxy.</p>${charts.donut(countries, { label: 'Downloads by country' })}`
-            : `<p class="hint">No country information. FOSSCast never
+            : `<p class="hint">No country information. ${esc(BRAND)} never
                looks an address up itself &mdash; that would mean shipping a
                database or asking somebody else about your listeners. If
                your proxy knows, it can say so: Cloudflare sets
@@ -651,7 +651,7 @@ function createAdminRouter(ctx) {
         &middot; <a href="/admin/episodes">shows</a></p>
       </section>`
       : `<section class="panel hero">
-        <h1>Welcome to FOSSCast</h1>
+        <h1>Welcome to ${esc(BRAND)}</h1>
         <p class="lede">One thing to do first: create your podcast. Its
         public pages and RSS feed all follow from it, and then you add as
         many shows (episodes) as you like.</p>
