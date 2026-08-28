@@ -17,6 +17,13 @@ const CATEGORIES = require('./categories');
 // Publishing from a studio is on unless the instance turns it off. The
 // card below is the only way to reach the key, so it goes with it.
 const STUDIO_PUBLISHING = !/^(0|off|false|no)$/i.test((process.env.STUDIO_PUBLISHING || '').trim());
+
+// Some instances hold no audio at all: the episodes live at archive.org
+// or on the podcaster's own storage, and the feed points there. Offering
+// an upload box on such an instance is offering something that cannot
+// work. MEDIA_UPLOADS=off takes it off the forms; the address box, which
+// every instance has, becomes the way in.
+const MEDIA_UPLOADS = !/^(0|off|false|no)$/i.test((process.env.MEDIA_UPLOADS || '').trim());
 const feedAliases = require('./feedaliases');
 const { probeDuration, ensureWebImage, ensureVideoPoster, typeFor } = require('./media');
 const importer = require('./import');
@@ -698,7 +705,10 @@ function createAdminRouter(ctx) {
 
   // The Shows page: the day-to-day work of adding and editing shows
   // (episodes) of the podcast.
-  function episodesPage(show, notice = '') {
+  // A hundred episodes above the form for the hundred-and-first is a lot
+  // of scrolling, so a menu can ask for one half or the other: "all" is
+  // the list, "new" is the form, and neither is the whole page as before.
+  function episodesPage(show, notice = '', only = '') {
     const items = episodes()
       .filter((e) => e.showId === show.id)
       .sort((a, b) => (a.date < b.date ? 1 : -1));
@@ -721,16 +731,16 @@ function createAdminRouter(ctx) {
       &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
       &middot; <a href="/admin/podcast">podcast details</a></p>
 
-      <section class="panel">
+      ${only === 'new' ? '' : `<section class="panel">
         <h2>All episodes</h2>
         <table>
           <caption class="sr-only">Episodes of ${esc(show.name)}</caption>
           <thead><tr><th><span class="sr-only">Artwork</span></th><th>Title</th><th>Date</th><th>Links</th><th></th></tr></thead>
           <tbody>${rows || '<tr><td colspan="5" class="hint">No episodes yet.</td></tr>'}</tbody>
         </table>
-      </section>
+      </section>`}
 
-      <section class="panel">
+      ${only === 'all' ? '' : `<section class="panel">
         <h2>New episode</h2>
         <form method="post" action="/admin/shows/${esc(show.slug)}/episodes">
         <div class="form-cols">
@@ -751,11 +761,17 @@ function createAdminRouter(ctx) {
           <textarea id="epDescription" name="description" rows="8" maxlength="4000"></textarea>
         </div>
         <div>
-          <label for="mediaFile">Media file (uploads to this server)</label>
+          ${MEDIA_UPLOADS ? `<label for="mediaFile">Media file (uploads to this server)</label>
           <input id="mediaFile" type="file" accept="audio/*,video/*" data-upload data-show="${esc(show.slug)}" data-target="mediaUrl" data-status="upload-status">
-          <p class="hint" id="upload-status"></p>
-          <label for="mediaUrl">Or media URL (your own storage, archive.org, anywhere reachable)</label>
+          <p class="hint" id="upload-status"></p>` : ''}
+          <label for="mediaUrl">${MEDIA_UPLOADS ? 'Or the address of the audio' : 'The address of the audio'}</label>
+          <p class="hint">Where the file actually lives - archive.org, your
+          own storage, anywhere a listener's app can reach. MP3 is the one
+          every app plays.</p>
           <input id="mediaUrl" name="mediaUrl" maxlength="1000" placeholder="https://archive.org/download/...">
+          ${archiveReady() ? `<p class="hint"><button class="btn-secondary btn-small" type="button" id="ia-pick">Choose from archive.org</button>
+          <span id="ia-pick-note"></span></p>
+          <div id="ia-pick-box" hidden></div>` : ''}
           <label for="epArt">Episode cover art (optional)</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels. Leave it
           empty and the show uses the podcast's artwork.</p>
@@ -773,12 +789,12 @@ function createAdminRouter(ctx) {
             <span class="switch" aria-hidden="true"></span>
             <span>Also send the audio to archive.org (it gets a permanent home there; downloads are still counted here)</span>
           </label>`
-            : `<p class="hint">Add your <a href="/admin/account">Internet Archive keys</a> and episodes can be sent to archive.org for permanent keeping as you publish them.</p>`}
+            : `<p class="hint">Add your keys on the <a href="/admin/account">Archive.org</a> page and episodes can be sent there for permanent keeping as you publish them.</p>`}
         </div>
         </div>
           <button class="btn-primary" type="submit">Publish episode</button>
         </form>
-      </section>`,
+      </section>`}`,
     });
   }
 
@@ -2077,7 +2093,8 @@ function createAdminRouter(ctx) {
     if (p === '/admin/episodes' && req.method === 'GET') {
       const show = shows()[0];
       if (!show) { redirect(res, '/admin/podcast'); return true; }
-      html(res, episodesPage(show));
+      const only = String(url.searchParams.get('only') || '');
+      html(res, episodesPage(show, '', ['all', 'new'].includes(only) ? only : ''));
       return true;
     }
     if (p === '/admin/podcast' && req.method === 'GET') {
