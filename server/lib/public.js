@@ -489,6 +489,16 @@ function bannerMarkup(show) {
   return `<div class="show-banner"><video src="${esc(show.bannerVideo)}"${poster ? ` poster="${esc(poster)}"` : ''} autoplay muted${show.bannerLoop === false ? '' : ' loop'} playsinline preload="auto" aria-hidden="true" style="object-position: ${Number(show.bannerFocusX ?? 50)}% ${Number(show.bannerFocusY ?? 50)}%"></video></div>`;
 }
 
+// An operator may run a mailing list beside this - listmonk, a hosted
+// service, anything that can serve a small HTML fragment. MAILLIST_EMBED names a same-site path that
+// returns a sign-up box, or nothing when the list is switched off, and
+// the home page shows whatever comes back. Unset - which is every
+// existing install - nothing is fetched and nothing is drawn.
+const MAILLIST_EMBED = (() => {
+  const raw = (process.env.MAILLIST_EMBED || '').trim();
+  return raw.startsWith('/') && !raw.includes('//') ? raw : '';
+})();
+
 function showPage(show, allEpisodes, domain) {
   const episodes = visible(allEpisodes);
   const items = episodes.length
@@ -525,6 +535,16 @@ function showPage(show, allEpisodes, domain) {
     </div>
   </section>
   ${listenCard(show, domain)}
+  ${MAILLIST_EMBED ? `<div id="maillist" data-src="${esc(MAILLIST_EMBED)}"></div>
+  <script>
+  (function () {
+    var slot = document.getElementById('maillist');
+    fetch(slot.dataset.src).then(function (r) {
+      if (r.status !== 200) return null;
+      return r.text();
+    }).then(function (t) { if (t) slot.innerHTML = t; }).catch(function () {});
+  })();
+  </script>` : ''}
   <section class="episodes">${items}</section>`,
   });
 }

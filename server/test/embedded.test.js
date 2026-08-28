@@ -137,3 +137,27 @@ test('a sign-in link can say where it was going, within reason', async () => {
     assert.equal(res.headers.get('location'), '/admin', `refused ${bad}`);
   }
 });
+
+test('the mailing-list hook is inert unset and same-site only', async () => {
+  // Unset - every existing install - the page neither mentions nor
+  // fetches anything.
+  fs.writeFileSync(path.join(dataDirs[PORT], 'shows.json'), JSON.stringify([{
+    id: 's1', slug: 'quiet-show', name: 'Quiet Show', description: 'x', createdAt: 'x',
+  }]));
+  await new Promise((r) => setTimeout(r, 300));
+  const page = await (await fetch(`http://127.0.0.1:${PORT}/shows/quiet-show`)).text();
+  assert.ok(!page.includes('maillist'), 'nothing drawn when nothing configured');
+
+  // The path rule refuses anything that could leave the site.
+  delete require.cache[require.resolve('../lib/public.js')];
+  process.env.MAILLIST_EMBED = 'https://evil.example/box';
+  const off = require('../lib/public.js');
+  delete require.cache[require.resolve('../lib/public.js')];
+  process.env.MAILLIST_EMBED = '/newsletter/box';
+  const on = require('../lib/public.js');
+  delete process.env.MAILLIST_EMBED;
+  delete require.cache[require.resolve('../lib/public.js')];
+  const show = { id: 's1', slug: 'x', name: 'X', description: 'd' };
+  assert.ok(!off.showPage(show, [], 'x.example').includes('maillist'), 'an absolute address is refused');
+  assert.ok(on.showPage(show, [], 'x.example').includes('data-src="/newsletter/box"'), 'a same-site path is used');
+});
