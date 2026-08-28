@@ -1,6 +1,7 @@
 'use strict';
-// Studio publishing is a door: a studio sends a key and an episode
-// appears. An instance whose audio lives somewhere else has no use for
+// The two switches an instance that stores nothing needs: no studio
+// publishing, and no audio uploads. Studio publishing is a door: a
+// studio sends a key and an episode appears. An instance whose audio lives somewhere else has no use for
 // it, so it can be switched off - and then the door refuses, the key
 // card is gone from the Account page, and the button that mints a new
 // key is not there to press. Unset, everything works as it always did.
@@ -55,7 +56,7 @@ async function account(port) {
 
 before(async () => {
   start(ON);
-  start(OFF, { STUDIO_PUBLISHING: 'off' });
+  start(OFF, { STUDIO_PUBLISHING: 'off', MEDIA_UPLOADS: 'off' });
   await until(async () => {
     for (const p of [ON, OFF]) {
       const res = await fetch(`http://127.0.0.1:${p}/healthz`);
@@ -104,4 +105,36 @@ test('switched off, the card goes and the door refuses every key', async () => {
     body: '',
   });
   assert.strictEqual(res.status, 404);
+});
+
+// An instance that holds no audio should not offer to hold any.
+test('MEDIA_UPLOADS=off takes the audio upload off the episode form', async () => {
+  const { page: onPage } = await account(ON);
+  assert.ok(onPage, 'the on instance answers');
+
+  const base = `http://127.0.0.1:${OFF}`;
+  const login = await fetch(`${base}/admin/login`, {
+    method: 'POST',
+    redirect: 'manual',
+    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ email: 'op@studio.example', password: PASSWORD }).toString(),
+  });
+  const cookie = login.headers.get('set-cookie').split(';')[0];
+  await fetch(`${base}/admin/shows`, {
+    method: 'POST',
+    redirect: 'manual',
+    headers: { cookie, 'Content-Type': 'application/x-www-form-urlencoded' },
+    body: new URLSearchParams({ name: 'No Storage Here', description: 'x' }).toString(),
+  });
+
+  const form = await (await fetch(`${base}/admin/episodes?only=new`, { headers: { cookie } })).text();
+  assert.ok(!form.includes('uploads to this server'), 'nothing offers to hold the audio');
+  assert.ok(!form.includes('id="mediaFile"'), 'and there is no box to drop it in');
+  assert.ok(form.includes('The address of the audio'), 'the address is the way in');
+
+  // The halves can be asked for separately, so a menu can point at each.
+  assert.ok(!form.includes('<h2>All episodes</h2>'), 'the new half is only the form');
+  const list = await (await fetch(`${base}/admin/episodes?only=all`, { headers: { cookie } })).text();
+  assert.ok(list.includes('<h2>All episodes</h2>') && !list.includes('<h2>New episode</h2>'),
+    'the list half is only the list');
 });
