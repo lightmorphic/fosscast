@@ -1389,7 +1389,7 @@ function createAdminRouter(ctx) {
         <section class="panel pane pane-support" id="sec-people">
           <h2>Funding</h2>
           <div class="field-row">
-            <div><label for="sfundurl">Funding URL (donations, memberships)</label>
+            <div><label for="sfundurl">Support page address</label>
             <input id="sfundurl" name="fundingUrl" type="url" maxlength="500" value="${esc(show.funding?.url || '')}"></div>
             <div><label for="sfundlabel">Funding label</label>
             <input id="sfundlabel" name="fundingLabel" maxlength="120" value="${esc(show.funding?.label || '')}" placeholder="Support the show"></div>
@@ -1418,7 +1418,7 @@ function createAdminRouter(ctx) {
         </section>
 
         <section class="panel pane pane-support" id="sec-support">
-          <h2>Memberships &amp; tips</h2>
+          <h2>Where listeners can support you</h2>
           <p class="hint">The services listeners already use to back a
           podcast. Paste your page on each one and its button appears on
           your show page, and goes into the feed as a funding link so apps
