@@ -1536,7 +1536,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   color: var(--danger);
   background: var(--danger-bg);
   border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
-  border-left: 3px solid var(--danger);
   border-radius: var(--radius);
 }
 .upload-failed-icon { flex: none; line-height: 0; margin-top: 0.05rem; }
