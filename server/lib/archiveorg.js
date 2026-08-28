@@ -225,7 +225,86 @@ function filenameFor(identifier, localPath) {
   return `${identifier}${ext}`;
 }
 
+
+// ---- Reading the account, rather than writing to it ----
+
+const SEARCH = 'https://archive.org/advancedsearch.php';
+
+// Who the keys belong to. The Archive answers this without a signature -
+// the key pair in the header is the whole question - and the reply
+// carries the account's email, which is also how its uploads are found.
+async function whoami({ accessKey, secretKey, fetchImpl = fetch, endpoint = ENDPOINT } = {}) {
+  if (!accessKey || !secretKey) return { authorized: false, error: 'no keys saved yet' };
+  try {
+    const res = await fetchImpl(`${endpoint}/?check_auth=1`, {
+      headers: { authorization: `LOW ${accessKey}:${secretKey}` },
+      signal: AbortSignal.timeout(20000),
+    });
+    const body = await res.json();
+    return {
+      authorized: Boolean(body && body.authorized),
+      email: (body && body.username) || '',
+      screenname: (body && body.screenname) || '',
+      error: (body && body.error) || '',
+    };
+  } catch (err) {
+    return { authorized: false, error: err.message };
+  }
+}
+
+// What this account has already put there. Public search, no keys - the
+// items are public the moment they exist - asked by uploader, newest
+// first, a page at a time.
+async function itemsFor({ email, page = 1, rows = 50, fetchImpl = fetch } = {}) {
+  if (!email) return { items: [], total: 0 };
+  const params = new URLSearchParams({
+    q: `uploader:"${email}"`, output: 'json', rows: String(Math.min(rows, 100)), page: String(Math.max(1, page)),
+  });
+  for (const field of ['identifier', 'title', 'publicdate', 'mediatype', 'item_size']) params.append('fl[]', field);
+  params.append('sort[]', 'publicdate desc');
+  const res = await fetchImpl(`${SEARCH}?${params}`, { signal: AbortSignal.timeout(25000) });
+  if (!res.ok) throw new Error(`archive.org answered ${res.status} when asked what you have uploaded`);
+  const body = await res.json();
+  const found = (body && body.response) || {};
+  return {
+    total: Number(found.numFound || 0),
+    items: (found.docs || []).map((d) => ({
+      identifier: d.identifier,
+      title: d.title || d.identifier,
+      date: String(d.publicdate || '').slice(0, 10),
+      mediatype: d.mediatype || '',
+      size: Number(d.item_size || 0),
+    })),
+  };
+}
+
+// The playable files inside one item, with the address a feed would
+// use. Derivatives (the Archive makes its own copies) are offered too:
+// a podcaster who uploaded a wav has an mp3 waiting for them here.
+const AUDIO = /\.(mp3|m4a|m4b|aac|ogg|oga|opus|flac|wav)$/i;
+async function audioFilesOf(identifier, { fetchImpl = fetch } = {}) {
+  const res = await fetchImpl(`${METADATA}/${encodeURIComponent(identifier)}`, {
+    signal: AbortSignal.timeout(25000),
+  });
+  if (!res.ok) throw new Error(`archive.org answered ${res.status} about ${identifier}`);
+  const body = await res.json();
+  if (!body || !body.metadata) return { title: identifier, files: [] };
+  return {
+    title: (body.metadata.title || identifier),
+    files: (body.files || [])
+      .filter((f) => AUDIO.test(f.name || ''))
+      .map((f) => ({
+        name: f.name,
+        format: f.format || '',
+        seconds: Math.round(Number(f.length || 0)) || 0,
+        bytes: Number(f.size || 0),
+        url: `${DOWNLOAD}/${encodeURIComponent(identifier)}/${f.name.split('/').map(encodeURIComponent).join('/')}`,
+      })),
+  };
+}
+
 module.exports = {
   identifierFor, freeIdentifier, exists, metaHeaders, headerValue, errorFrom,
   overLimit, put, metadataFor, filenameFor, COLLECTION, ENDPOINT,
+  whoami, itemsFor, audioFilesOf, SEARCH,
 };

@@ -749,6 +749,20 @@ body.embedded .wrap { padding-top: 0.5rem; }
 .sub-btn:hover { border-color: var(--accent); color: var(--accent); }
 .sub-btn svg { width: 1.05rem; height: 1.05rem; flex: none; }
 
+/* A row in an archive.org list: what it is, when, and the button that
+   takes it. Same shape whether it is an item or a file inside one. */
+.ia-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.ia-item:last-child { border-bottom: none; }
+.ia-item strong { flex: 1; min-width: 0; font-size: 0.9375rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ia-item .hint { flex: none; font-size: 0.8125rem; }
+.ia-item .btn-secondary { flex: none; margin-top: 0; }
+
 /* ---------- Feed check ---------- */
 /* Ten short ticks down the left of a full-width card left the right
    two thirds empty. They flow into columns instead, as many as fit. */
