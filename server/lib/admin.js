@@ -696,7 +696,7 @@ function createAdminRouter(ctx) {
       <td class="actions">${deleteButton(`/admin/episodes/${esc(episode.id)}/delete`, 'Delete episode')}</td>
     </tr>`).join('');
     return adminPage({
-      title: 'Shows',
+      title: 'Episodes',
       active: 'episodes',
       body: `<h1 class="page-title">Episodes</h1>
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
