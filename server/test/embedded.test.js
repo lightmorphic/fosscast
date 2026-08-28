@@ -126,6 +126,10 @@ test('a sign-in link can say where it was going, within reason', async () => {
   const wanted = await fetch(mint('/admin/stats'), { redirect: 'manual' });
   assert.equal(wanted.headers.get('location'), '/admin/stats');
 
+  // One tab of a page, which is what a shell with a menu points at.
+  const tab = await fetch(mint('/admin/podcast?s=feed'), { redirect: 'manual' });
+  assert.equal(tab.headers.get('location'), '/admin/podcast?s=feed');
+
   // Anywhere that is not a local admin page is quietly ignored, so a
   // link that signs somebody in can never carry them off the site.
   for (const bad of ['https://evil.example/x', '//evil.example/x', '/wp-admin']) {

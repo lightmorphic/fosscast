@@ -1414,3 +1414,23 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
   color: var(--muted-fg); font-variant-numeric: tabular-nums;
   font-size: 0.8125rem; margin-right: 0.4rem;
 }
+
+/* ---------- Settings tabs: one page, one decision at a time ---------- */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 1.25rem 0 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+.tab {
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--muted-fg);
+  text-decoration: none;
+}
+.tab:hover { color: var(--fg); background: var(--muted); }
+.tab.current { color: var(--on-accent-container); background: var(--accent-container); }

@@ -1116,7 +1116,7 @@ function createAdminRouter(ctx) {
   // and rarely change, so they live here, apart from the shows
   // (episodes). The feed check lives here too, since it is about the
   // podcast as a whole.
-  function podcastPage(show, notice = '') {
+  function podcastPage(show, notice = '', want = 'basics') {
     const items = episodes().filter((e) => e.showId === show.id);
     const checks = feedChecks(show, items);
     const failed = checks.filter(([, ok]) => !ok);
@@ -1128,8 +1128,17 @@ function createAdminRouter(ctx) {
       <p class="hint">${esc(show.name)} &middot; <a href="/shows/${esc(show.slug)}">public page</a>
       &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
       &middot; <a href="/admin/episodes">shows</a></p>
+      ${(() => {
+        const tabs = [["basics", "Basics"], ["feed", "Feed"], ["artwork", "Artwork"], ["listen", "Where to listen"], ["support", "Support"], ["analytics", "Analytics"]];
+        const here = tabs.some(([id]) => id === want) ? want : tabs[0][0];
+        return `<style>.pane{display:none}.pane-${here}{display:block}</style>
+        <nav class="tabs" aria-label="Podcast settings">
+          ${tabs.map(([id, label]) => `<a class="tab${id === here ? ' current' : ''}"
+            href="/admin/podcast?s=${id}">${esc(label)}</a>`).join('')}
+        </nav>`;
+      })()}
 
-      <section class="panel" id="sec-old-addresses">
+      <section class="panel pane pane-feed" id="sec-old-addresses">
         <h2>Feed addresses you used to have</h2>
         <p class="hint">If this show has lived somewhere else, put the old feed
         address here and it keeps working: anyone still asking for it is sent
@@ -1152,7 +1161,7 @@ function createAdminRouter(ctx) {
         directories follow that instead.</p>
       </section>
 
-      <section class="panel" id="sec-feed">
+      <section class="panel pane pane-feed" id="sec-feed">
         <h2>Feed check</h2>
         <p class="hint">What Apple, Spotify and the rest look for before
         they accept a podcast. ${failed.length ? `<strong>${failed.length} still to sort out.</strong>` : 'All good.'}</p>
@@ -1165,7 +1174,7 @@ function createAdminRouter(ctx) {
       </section>
 
       <form method="post" action="/admin/shows/${esc(show.slug)}/settings" data-autosave>
-        <section class="panel" id="sec-basics">
+        <section class="panel pane pane-basics" id="sec-basics">
           <h2>Basics</h2>
           <label for="sname">Name</label>
           <input id="sname" name="name" required maxlength="120" value="${esc(show.name)}">
@@ -1190,7 +1199,7 @@ function createAdminRouter(ctx) {
           </div>
         </section>
 
-        <section class="panel" id="sec-ownership">
+        <section class="panel pane pane-basics" id="sec-ownership">
           <h2>Ownership</h2>
           <div class="field-row">
             <div><label for="sowner">Owner name</label>
@@ -1208,7 +1217,7 @@ function createAdminRouter(ctx) {
 
         </section>
 
-        <section class="panel" id="sec-artwork">
+        <section class="panel pane pane-artwork" id="sec-artwork">
           <h2>Artwork &amp; banner</h2>
           <div class="subsection">
           <label for="sart">Podcast artwork</label>
@@ -1327,7 +1336,7 @@ function createAdminRouter(ctx) {
           </div>
         </section>
 
-        <section class="panel" id="sec-people">
+        <section class="panel pane pane-support" id="sec-people">
           <h2>Funding</h2>
           <div class="field-row">
             <div><label for="sfundurl">Funding URL (donations, memberships)</label>
@@ -1337,7 +1346,7 @@ function createAdminRouter(ctx) {
           </div>
         </section>
 
-        <section class="panel" id="sec-prefix">
+        <section class="panel pane pane-analytics" id="sec-prefix">
           <h2>Analytics prefix</h2>
           <p class="hint">Third-party download measurement, the way the
           rest of the podcast world does it. Services such as
@@ -1358,7 +1367,7 @@ function createAdminRouter(ctx) {
           in the path and worth deciding on purpose.</p>` : ''}
         </section>
 
-        <section class="panel" id="sec-support">
+        <section class="panel pane pane-support" id="sec-support">
           <h2>Memberships &amp; tips</h2>
           <p class="hint">The services listeners already use to back a
           podcast. Paste your page on each one and its button appears on
@@ -1370,7 +1379,7 @@ function createAdminRouter(ctx) {
           <input id="sup-${key}" name="support_${key}" type="url" maxlength="500" value="${esc((show.support || {})[key] || '')}" placeholder="${esc(placeholder)}">`).join('')}
         </section>
 
-        <section class="panel" id="sec-hosts">
+        <section class="panel pane pane-none" id="sec-hosts">
           <h2>Hosts</h2>
           <p class="hint">${hostList(show).length
             ? `${hostList(show).length} host${hostList(show).length === 1 ? '' : 's'}: ${esc(hostList(show).map((h) => h.name).join(', '))}.`
@@ -1379,7 +1388,7 @@ function createAdminRouter(ctx) {
           <p><a class="btn-secondary" href="/admin/hosts">${hostList(show).length ? 'Manage hosts' : 'Add the hosts'}</a></p>
         </section>
 
-        <section class="panel" id="sec-listen">
+        <section class="panel pane pane-listen" id="sec-listen">
           <h2>Listen on</h2>
           <p class="hint">Paste the address of your show on each platform
           and its button appears on your pages. You get these after
@@ -1389,7 +1398,7 @@ function createAdminRouter(ctx) {
           <input id="link-${key}" name="link_${key}" type="url" maxlength="500" value="${esc((show.links || {})[key] || '')}" placeholder="https://">`).join('')}
         </section>
 
-        <section class="panel" id="sec-social">
+        <section class="panel pane pane-listen" id="sec-social">
           <h2>Find us on</h2>
           <p class="hint">Where the show talks to its audience. Anything
           you fill in becomes a button on your page. Matrix first, then
@@ -1398,7 +1407,7 @@ function createAdminRouter(ctx) {
           <input id="social-${key}" name="social_${key}" type="url" maxlength="500" value="${esc((show.social || {})[key] || '')}" placeholder="${esc(placeholder)}">`).join('')}
         </section>
 
-        <section class="panel" id="sec-guid">
+        <section class="panel pane pane-feed" id="sec-guid">
           <h2>Moving from another host</h2>
           <label for="sguid">Feed GUID</label>
           <p class="hint">Only when moving from another host. Directories
@@ -1732,7 +1741,11 @@ function createAdminRouter(ctx) {
       // rather than argued with, so this can never become an open
       // redirect wearing a session cookie.
       const asked = String(url.searchParams.get('next') || '');
-      const next = /^\/admin(\/[A-Za-z0-9/_-]*)?$/.test(asked) ? asked : '/admin';
+      // A local admin path, optionally with a simple query - a shell that
+      // sends somebody here may be pointing at one tab of a page. Still
+      // nothing that could leave the site: no host, no protocol, no
+      // protocol-relative address.
+      const next = /^\/admin(\/[A-Za-z0-9/_-]*)?(\?[A-Za-z0-9=&_-]*)?$/.test(asked) ? asked : '/admin';
       redirect(res, next, { 'Set-Cookie': sessionCookie(req, session, 7 * 24 * 3600) });
       return true;
     }
@@ -1862,7 +1875,9 @@ function createAdminRouter(ctx) {
     }
     if (p === '/admin/podcast' && req.method === 'GET') {
       const show = shows()[0];
-      html(res, show ? podcastPage(show) : createPodcastPage());
+      html(res, show
+        ? podcastPage(show, '', String(url.searchParams.get('s') || 'basics'))
+        : createPodcastPage());
       return true;
     }
     // The edit form now lives on the podcast page itself.
