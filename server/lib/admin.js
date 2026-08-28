@@ -719,7 +719,9 @@ function createAdminRouter(ctx) {
         : '<span class="row-art row-art-none" aria-hidden="true"></span>'}</td>
       <td><a href="/admin/episodes/${esc(episode.id)}">${esc(episode.title)}</a>${episode.draft ? ' <span class="tag">draft</span>' : ''}</td>
       <td>${esc(episode.date)}</td>
-      <td class="media-cell"><a href="/shows/${esc(show.slug)}/${esc(episode.slug || episode.id)}">page</a> &middot; <a href="/embed/${esc(episode.id)}">embed</a></td>
+      <td class="media-cell"><a href="/shows/${esc(show.slug)}/${esc(episode.slug || episode.id)}" target="_blank" rel="noopener">page</a>
+        &middot; <button type="button" class="linkish" data-embed="${esc(episode.id)}"
+          data-embed-title="${esc(episode.title)}">embed</button></td>
       <td class="actions">${deleteButton(`/admin/episodes/${esc(episode.id)}/delete`, 'Delete episode')}</td>
     </tr>`).join('');
     return adminPage({
@@ -727,9 +729,6 @@ function createAdminRouter(ctx) {
       active: 'episodes',
       body: `<h1 class="page-title">Episodes</h1>
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
-      <p class="hint">${esc(show.name)} &middot; <a href="/shows/${esc(show.slug)}">public page</a>
-      &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
-      &middot; <a href="/admin/podcast">podcast details</a></p>
 
       ${only === 'new' ? '' : `<section class="panel">
         <h2>All episodes</h2>
@@ -769,9 +768,12 @@ function createAdminRouter(ctx) {
           own storage, anywhere a listener's app can reach. MP3 is the one
           every app plays.</p>
           <input id="mediaUrl" name="mediaUrl" maxlength="1000" placeholder="https://archive.org/download/...">
-          ${archiveReady() ? `<p class="hint"><button class="btn-secondary btn-small" type="button" id="ia-pick">Choose from archive.org</button>
-          <span id="ia-pick-note"></span></p>
-          <div id="ia-pick-box" hidden></div>` : ''}
+          ${archiveReady() ? `<aside class="aside-offer">
+            <p>Are you using archive.org?
+            <button class="btn-secondary btn-small" type="button" id="ia-pick">Show my last five</button></p>
+            <p class="hint">Only if you keep your audio there. Otherwise paste
+            the address above and ignore this.</p>
+          </aside>` : ''}
           <label for="epArt">Episode cover art (optional)</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels. Leave it
           empty and the show uses the podcast's artwork.</p>
@@ -1670,9 +1672,12 @@ function createAdminRouter(ctx) {
           </div>
           <label for="mediaUrl">Media URL</label>
           <input id="mediaUrl" name="mediaUrl" maxlength="1000" value="${esc(episode.mediaUrl)}">
-          ${archiveReady() ? `<p class="hint"><button class="btn-secondary btn-small" type="button" id="ia-pick">Choose from archive.org</button>
-          <span id="ia-pick-note"></span></p>
-          <div id="ia-pick-box" hidden></div>` : ''}
+          ${archiveReady() ? `<aside class="aside-offer">
+            <p>Are you using archive.org?
+            <button class="btn-secondary btn-small" type="button" id="ia-pick">Show my last five</button></p>
+            <p class="hint">Only if you keep your audio there. Otherwise paste
+            the address above and ignore this.</p>
+          </aside>` : ''}
           <label for="epDescription">Description</label>
           <textarea id="epDescription" name="description" rows="4" maxlength="4000">${esc(episode.description)}</textarea>
           <label for="epArt">Episode cover art (optional)</label>
@@ -2272,6 +2277,16 @@ function createAdminRouter(ctx) {
       if (!/^[a-z0-9][a-z0-9._-]{1,99}$/i.test(identifier)) { sendJson(res, 400, { files: [], error: 'no item named' }); return true; }
       try { sendJson(res, 200, await archiveorg.audioFilesOf(identifier)); }
       catch (err) { sendJson(res, 200, { files: [], error: err.message }); }
+      return true;
+    }
+
+    // The five most recent, each already reduced to a playable file, so
+    // the episode form asks once rather than twice.
+    if (p === '/admin/account/archive-recent' && req.method === 'GET') {
+      const who = await archiveorg.whoami(archiveKeys());
+      if (!who.authorized) { sendJson(res, 200, { episodes: [], total: 0, error: who.error || 'no keys' }); return true; }
+      try { sendJson(res, 200, await archiveorg.recentEpisodes({ email: who.email })); }
+      catch (err) { sendJson(res, 200, { episodes: [], total: 0, error: err.message }); }
       return true;
     }
 
