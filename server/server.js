@@ -203,7 +203,16 @@ function route(req, res) {
     }
     // Temporary on purpose: a permanent redirect would be cached by the
     // app, and the next download would never be seen.
-    res.writeHead(302, { Location: episode.mediaUrl, 'Cache-Control': 'no-store' });
+    //
+    // The header lets a web player fetch an episode to keep for offline
+    // listening. Without it a browser refuses the read - not because the
+    // audio is private (it is a public podcast, and anything can already
+    // download it) but because the rule exists for pages that are not.
+    res.writeHead(302, {
+      Location: episode.mediaUrl,
+      'Cache-Control': 'no-store',
+      'Access-Control-Allow-Origin': '*',
+    });
     res.end();
     return;
   }
