@@ -206,7 +206,9 @@ test('funding services show as buttons and as feed funding links', async () => {
   const admin = await (await fetch(`${BASE}/admin/podcast`, { headers: { cookie } })).text();
   assert.ok(admin.includes('https://www.patreon.com/create'));
   assert.ok(admin.includes('https://buymeacoffee.com/signup'));
-  assert.ok(admin.includes('Memberships'));
+  // The panel is named for what it is for, not for a feature elsewhere
+  // that happens to share a word.
+  assert.ok(admin.includes('Where listeners can support you'));
 });
 
 test('the look: colours, background, type and words of your own', async () => {
