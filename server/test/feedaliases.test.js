@@ -74,6 +74,18 @@ test('the app keeps its own addresses whatever anybody types', () => {
   }
 });
 
+test('a handle-style address survives, which is what people arrive with', () => {
+  // Castopod and anything else built around handles serves feeds at
+  // /@name/feed.xml. Rejecting the @ rejected the single most likely
+  // thing anybody would paste, and rejected it silently.
+  assert.strictEqual(aliases.tidy('https://fossnerds.org/@fossnerds/feed.xml'), '/@fossnerds/feed.xml');
+  assert.strictEqual(aliases.tidy('/@fossnerds/feed.xml'), '/@fossnerds/feed.xml');
+  // What still has no business in a path.
+  for (const bad of ['/a b', '/x<y>', '/it"s', '/back\\slash']) {
+    assert.strictEqual(aliases.tidy(bad), '', `${bad} must be refused`);
+  }
+});
+
 test('what people actually paste is understood', () => {
   // A whole address, because that is what the old host showed them.
   assert.strictEqual(aliases.tidy('https://old.example.com/feed/mine.xml'), '/feed/mine.xml');
