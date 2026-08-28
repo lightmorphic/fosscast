@@ -287,7 +287,7 @@ function landing() {
     description: 'A home for an independent show: every published episode, playable in the browser and subscribable anywhere podcasts go.',
     body: `
   <section class="panel hero">
-    <p class="status"><span aria-hidden="true">&#9679;</span> Being built in the open. First shows soon.</p>
+    <p class="status"><span aria-hidden="true">&#9679;</span> Being built in the open. First episodes soon.</p>
     <h1>Your show, kept properly.</h1>
     <p class="lede">FOSSCast is the public home of an independent show:
     every published episode on its own page, playable here and
@@ -325,11 +325,11 @@ function showsIndex(shows, episodes) {
           <p class="hint">${count} episode${count === 1 ? '' : 's'}</p>
         </a>`;
       }).join('')
-    : '<div class="panel"><p class="hint">No shows yet. They are coming.</p></div>';
+    : '<div class="panel"><p class="hint">No episodes yet. They are coming.</p></div>';
   return publicPage({
-    title: 'Shows - FOSSCast',
-    description: 'All shows on FOSSCast.',
-    body: `<h1 class="page-title">Shows</h1><section class="grid">${cards}</section>`,
+    title: 'Episodes - FOSSCast',
+    description: 'All episodes on FOSSCast.',
+    body: `<h1 class="page-title">Episodes</h1><section class="grid">${cards}</section>`,
   });
 }
 
