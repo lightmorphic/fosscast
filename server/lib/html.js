@@ -836,6 +836,73 @@ document.addEventListener('change', (e) => {
   labels();
 })();
 
+// Choosing an episode's audio from what is already at archive.org. Two
+// steps because that is how the Archive is shaped: an item, then the
+// files inside it - and the Archive keeps its own converted copies, so
+// a wav uploaded last year has an mp3 sitting beside it now.
+(() => {
+  const button = document.getElementById('ia-pick');
+  const box = document.getElementById('ia-pick-box');
+  const note = document.getElementById('ia-pick-note');
+  const field = document.getElementById('mediaUrl');
+  if (!button || !box || !field) return;
+
+  const esc = (t) => { const d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; };
+  const mins = (s) => (s ? Math.floor(s / 60) + ' min' : '');
+
+  function say(text) { if (note) note.textContent = text; }
+
+  async function items() {
+    say('Asking archive.org\u2026');
+    const res = await fetch('/admin/account/archive-items');
+    const data = await res.json();
+    say('');
+    if (!data.items || !data.items.length) {
+      box.innerHTML = '<p class="hint">' + esc(data.error || 'Nothing is there under your account yet.') + '</p>';
+      return;
+    }
+    box.innerHTML = '<p class="hint">Pick the recording this episode should play.</p>'
+      + data.items.map((it) => '<div class="ia-item"><strong>' + esc(it.title) + '</strong>'
+        + '<span class="hint">' + esc(it.date) + '</span>'
+        + '<button class="btn-secondary btn-small" type="button" data-ia-item="' + esc(it.identifier) + '">Open</button></div>').join('');
+  }
+
+  async function files(identifier) {
+    say('Looking inside\u2026');
+    const res = await fetch('/admin/account/archive-item/' + encodeURIComponent(identifier));
+    const data = await res.json();
+    say('');
+    if (!data.files || !data.files.length) {
+      box.innerHTML = '<p class="hint">Nothing playable in that one. '
+        + '<button class="btn-secondary btn-small" type="button" data-ia-back>Back</button></p>';
+      return;
+    }
+    box.innerHTML = '<p class="hint">' + esc(data.title) + ' \u2014 which file? '
+      + '<button class="btn-secondary btn-small" type="button" data-ia-back>Back</button></p>'
+      + data.files.map((f) => '<div class="ia-item"><strong>' + esc(f.name.split('/').pop()) + '</strong>'
+        + '<span class="hint">' + esc(f.format) + (f.seconds ? ' \u00b7 ' + mins(f.seconds) : '') + '</span>'
+        + '<button class="btn-secondary btn-small" type="button" data-ia-url="' + esc(f.url) + '">Use this</button></div>').join('');
+  }
+
+  button.addEventListener('click', () => {
+    box.hidden = !box.hidden;
+    if (!box.hidden) items().catch(() => say('archive.org did not answer.'));
+  });
+
+  box.addEventListener('click', (ev) => {
+    const open = ev.target.closest('[data-ia-item]');
+    if (open) { files(open.dataset.iaItem).catch(() => say('archive.org did not answer.')); return; }
+    if (ev.target.closest('[data-ia-back]')) { items().catch(() => {}); return; }
+    const use = ev.target.closest('[data-ia-url]');
+    if (use) {
+      field.value = use.dataset.iaUrl;
+      field.dispatchEvent(new Event('change', { bubbles: true }));
+      box.hidden = true;
+      say('Set. Remember to save.');
+    }
+  });
+})();
+
 // Sending an episode to the Internet Archive. The upload runs on the
 // server and can take a while, so the button starts it and the page asks
 // every couple of seconds how far it has got.

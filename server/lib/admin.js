@@ -1654,6 +1654,9 @@ function createAdminRouter(ctx) {
           </div>
           <label for="mediaUrl">Media URL</label>
           <input id="mediaUrl" name="mediaUrl" maxlength="1000" value="${esc(episode.mediaUrl)}">
+          ${archiveReady() ? `<p class="hint"><button class="btn-secondary btn-small" type="button" id="ia-pick">Choose from archive.org</button>
+          <span id="ia-pick-note"></span></p>
+          <div id="ia-pick-box" hidden></div>` : ''}
           <label for="epDescription">Description</label>
           <textarea id="epDescription" name="description" rows="4" maxlength="4000">${esc(episode.description)}</textarea>
           <label for="epArt">Episode cover art (optional)</label>
@@ -1693,9 +1696,9 @@ function createAdminRouter(ctx) {
     // credential they never use. The page is then what is left of it.
     const embedded = isEmbedded();
     return adminPage({
-      title: embedded ? 'Archive' : 'Account',
+      title: embedded ? 'Archive.org' : 'Account',
       active: 'account',
-      body: `<h1 class="page-title">${embedded ? 'Archive' : 'Account'}</h1>
+      body: `<h1 class="page-title">${embedded ? 'Archive.org' : 'Account'}</h1>
       ${embedded ? '' : `<section class="panel narrow">
         <h2>Change password</h2>
         <p class="hint">Signed in as ${esc(user.email)}.</p>
@@ -1739,19 +1742,18 @@ function createAdminRouter(ctx) {
       </section>` : ''}
 
       <section class="panel narrow">
-        <h2>Internet Archive</h2>
-        <p class="hint">With a key pair here, any episode held on this
-        server can be sent to
-        <a href="https://archive.org" target="_blank" rel="noopener">archive.org</a>
-        in one click: the audio gets a permanent home that outlives this
-        VPS, and the episode's media address follows it there. Downloads
-        are still counted, because the feed keeps pointing at this
-        instance and only forwards listeners on.</p>
-        <p class="hint">The account is yours, not ours: sign up (it is
-        free), then generate a pair at
-        <a href="https://archive.org/account/s3.php" target="_blank" rel="noopener">archive.org/account/s3.php</a>
-        and paste them in. Episodes go into the Archive's Community Audio
-        collection under your own name.</p>
+        <h2>Your archive.org account</h2>
+        <p class="hint">The account is yours, not ours. It is free, it takes
+        a minute, and what you put there stays there: a permanent home for
+        your audio that outlives this server, under your own name.</p>
+        <p class="hint">
+          <a class="btn-secondary btn-small" href="https://archive.org/account/signup" target="_blank" rel="noopener">Create an account</a>
+          <a class="btn-secondary btn-small" href="https://archive.org/account/s3.php" target="_blank" rel="noopener">Get your keys</a>
+        </p>
+        <p class="hint">Signed in at archive.org, the second link shows an
+        access key and a secret key. Copy both into the boxes below. They
+        are stored on this server, never shown again, and nothing is sent
+        anywhere until you ask for it.</p>
         <form method="post" action="/admin/account/archive-keys">
           <label for="ia-access">Access key</label>
           <input id="ia-access" name="accessKey" type="password" autocomplete="off"
@@ -1759,15 +1761,154 @@ function createAdminRouter(ctx) {
           <label for="ia-secret">Secret key</label>
           <input id="ia-secret" name="secretKey" type="password" autocomplete="off"
             placeholder="${archiveHeld.secret ? `Held \u2013 ends ${esc(archiveHeld.secret)}` : 'Not set'}">
-          <p class="hint">Leave a box empty to keep the key already
-          held. They are stored on this server and never shown again. See
-          <a href="https://github.com/lightmorphic/fosscast/blob/main/docs/archive-org.md" target="_blank" rel="noopener">the notes on archiving</a>.</p>
+          <p class="hint">Leave a box empty to keep the key already held.
+          See <a href="https://github.com/lightmorphic/fosscast/blob/main/docs/archive-org.md" target="_blank" rel="noopener">the notes on archiving</a>.</p>
           <button class="btn-primary" type="submit">Save keys</button>
         </form>
+        <p class="hint" id="ia-who" aria-live="polite"></p>
         ${archiveHeld.access || archiveHeld.secret ? `<form method="post" action="/admin/account/archive-keys?clear=1">
           <button class="btn-secondary btn-confirm" type="submit">Forget these keys</button>
         </form>` : ''}
-      </section>`,
+      </section>
+
+      <section class="panel narrow" id="ia-upload-card" hidden>
+        <h2>Send a file straight there</h2>
+        <p class="hint">The file goes from this browser to archive.org
+        directly. It does not pass through this server and nothing is kept
+        here - which is the point, because this server holds no audio.</p>
+        <p class="hint">An upload is public and meant to last: the Archive
+        keeps what it is given, and taking something down again means
+        asking them. Send something you are happy to publish for good.</p>
+        <label for="ia-file">The file</label>
+        <input id="ia-file" type="file" accept="audio/*,video/*">
+        <label for="ia-title">What to call it</label>
+        <input id="ia-title" maxlength="200" placeholder="Episode 12 - the one about cheese">
+        <label for="ia-id">Its address at archive.org</label>
+        <input id="ia-id" maxlength="90" placeholder="filled in from the title">
+        <p class="hint">This becomes archive.org/details/&lt;address&gt;. It is
+        permanent and shared with everybody there, so it has to be free.</p>
+        <button class="btn-primary" type="button" id="ia-send">Send it</button>
+        <p class="hint" id="ia-progress" aria-live="polite"></p>
+      </section>
+
+      <section class="panel narrow" id="ia-items-card" hidden>
+        <h2>What you have there already</h2>
+        <p class="hint" id="ia-items-note">Looking\u2026</p>
+        <div id="ia-items"></div>
+      </section>
+
+      <script>
+      (function () {
+        var who = document.getElementById('ia-who');
+        var upload = document.getElementById('ia-upload-card');
+        var itemsCard = document.getElementById('ia-items-card');
+        var itemsNote = document.getElementById('ia-items-note');
+        var items = document.getElementById('ia-items');
+
+        function bytes(n) {
+          if (!n) return '';
+          var u = ['bytes', 'KB', 'MB', 'GB'];
+          var i = 0; while (n >= 1024 && i < u.length - 1) { n = n / 1024; i++; }
+          return (i ? n.toFixed(1) : n) + ' ' + u[i];
+        }
+
+        fetch('/admin/account/archive-whoami').then(function (r) { return r.json(); }).then(function (d) {
+          if (!d.authorized) {
+            who.textContent = d.error ? 'Those keys were refused: ' + d.error : '';
+            return;
+          }
+          who.textContent = 'Working. These keys belong to ' + (d.screenname || d.email) + '.';
+          upload.hidden = false;
+          itemsCard.hidden = false;
+          loadItems();
+        }).catch(function () {});
+
+        function loadItems() {
+          fetch('/admin/account/archive-items').then(function (r) { return r.json(); }).then(function (d) {
+            if (!d.items || !d.items.length) {
+              itemsNote.textContent = 'Nothing there yet. Anything you send appears here.';
+              return;
+            }
+            itemsNote.textContent = d.total + ' item' + (d.total === 1 ? '' : 's') + ' under your account, newest first.';
+            items.innerHTML = d.items.map(function (it) {
+              return '<div class="ia-item"><strong>' + esc(it.title) + '</strong>'
+                + '<span class="hint">' + esc(it.date) + ' \u00b7 ' + esc(it.identifier) + (it.size ? ' \u00b7 ' + bytes(it.size) : '') + '</span>'
+                + '<a class="btn-secondary btn-small" href="https://archive.org/details/' + encodeURIComponent(it.identifier) + '" target="_blank" rel="noopener">Open</a></div>';
+            }).join('');
+          }).catch(function () { itemsNote.textContent = 'archive.org did not answer just now.'; });
+        }
+
+        function esc(t) { var d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
+
+        var file = document.getElementById('ia-file');
+        var title = document.getElementById('ia-title');
+        var id = document.getElementById('ia-id');
+        var send = document.getElementById('ia-send');
+        var progress = document.getElementById('ia-progress');
+
+        function slug(t) {
+          return String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 90);
+        }
+        title.addEventListener('input', function () { if (!id.dataset.touched) id.value = slug(title.value); });
+        id.addEventListener('input', function () { id.dataset.touched = '1'; });
+        file.addEventListener('change', function () {
+          if (!title.value && file.files[0]) {
+            title.value = file.files[0].name.replace(/\.[a-z0-9]+$/i, '');
+            id.value = slug(title.value);
+          }
+        });
+
+        send.addEventListener('click', function () {
+          var f = file.files[0];
+          if (!f) { progress.textContent = 'Choose a file first.'; return; }
+          var identifier = slug(id.value || title.value);
+          if (!identifier) { progress.textContent = 'It needs an address at archive.org.'; return; }
+          send.disabled = true;
+          progress.textContent = 'Asking archive.org whether that address is free\u2026';
+
+          fetch('/admin/account/archive-upload-keys?identifier=' + encodeURIComponent(identifier))
+            .then(function (r) { return r.json(); })
+            .then(function (k) {
+              if (k.error) throw new Error(k.error);
+              id.value = k.identifier;
+              // Straight from here to archive.org. XHR rather than fetch
+              // because only XHR reports how far a request body has got.
+              var xhr = new XMLHttpRequest();
+              var name = f.name.replace(/[^A-Za-z0-9._-]+/g, '-');
+              xhr.open('PUT', 'https://s3.us.archive.org/' + encodeURIComponent(k.identifier) + '/' + encodeURIComponent(name));
+              xhr.setRequestHeader('authorization', 'LOW ' + k.accessKey + ':' + k.secretKey);
+              xhr.setRequestHeader('x-archive-auto-make-bucket', '1');
+              xhr.setRequestHeader('x-archive-meta-collection', k.collection);
+              xhr.setRequestHeader('x-archive-meta-mediatype', 'audio');
+              xhr.setRequestHeader('x-archive-meta-title', k.headerTitle || identifier);
+              xhr.upload.onprogress = function (e) {
+                if (!e.lengthComputable) return;
+                progress.textContent = 'Sending: ' + Math.round((e.loaded / e.total) * 100) + '% of ' + bytes(e.total);
+              };
+              xhr.onload = function () {
+                send.disabled = false;
+                if (xhr.status >= 200 && xhr.status < 300) {
+                  var url = 'https://archive.org/download/' + encodeURIComponent(k.identifier) + '/' + encodeURIComponent(name);
+                  progress.innerHTML = 'Sent. It is at <a href="' + url + '" target="_blank" rel="noopener">' + esc(url) + '</a>'
+                    + ' \u2014 archive.org takes a few minutes to finish processing it.';
+                  setTimeout(loadItems, 4000);
+                } else {
+                  // The Archive answers in S3's XML. The sentence inside
+                  // it is the only part worth showing anybody.
+                  var said = (/<Message>([^<]+)<\/Message>/.exec(xhr.responseText || '') || [])[1];
+                  progress.textContent = 'archive.org refused it: ' + (said || 'it answered ' + xhr.status + '.');
+                }
+              };
+              xhr.onerror = function () { send.disabled = false; progress.textContent = 'The connection to archive.org failed.'; };
+              var headerTitle = title.value || identifier;
+              xhr.setRequestHeader('x-archive-meta-description', headerTitle);
+              progress.textContent = 'Sending\u2026';
+              xhr.send(f);
+            })
+            .catch(function (err) { send.disabled = false; progress.textContent = err.message; });
+        });
+      })();
+      </script>`,
     });
   }
 
@@ -2083,6 +2224,60 @@ function createAdminRouter(ctx) {
       });
       store.save('shows', list);
       redirect(res, '/admin/podcast');
+      return true;
+    }
+
+    // Do the keys work, and whose are they? Asked from the page so it
+    // can show the upload and the library only when there is a point.
+    if (p === '/admin/account/archive-whoami' && req.method === 'GET') {
+      const who = await archiveorg.whoami(archiveKeys());
+      sendJson(res, 200, who);
+      return true;
+    }
+
+    // What the account already holds. The search is public, so this is
+    // only a proxy for tidiness - it keeps the account's email, which we
+    // learn from the keys, off the page.
+    if (p === '/admin/account/archive-items' && req.method === 'GET') {
+      const who = await archiveorg.whoami(archiveKeys());
+      if (!who.authorized) { sendJson(res, 200, { items: [], total: 0, error: who.error || 'no keys' }); return true; }
+      try {
+        const page = Number(url.searchParams.get('page') || 1);
+        sendJson(res, 200, await archiveorg.itemsFor({ email: who.email, page }));
+      } catch (err) { sendJson(res, 200, { items: [], total: 0, error: err.message }); }
+      return true;
+    }
+
+    // The playable files inside one item, for the episode form's picker.
+    if (p.startsWith('/admin/account/archive-item/') && req.method === 'GET') {
+      let identifier = '';
+      try { identifier = decodeURIComponent(p.slice('/admin/account/archive-item/'.length)); } catch { identifier = ''; }
+      if (!/^[a-z0-9][a-z0-9._-]{1,99}$/i.test(identifier)) { sendJson(res, 400, { files: [], error: 'no item named' }); return true; }
+      try { sendJson(res, 200, await archiveorg.audioFilesOf(identifier)); }
+      catch (err) { sendJson(res, 200, { files: [], error: err.message }); }
+      return true;
+    }
+
+    // The keys themselves, so the browser can send a file straight to
+    // archive.org without it passing through this server. They are the
+    // operator's own keys, handed to the operator's own signed-in page,
+    // over the same connection that would have carried the file anyway -
+    // and never stored by the browser.
+    if (p === '/admin/account/archive-upload-keys' && req.method === 'GET') {
+      const keys = archiveKeys();
+      if (!keys.accessKey || !keys.secretKey) { sendJson(res, 200, { error: 'No archive.org keys are saved yet.' }); return true; }
+      const wanted = String(url.searchParams.get('identifier') || '').trim();
+      if (!/^[a-z0-9][a-z0-9._-]{1,89}$/i.test(wanted)) { sendJson(res, 200, { error: 'That address will not do: letters, numbers and dashes.' }); return true; }
+      let identifier;
+      try { identifier = await archiveorg.freeIdentifier(wanted); }
+      catch (err) { sendJson(res, 200, { error: err.message }); return true; }
+      res.setHeader('Cache-Control', 'no-store');
+      sendJson(res, 200, {
+        accessKey: keys.accessKey,
+        secretKey: keys.secretKey,
+        identifier,
+        collection: archiveorg.COLLECTION,
+      });
       return true;
     }
 
