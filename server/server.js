@@ -11,6 +11,7 @@ const { createAdminRouter } = require('./lib/admin');
 const { Stats } = require('./lib/stats');
 const media = require('./lib/media');
 const publicSite = require('./lib/public');
+const feedAliases = require('./lib/feedaliases');
 const transcripts = require('./lib/transcripts');
 
 const HTTP_PORT = Number(process.env.HTTP_PORT || 3100);
@@ -307,6 +308,15 @@ function route(req, res) {
       store.load('episodes', []),
     ));
   }
+  // An address this show's last host used, kept alive so a podcaster
+  // who moved never has to edit a directory entry. Permanent, so the
+  // directories update themselves and stop relying on it.
+  const aliased = feedAliases.match(store.load('shows', []), p);
+  if (aliased) {
+    res.writeHead(301, { Location: `/shows/${aliased.slug}/feed.xml` });
+    return res.end();
+  }
+
   const showMatch = p.match(/^\/shows\/([a-z0-9-]+)(\/feed\.xml)?$/);
   if (showMatch) {
     const show = store.load('shows', []).find((s) => s.slug === showMatch[1]);
