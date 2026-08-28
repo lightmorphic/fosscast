@@ -180,7 +180,10 @@ function createAdminRouter(ctx) {
     // excluded, a crawler counted the same as a subscriber, and
     // averaging those in reports a readership that was never there.
     const trusted = data.machinesFrom
-      ? feed.filter((d) => d.day >= data.machinesFrom).slice(-7)
+      // Strictly after: the day the filter arrived was already part
+      // spent, and its count holds the machines recorded that morning.
+      // The first day worth averaging is the one after it.
+      ? feed.filter((d) => d.day > data.machinesFrom).slice(-7)
       : [];
     const subscribers = trusted.length
       ? Math.round(trusted.reduce((a, d) => a + d.count, 0) / trusted.length)
