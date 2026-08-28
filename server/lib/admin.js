@@ -13,6 +13,10 @@ const fs = require('fs');
 const { esc, adminPage, ICONS, withEmbedded, BRAND } = require('./html');
 const auth = require('./auth');
 const CATEGORIES = require('./categories');
+
+// Publishing from a studio is on unless the instance turns it off. The
+// card below is the only way to reach the key, so it goes with it.
+const STUDIO_PUBLISHING = !/^(0|off|false|no)$/i.test((process.env.STUDIO_PUBLISHING || '').trim());
 const feedAliases = require('./feedaliases');
 const { probeDuration, ensureWebImage, ensureVideoPoster, typeFor } = require('./media');
 const importer = require('./import');
@@ -1703,7 +1707,7 @@ function createAdminRouter(ctx) {
         </form>
       </section>
 
-      <section class="panel narrow">
+      ${STUDIO_PUBLISHING ? `<section class="panel narrow">
         <h2>Studio publishing</h2>
         <p class="hint">The key FOSSStudio &mdash; or any other studio &mdash;
         uses to publish a finished recording straight into this instance.
@@ -1727,7 +1731,7 @@ function createAdminRouter(ctx) {
         </form>
         <p class="hint">A new key stops the old one working at once, so
         any studio using it needs the new one.</p>
-      </section>
+      </section>` : ''}
 
       <section class="panel narrow">
         <h2>Internet Archive</h2>
@@ -2045,7 +2049,9 @@ function createAdminRouter(ctx) {
 
     if (p === '/admin/stats' && req.method === 'GET') { html(res, statsPage()); return true; }
     if (p === '/admin/account' && req.method === 'GET') { html(res, accountPage(user)); return true; }
-    if (p === '/admin/account/studio-key' && req.method === 'POST') {
+    // Switched off, this falls through to the page-not-found below.
+    // Returning unhandled from here would leave the request unanswered.
+    if (p === '/admin/account/studio-key' && req.method === 'POST' && STUDIO_PUBLISHING) {
       const value = settings();
       value.studioToken = crypto.randomBytes(32).toString('hex');
       store.save('settings', value);

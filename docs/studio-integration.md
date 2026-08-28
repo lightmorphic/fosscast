@@ -8,7 +8,10 @@ relationship is this one API.
 ## Publishing episodes (the publish API)
 
 Token-authenticated: the key is on the instance's Account page, under
-Studio publishing, where it can be copied or replaced. It is sent as
+Studio publishing, where it can be copied or replaced. An instance with
+no use for this - one whose audio lives elsewhere, or that never
+records through a studio - can set `STUDIO_PUBLISHING=off`, and then the
+card disappears and both endpoints below refuse every key. It is sent as
 `Authorization: Bearer <token>`. (`FOSSSTUDIO_TOKEN` in the environment
 sets it in advance instead, for a studio configured before the instance
 exists.) Two steps:
