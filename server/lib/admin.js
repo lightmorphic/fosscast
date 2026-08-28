@@ -1144,7 +1144,7 @@ function createAdminRouter(ctx) {
         address here and it keeps working: anyone still asking for it is sent
         to this show's feed, permanently, so Apple, Spotify and the rest
         update themselves. You never open a directory or fill in a form.</p>
-        <form method="post" action="/admin/shows/${esc(show.slug)}/settings" data-autosave>
+        <form method="post" action="/admin/shows/${esc(show.slug)}/aliases" data-autosave>
           <label for="feedAliases">Old address</label>
           <input id="feedAliases" name="feedAliases" type="text" spellcheck="false"
             placeholder="/@${esc(show.slug)}/feed.xml"
@@ -2059,7 +2059,7 @@ function createAdminRouter(ctx) {
       return true;
     }
 
-    const showMatch = p.match(/^\/admin\/shows\/([a-z0-9-]+)(\/episodes|\/delete|\/settings|\/import)?$/);
+    const showMatch = p.match(/^\/admin\/shows\/([a-z0-9-]+)(\/episodes|\/delete|\/settings|\/import|\/aliases)?$/);
     if (showMatch) {
       const show = shows().find((s) => s.slug === showMatch[1]);
       if (!show) { html(res, adminPage({ title: 'Not found', body: '<p>Episode not found.</p>' }), 404); return true; }
@@ -2134,10 +2134,6 @@ function createAdminRouter(ctx) {
         entry.copyright = String(form.get('copyright') || '').trim().slice(0, 200);
         const guid = String(form.get('podcastGuid') || '').trim().slice(0, 60);
         entry.podcastGuid = /^[a-zA-Z0-9-]{8,}$/.test(guid) ? guid : undefined;
-        // Old feed addresses on the podcaster's own domain. Anything
-        // unusable is dropped rather than stored, so the box always
-        // shows back exactly what is in force.
-        entry.feedAliases = feedAliases.parse(form.get('feedAliases'));
         entry.locked = form.get('locked') === '1';
         entry.lockedOwner = user.email;
         const fundingUrl = String(form.get('fundingUrl') || '').trim().slice(0, 500);
@@ -2187,6 +2183,21 @@ function createAdminRouter(ctx) {
         // the page is already showing what was stored.
         if (form.get('live')) { noContent(res); return true; }
         redirect(res, '/admin/podcast');
+        return true;
+      }
+
+      // One field, its own route. A form that posts to the settings
+      // handler is asking that handler to rewrite the whole show from
+      // whatever the form happened to contain, which for a one-field
+      // form means erasing everything else.
+      if (action === '/aliases' && req.method === 'POST') {
+        const form = await formBody(req, readBody);
+        const list = shows();
+        const entry = list.find((sh) => sh.id === show.id);
+        entry.feedAliases = feedAliases.parse(form.get('feedAliases'));
+        store.save('shows', list);
+        if (form.get('live')) { sendJson(res, 200, { ok: true, aliases: entry.feedAliases }); return true; }
+        redirect(res, '/admin/podcast?s=feed');
         return true;
       }
 

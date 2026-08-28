@@ -113,3 +113,15 @@ test('two shows cannot both own one old address', () => {
   ];
   assert.strictEqual(aliases.match(shows, '/shared').slug, 'first', 'first claim wins, and it is stable');
 });
+
+test('saving an old address leaves the rest of the show alone', async () => {
+  // The box had its own form pointed at the settings handler, which
+  // rewrites the whole show from whatever the form contains. One field
+  // in, everything else blanked - description, author, owner email.
+  // This is the test that would have caught it.
+  const settings = fs.readFileSync(path.join(__dirname, '..', 'lib', 'admin.js'), 'utf8');
+  const form = settings.slice(settings.indexOf('id="sec-old-addresses"'));
+  const action = form.slice(form.indexOf('<form'), form.indexOf('</form>'));
+  assert.ok(action.includes('/aliases'), 'the box posts to its own route');
+  assert.ok(!action.includes('/settings'), 'and never to the one that rewrites everything');
+});
