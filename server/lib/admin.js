@@ -176,7 +176,15 @@ function createAdminRouter(ctx) {
     const published = episodeList.filter((e) => !e.draft).length;
     const perEpisode = published ? Math.round(allTime / published) : 0;
     const thisMonth = months[months.length - 1] || { count: 0 };
-    const subscribers = Math.round(feed.slice(-7).reduce((a, d) => a + d.count, 0) / 7);
+    // Only days this instance can vouch for: before machines were
+    // excluded, a crawler counted the same as a subscriber, and
+    // averaging those in reports a readership that was never there.
+    const trusted = data.machinesFrom
+      ? feed.filter((d) => d.day >= data.machinesFrom).slice(-7)
+      : [];
+    const subscribers = trusted.length
+      ? Math.round(trusted.reduce((a, d) => a + d.count, 0) / trusted.length)
+      : null;
     const countryCount = Object.keys(data.byCountry).filter((c) => c && data.byCountry[c] > 0).length;
 
     const monthPoints = months.map((m) => ({
@@ -241,7 +249,9 @@ function createAdminRouter(ctx) {
           note: change === null ? '' : `${change >= 0 ? '+' : ''}${change}% on the 30 before`,
           tone: change === null ? '' : change >= 0 ? 'up' : 'down' },
         { value: charts.short(thisMonth.count), label: 'This month so far' },
-        { value: charts.short(subscribers), label: 'Feed pulls a day', note: 'roughly, subscribers' },
+        ...(subscribers === null
+          ? [{ value: '\u2013', label: 'Feed pulls a day', note: 'counting from tomorrow' }]
+          : [{ value: charts.short(subscribers), label: 'Feed pulls a day', note: 'roughly, subscribers' }]),
         { value: charts.short(perEpisode), label: 'Average per episode' },
         { value: charts.short(best.count), label: 'Best day', note: best.day || '' },
         { value: String(published), label: 'Episodes published' },

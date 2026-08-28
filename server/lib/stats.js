@@ -195,6 +195,13 @@ class Stats {
     if (isMachine(userAgent)) return;
     const day = new Date().toISOString().slice(0, 10);
     this.rollDay(day);
+    // The first day this instance ran a version that leaves machines
+    // out. Days before it counted every crawler as a subscriber, so
+    // anything reading these numbers can tell which of them mean
+    // anything - rather than a number healing quietly over a week
+    // while the page insists it was right all along.
+    const data0 = this.data();
+    if (!data0.machinesFrom) { data0.machinesFrom = day; this.store.save('stats', data0); }
     const key = this.fingerprint(ip, userAgent, 'feed');
     if (this.seenFeed.has(key)) return;
     this.seenFeed.add(key);
