@@ -687,6 +687,9 @@ function createAdminRouter(ctx) {
       .sort((a, b) => (a.date < b.date ? 1 : -1));
     const nextEpisode = items.reduce((n, e) => Math.max(n, e.episode || 0), 0) + 1;
     const rows = items.map((episode) => `<tr>
+      <td class="art-cell">${(episode.artwork || show.artwork)
+        ? `<img class="row-art" src="${esc(episode.artwork || show.artwork)}" alt="" loading="lazy">`
+        : '<span class="row-art row-art-none" aria-hidden="true"></span>'}</td>
       <td><a href="/admin/episodes/${esc(episode.id)}">${esc(episode.title)}</a>${episode.draft ? ' <span class="tag">draft</span>' : ''}</td>
       <td>${esc(episode.date)}</td>
       <td class="media-cell"><a href="/shows/${esc(show.slug)}/${esc(episode.slug || episode.id)}">page</a> &middot; <a href="/embed/${esc(episode.id)}">embed</a></td>
@@ -705,16 +708,16 @@ function createAdminRouter(ctx) {
         <h2>All episodes</h2>
         <table>
           <caption class="sr-only">Episodes of ${esc(show.name)}</caption>
-          <thead><tr><th>Title</th><th>Date</th><th>Links</th><th></th></tr></thead>
-          <tbody>${rows || '<tr><td colspan="4" class="hint">No episodes yet.</td></tr>'}</tbody>
+          <thead><tr><th><span class="sr-only">Artwork</span></th><th>Title</th><th>Date</th><th>Links</th><th></th></tr></thead>
+          <tbody>${rows || '<tr><td colspan="5" class="hint">No episodes yet.</td></tr>'}</tbody>
         </table>
       </section>
 
-      <div class="cols">
-      <div>
       <section class="panel">
         <h2>New episode</h2>
         <form method="post" action="/admin/shows/${esc(show.slug)}/episodes">
+        <div class="form-cols">
+        <div>
           <label for="title">Title</label>
           <input id="title" name="title" required maxlength="200">
           <div class="field-row">
@@ -727,6 +730,10 @@ function createAdminRouter(ctx) {
             <div><label for="eptype">Type</label>
             <select id="eptype" name="type"><option value="full">Full</option><option value="trailer">Trailer</option><option value="bonus">Bonus</option></select></div>
           </div>
+          <label for="epDescription">Description</label>
+          <textarea id="epDescription" name="description" rows="8" maxlength="4000"></textarea>
+        </div>
+        <div>
           <label for="mediaFile">Media file (uploads to this server)</label>
           <input id="mediaFile" type="file" accept="audio/*,video/*" data-upload data-show="${esc(show.slug)}" data-target="mediaUrl" data-status="upload-status">
           <p class="hint" id="upload-status"></p>
@@ -739,8 +746,6 @@ function createAdminRouter(ctx) {
           <p class="hint" id="epart-status"></p>
           <input type="hidden" id="epArtwork" name="artwork" value="">
           <img class="art-preview" id="epart-preview-img" alt="" src="" style="display:none">
-          <label for="epDescription">Description</label>
-          <textarea id="epDescription" name="description" rows="4" maxlength="4000"></textarea>
           <label class="switch-label">
             <input type="checkbox" name="draft" value="1" class="switch-input">
             <span class="switch" aria-hidden="true"></span>
@@ -752,11 +757,11 @@ function createAdminRouter(ctx) {
             <span>Also send the audio to archive.org (it gets a permanent home there; downloads are still counted here)</span>
           </label>`
             : `<p class="hint">Add your <a href="/admin/account">Internet Archive keys</a> and episodes can be sent to archive.org for permanent keeping as you publish them.</p>`}
+        </div>
+        </div>
           <button class="btn-primary" type="submit">Publish episode</button>
         </form>
-      </section>
-      </div>
-      </div>`,
+      </section>`,
     });
   }
 

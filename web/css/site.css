@@ -1471,3 +1471,23 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .tab:hover { color: var(--fg); background: var(--muted); }
 .tab.current { color: var(--on-accent-container); background: var(--accent-container); }
+
+/* A form wide enough to use the room it is given: what the episode is
+   on one side, where its audio and artwork come from on the other. */
+.form-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1.75rem;
+  align-items: start;
+}
+@media (max-width: 56rem) {
+  .form-cols { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* The episode list is read by its pictures as much as its titles. */
+td.art-cell { width: 1%; padding-right: 0.25rem; }
+.row-art {
+  display: block; width: 3rem; height: 3rem;
+  border-radius: 0.5rem; object-fit: cover;
+}
+.row-art-none { background: var(--muted); }
