@@ -414,7 +414,38 @@ textarea { min-height: 6rem; resize: vertical; }
 input[type="file"] { padding: 0.5rem; }
 .field-row { display: flex; gap: 1rem; flex-wrap: wrap; }
 .field-row > div { flex: 1; min-width: 8rem; }
-.check-label { display: flex; align-items: center; gap: 0.5rem; font-weight: 400; }
+/* A setting that is on or off is drawn as a switch, whatever markup it
+   arrives in. The tick box is still the control underneath - it posts,
+   it autosaves, it works from a keyboard, a screen reader calls it a
+   checkbox - only the drawing changes. Done here as well as in the
+   markup so a checkbox added later cannot quietly look like the old
+   ones again. */
+.check-label {
+  display: flex; align-items: flex-start; gap: 0.65rem;
+  font-weight: 400; cursor: pointer;
+}
+.check-label > input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  flex: none; position: relative; margin: 0.1rem 0 0; cursor: pointer;
+  width: 2.5rem; height: 1.375rem; border-radius: 999px;
+  background: color-mix(in srgb, var(--fg) 14%, transparent);
+  border: 1px solid var(--border);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.check-label > input[type="checkbox"]::after {
+  content: ""; position: absolute; top: 50%; left: 2px;
+  transform: translateY(-50%);
+  width: 1rem; height: 1rem; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+  transition: left 0.15s ease;
+}
+.check-label > input[type="checkbox"]:checked {
+  background: var(--accent); border-color: var(--accent);
+}
+.check-label > input[type="checkbox"]:checked::after { left: calc(100% - 1rem - 2px); }
+.check-label > input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
 .check { display: inline; width: auto; }
 .form-error {
   color: var(--danger);

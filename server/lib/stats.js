@@ -87,6 +87,21 @@ function countryFor(headers) {
   return /^[A-Z]{2}$/.test(raw) && raw !== 'XX' ? raw : '';
 }
 
+// Machines that fetch a feed or a file without anybody listening:
+// search crawlers, link unfurlers, uptime checks, and the scripted
+// clients that come with them. They were labelled and then counted,
+// which is how a show with four downloads reported two hundred and
+// fifty subscribers.
+const MACHINES = /bot\b|bot\/|crawler|spider|facebookexternalhit|slurp|bingpreview|headless|monitor|uptime|preview|scrapy|curl|wget|python-requests|libwww|Go-http|okhttp|axios|node-fetch|PostmanRuntime/i;
+
+function isMachine(userAgent) {
+  const ua = String(userAgent || '');
+  // Nothing at all is a machine too: every real podcast app and browser
+  // says who it is.
+  if (!ua.trim()) return true;
+  return MACHINES.test(ua);
+}
+
 function bump(bucket, key, by = 1) {
   if (!key) return;
   bucket[key] = (bucket[key] || 0) + by;
@@ -135,6 +150,7 @@ class Stats {
   // the user agent, the language asked for, the country the proxy
   // reported, and the episode's publication date for the age curve.
   record(episodeId, ip, userAgent, context = {}) {
+    if (isMachine(userAgent)) return;
     const now = new Date();
     const day = now.toISOString().slice(0, 10);
     this.rollDay(day);
@@ -176,6 +192,7 @@ class Stats {
   // daily, so the count of distinct pullers per day is the closest
   // honest thing to a subscriber number.
   recordFeed(ip, userAgent) {
+    if (isMachine(userAgent)) return;
     const day = new Date().toISOString().slice(0, 10);
     this.rollDay(day);
     const key = this.fingerprint(ip, userAgent, 'feed');
@@ -265,4 +282,4 @@ class Stats {
   }
 }
 
-module.exports = { Stats, appFor, platformFor, languageFor, countryFor };
+module.exports = { Stats, isMachine, appFor, platformFor, languageFor, countryFor };

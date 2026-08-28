@@ -177,6 +177,7 @@ function createAdminRouter(ctx) {
     const perEpisode = published ? Math.round(allTime / published) : 0;
     const thisMonth = months[months.length - 1] || { count: 0 };
     const subscribers = Math.round(feed.slice(-7).reduce((a, d) => a + d.count, 0) / 7);
+    const countryCount = Object.keys(data.byCountry).filter((c) => c && data.byCountry[c] > 0).length;
 
     const monthPoints = months.map((m) => ({
       label: new Date(`${m.month}-01T00:00:00Z`).toLocaleDateString('en-GB', { month: 'long', year: 'numeric', timeZone: 'UTC' }),
@@ -244,7 +245,13 @@ function createAdminRouter(ctx) {
         { value: charts.short(perEpisode), label: 'Average per episode' },
         { value: charts.short(best.count), label: 'Best day', note: best.day || '' },
         { value: String(published), label: 'Episodes published' },
-        { value: String(Object.keys(data.byCountry).filter((c) => c && data.byCountry[c] > 0).length), label: 'Countries' },
+        // Country comes from a header a geo-aware proxy sets. Plenty of
+        // instances sit behind one that does not, and showing them a
+        // hard 0 reads as "nobody, anywhere" rather than "we cannot
+        // tell from here".
+        ...(countryCount
+          ? [{ value: String(countryCount), label: 'Countries' }]
+          : [{ value: '\u2013', label: 'Countries', note: 'your proxy does not say' }]),
       ])}
 
       <section class="panel" id="sec-months">
@@ -734,8 +741,16 @@ function createAdminRouter(ctx) {
           <img class="art-preview" id="epart-preview-img" alt="" src="" style="display:none">
           <label for="epDescription">Description</label>
           <textarea id="epDescription" name="description" rows="4" maxlength="4000"></textarea>
-          <label class="check-label"><input type="checkbox" name="draft" value="1" class="check"> Save as draft (hidden from the public site and feed)</label>
-          ${archiveReady() ? `<label class="check-label"><input type="checkbox" name="archive" value="1" class="check"> Also send the audio to archive.org (it gets a permanent home there; downloads are still counted here)</label>`
+          <label class="switch-label">
+            <input type="checkbox" name="draft" value="1" class="switch-input">
+            <span class="switch" aria-hidden="true"></span>
+            <span>Save as draft (hidden from the public site and feed)</span>
+          </label>
+          ${archiveReady() ? `<label class="switch-label">
+            <input type="checkbox" name="archive" value="1" class="switch-input">
+            <span class="switch" aria-hidden="true"></span>
+            <span>Also send the audio to archive.org (it gets a permanent home there; downloads are still counted here)</span>
+          </label>`
             : `<p class="hint">Add your <a href="/admin/account">Internet Archive keys</a> and episodes can be sent to archive.org for permanent keeping as you publish them.</p>`}
           <button class="btn-primary" type="submit">Publish episode</button>
         </form>
@@ -872,7 +887,11 @@ function createAdminRouter(ctx) {
           <div class="subsection">
           <p class="group-label">Episodes</p>
           ${chips('episodes', themes.EPISODE_LAYOUTS.map(([k, l]) => [k, l.replace(' the text', '').replace(', small thumbnails', ''), '']), t.episodes)}
-          <label class="check-label"><input type="checkbox" name="bannerFull" value="1" class="check"${t.bannerFull ? ' checked' : ''}> Banner runs edge to edge</label>
+          <label class="switch-label">
+            <input type="checkbox" name="bannerFull" value="1" class="switch-input"${t.bannerFull ? ' checked' : ''}>
+            <span class="switch" aria-hidden="true"></span>
+            <span>Banner runs edge to edge</span>
+          </label>
           </div>
         </section>
 
@@ -892,7 +911,11 @@ function createAdminRouter(ctx) {
         <section class="panel" id="sec-mode">
           <h2>Light or dark</h2>
           ${chips('mode', [['auto', 'Follow the visitor', "Their device decides, and they can flip it."], ['light', 'Always light', ''], ['dark', 'Always dark', '']], t.mode)}
-          <label class="check-label"><input type="checkbox" name="toggle" value="1" class="check"${t.toggle ? ' checked' : ''}> Offer the light/dark switch</label>
+          <label class="switch-label">
+            <input type="checkbox" name="toggle" value="1" class="switch-input"${t.toggle ? ' checked' : ''}>
+            <span class="switch" aria-hidden="true"></span>
+            <span>Offer the light/dark switch</span>
+          </label>
         </section>
 
         <section class="panel" id="sec-words">
@@ -1212,8 +1235,16 @@ function createAdminRouter(ctx) {
           reject a feed without one. It is published in the feed, so use an
           address you are happy to make public. It does not have to be the
           address you log in with.</p>
-          <label class="check-label"><input type="checkbox" name="explicit" value="1" class="check"${show.explicit ? ' checked' : ''}> Explicit content</label>
-          <label class="check-label"><input type="checkbox" name="locked" value="1" class="check"${show.locked ? ' checked' : ''}> Lock the feed (tells other hosts not to import it without permission)</label>
+          <label class="switch-label">
+            <input type="checkbox" name="explicit" value="1" class="switch-input"${show.explicit ? ' checked' : ''}>
+            <span class="switch" aria-hidden="true"></span>
+            <span>Explicit content</span>
+          </label>
+          <label class="switch-label">
+            <input type="checkbox" name="locked" value="1" class="switch-input"${show.locked ? ' checked' : ''}>
+            <span class="switch" aria-hidden="true"></span>
+            <span>Lock the feed (tells other hosts not to import it without permission)</span>
+          </label>
 
         </section>
 
@@ -1309,7 +1340,11 @@ function createAdminRouter(ctx) {
           <input id="sbannervideo" type="file" accept="video/mp4,video/webm" data-upload data-check="banner-video" data-show="${esc(show.slug)}" data-target="bannerVideo" data-status="bannervideo-status">
           <p class="hint" id="bannervideo-status">${show.bannerVideo ? 'Uploaded.' : 'None. The still banner is used.'}</p>
           <input type="hidden" id="bannerVideo" name="bannerVideo" value="${esc(show.bannerVideo || '')}">
-          <label class="check-label"><input type="checkbox" name="bannerLoop" value="1" class="check"${show.bannerLoop === false ? '' : ' checked'}> Loop it &mdash; otherwise it plays once and holds on its last frame</label>
+          <label class="switch-label">
+            <input type="checkbox" name="bannerLoop" value="1" class="switch-input"${show.bannerLoop === false ? '' : ' checked'}>
+            <span class="switch" aria-hidden="true"></span>
+            <span>Loop it &mdash; otherwise it plays once and holds on its last frame</span>
+          </label>
 
           <input type="hidden" name="bannerFocusX" id="bannerFocusX" value="${Number(show.bannerFocusX ?? 50)}">
           <input type="hidden" name="bannerFocusY" id="bannerFocusY" value="${Number(show.bannerFocusY ?? 50)}">
@@ -1608,7 +1643,11 @@ function createAdminRouter(ctx) {
           ${episode.artwork ? `<img class="art-preview" src="${esc(episode.artwork)}" alt="Episode artwork" width="120" height="120">` : ''}
           <label for="chapters">Chapters (one per line: HH:MM:SS Title)</label>
           <textarea id="chapters" name="chapters" rows="5" placeholder="00:00 Intro&#10;05:30 The main topic">${esc(formatChapters(episode.chapters))}</textarea>
-          <label class="check-label"><input type="checkbox" name="draft" value="1" class="check"${episode.draft ? ' checked' : ''}> Draft (hidden from the public site and feed)</label>
+          <label class="switch-label">
+            <input type="checkbox" name="draft" value="1" class="switch-input"${episode.draft ? ' checked' : ''}>
+            <span class="switch" aria-hidden="true"></span>
+            <span>Draft (hidden from the public site and feed)</span>
+          </label>
           <div class="save-bar"><span class="save-state" aria-live="polite"></span></div>
         </form>
       </section>
