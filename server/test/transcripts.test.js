@@ -226,7 +226,11 @@ test('with nothing configured there is no tool and no sign of one', async () => 
   assert.doesNotMatch(page, /id="transcribe-frame"/, 'nowhere to put a frame');
   assert.doesNotMatch(page, /data-origin=/, 'no origin, so the listener never attaches');
   assert.doesNotMatch(page, /data-tool=/);
-  assert.doesNotMatch(page, /<iframe/);
+  // No frame is rendered. Scripts are stripped first: the admin's own
+  // script carries the line of HTML that the embed pop-up hands people
+  // to copy, and a string inside a script is not a frame on the page.
+  const markup = page.replace(/<script[\s\S]*?<\/script>/g, '');
+  assert.doesNotMatch(markup, /<iframe/);
   // The panel is still there and still works: the box is the feature,
   // the tool is an extra.
   assert.match(page, /id="transcript-panel"/);

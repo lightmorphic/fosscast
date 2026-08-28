@@ -836,70 +836,109 @@ document.addEventListener('change', (e) => {
   labels();
 })();
 
-// Choosing an episode's audio from what is already at archive.org. Two
-// steps because that is how the Archive is shaped: an item, then the
-// files inside it - and the Archive keeps its own converted copies, so
-// a wav uploaded last year has an mp3 sitting beside it now.
+// Choosing an episode's audio from what is already at archive.org. It
+// is an offer, not a step: the podcaster may keep their audio anywhere,
+// so this stays out of the way until asked and then covers the page
+// rather than growing inside the form.
 (() => {
   const button = document.getElementById('ia-pick');
-  const box = document.getElementById('ia-pick-box');
-  const note = document.getElementById('ia-pick-note');
   const field = document.getElementById('mediaUrl');
-  if (!button || !box || !field) return;
+  if (!button || !field) return;
 
   const esc = (t) => { const d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; };
-  const mins = (s) => (s ? Math.floor(s / 60) + ' min' : '');
 
-  function say(text) { if (note) note.textContent = text; }
+  const back = document.createElement('div');
+  back.className = 'ia-back';
+  back.hidden = true;
+  back.innerHTML = '<div class="ia-modal" role="dialog" aria-modal="true" aria-label="Your recordings at archive.org">'
+    + '<button class="ia-x" type="button" aria-label="Close">&times;</button>'
+    + '<h2>Your last five at archive.org</h2>'
+    + '<div class="ia-body"><p class="hint">Asking archive.org\u2026</p></div></div>';
+  document.body.appendChild(back);
+  const body = back.querySelector('.ia-body');
 
-  async function items() {
-    say('Asking archive.org\u2026');
-    const res = await fetch('/admin/account/archive-items');
-    const data = await res.json();
-    say('');
-    if (!data.items || !data.items.length) {
-      box.innerHTML = '<p class="hint">' + esc(data.error || 'Nothing is there under your account yet.') + '</p>';
+  const close = () => { back.hidden = true; };
+  back.addEventListener('click', (ev) => { if (ev.target === back || ev.target.closest('.ia-x')) close(); });
+  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !back.hidden) close(); });
+
+  button.addEventListener('click', async () => {
+    back.hidden = false;
+    body.innerHTML = '<p class="hint">Asking archive.org\u2026</p>';
+    let data;
+    try { data = await (await fetch('/admin/account/archive-recent')).json(); }
+    catch { body.innerHTML = '<p class="hint">archive.org did not answer just now.</p>'; return; }
+    if (!data.episodes || !data.episodes.length) {
+      body.innerHTML = '<p class="hint">' + esc(data.error || 'Nothing playable is there under your account yet.') + '</p>';
       return;
     }
-    box.innerHTML = '<p class="hint">Pick the recording this episode should play.</p>'
-      + data.items.map((it) => '<div class="ia-item"><strong>' + esc(it.title) + '</strong>'
-        + '<span class="hint">' + esc(it.date) + '</span>'
-        + '<button class="btn-secondary btn-small" type="button" data-ia-item="' + esc(it.identifier) + '">Open</button></div>').join('');
-  }
+    const more = data.total > data.episodes.length
+      ? '<p class="hint">The five most recent. You have ' + data.total + ' items there in all - for an older one, copy its address from archive.org and paste it in.</p>'
+      : '<p class="hint">Everything playable under your account. Click one.</p>';
+    body.innerHTML = more + data.episodes.map((e, i) =>
+      '<button class="ia-choice" type="button" data-i="' + i + '">'
+      + '<strong>' + esc(e.name) + '</strong>'
+      + '<span>' + esc(e.url) + '</span></button>').join('');
+    body.querySelectorAll('.ia-choice').forEach((choice) => {
+      choice.addEventListener('click', () => {
+        field.value = data.episodes[Number(choice.dataset.i)].url;
+        field.dispatchEvent(new Event('change', { bubbles: true }));
+        close();
+        field.focus();
+      });
+    });
+  });
+})();
 
-  async function files(identifier) {
-    say('Looking inside\u2026');
-    const res = await fetch('/admin/account/archive-item/' + encodeURIComponent(identifier));
-    const data = await res.json();
-    say('');
-    if (!data.files || !data.files.length) {
-      box.innerHTML = '<p class="hint">Nothing playable in that one. '
-        + '<button class="btn-secondary btn-small" type="button" data-ia-back>Back</button></p>';
-      return;
+// The embed code, where somebody who wants it is standing: the row in
+// the episode list. Clicking used to open the player itself, which is
+// the one thing nobody needs at that moment - they need the line of
+// HTML that puts it on their own page.
+(() => {
+  const table = document.querySelector('table');
+  if (!table || !table.querySelector('[data-embed]')) return;
+
+  const back = document.createElement('div');
+  back.className = 'ia-back';
+  back.hidden = true;
+  back.innerHTML = '<div class="ia-modal" role="dialog" aria-modal="true" aria-label="Embed code">'
+    + '<button class="ia-x" type="button" aria-label="Close">&times;</button>'
+    + '<h2>Put this episode on a page</h2>'
+    + '<p class="hint" id="embed-for"></p>'
+    + '<div class="embed-code"><button class="btn-secondary btn-small embed-copy" type="button">Copy</button>'
+    + '<pre id="embed-snip"></pre></div>'
+    + '<p class="hint">Paste it into any web page. It plays there, and the '
+    + 'download counts as one of yours like every other.</p></div>';
+  document.body.appendChild(back);
+
+  const snip = back.querySelector('#embed-snip');
+  const forWho = back.querySelector('#embed-for');
+  const copy = back.querySelector('.embed-copy');
+  const close = () => { back.hidden = true; };
+  back.addEventListener('click', (ev) => { if (ev.target === back || ev.target.closest('.ia-x')) close(); });
+  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !back.hidden) close(); });
+
+  copy.addEventListener('click', async () => {
+    try {
+      await navigator.clipboard.writeText(snip.textContent);
+      copy.textContent = 'Copied';
+      setTimeout(() => { copy.textContent = 'Copy'; }, 1600);
+    } catch {
+      const range = document.createRange();
+      range.selectNodeContents(snip);
+      const sel = window.getSelection();
+      sel.removeAllRanges();
+      sel.addRange(range);
     }
-    box.innerHTML = '<p class="hint">' + esc(data.title) + ' \u2014 which file? '
-      + '<button class="btn-secondary btn-small" type="button" data-ia-back>Back</button></p>'
-      + data.files.map((f) => '<div class="ia-item"><strong>' + esc(f.name.split('/').pop()) + '</strong>'
-        + '<span class="hint">' + esc(f.format) + (f.seconds ? ' \u00b7 ' + mins(f.seconds) : '') + '</span>'
-        + '<button class="btn-secondary btn-small" type="button" data-ia-url="' + esc(f.url) + '">Use this</button></div>').join('');
-  }
-
-  button.addEventListener('click', () => {
-    box.hidden = !box.hidden;
-    if (!box.hidden) items().catch(() => say('archive.org did not answer.'));
   });
 
-  box.addEventListener('click', (ev) => {
-    const open = ev.target.closest('[data-ia-item]');
-    if (open) { files(open.dataset.iaItem).catch(() => say('archive.org did not answer.')); return; }
-    if (ev.target.closest('[data-ia-back]')) { items().catch(() => {}); return; }
-    const use = ev.target.closest('[data-ia-url]');
-    if (use) {
-      field.value = use.dataset.iaUrl;
-      field.dispatchEvent(new Event('change', { bubbles: true }));
-      box.hidden = true;
-      say('Set. Remember to save.');
-    }
+  table.addEventListener('click', (ev) => {
+    const button = ev.target.closest('[data-embed]');
+    if (!button) return;
+    const url = window.location.origin + '/embed/' + button.dataset.embed;
+    forWho.textContent = button.dataset.embedTitle || '';
+    snip.textContent = '<iframe src="' + url + '" width="100%" height="150" '
+      + 'frameborder="0" scrolling="no" loading="lazy" title="Podcast episode player"></iframe>';
+    back.hidden = false;
   });
 })();
 

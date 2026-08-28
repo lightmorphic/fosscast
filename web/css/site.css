@@ -749,6 +749,110 @@ body.embedded .wrap { padding-top: 0.5rem; }
 .sub-btn:hover { border-color: var(--accent); color: var(--accent); }
 .sub-btn svg { width: 1.05rem; height: 1.05rem; flex: none; }
 
+/* An offer standing beside the form rather than inside it: a podcaster
+   who keeps their audio anywhere else should be able to see at a glance
+   that this is not a step they have to take. */
+.aside-offer {
+  margin: 1.25rem 0 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: none;
+}
+.aside-offer p { margin: 0; max-width: none; }
+.aside-offer p:first-child { font-weight: 600; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.aside-offer .btn-secondary { margin-top: 0; }
+.aside-offer .hint { margin-top: 0.4rem; }
+
+/* A pop-up: the page keeps its place underneath, and what was asked for
+   sits in the middle of the screen with a way out at the top right. */
+.ia-back {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(9, 9, 11, 0.45);
+  backdrop-filter: blur(3px);
+}
+.ia-back[hidden] { display: none; }
+.ia-modal {
+  position: relative;
+  width: min(34rem, 100%);
+  max-height: 82vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 2);
+  box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.35);
+  padding: 1.5rem 1.6rem 1.75rem;
+}
+.ia-modal h2 { margin: 0 2rem 0.35rem 0; font-size: 1.2rem; }
+.ia-x {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.75rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--muted-fg);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+}
+.ia-x:hover { color: var(--fg); }
+
+/* One recording to choose: its file name, and the address underneath so
+   nobody has to guess which one it is. The whole row is the button. */
+.ia-choice {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.7rem 0.85rem;
+  margin-top: 0.6rem;
+  cursor: pointer;
+}
+.ia-choice:hover { border-color: var(--accent); }
+.ia-choice strong { display: block; font-size: 0.9375rem; }
+.ia-choice span {
+  display: block;
+  color: var(--muted-fg);
+  font-size: 0.78rem;
+  margin-top: 0.2rem;
+  word-break: break-all;
+}
+
+/* The embed snippet, with its copy button in the corner. */
+.embed-code { position: relative; margin: 0.75rem 0; }
+.embed-code pre {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.embed-copy { position: absolute; top: 0.5rem; right: 0.5rem; margin-top: 0; }
+
+/* A button that reads as a link, for a row of small actions. */
+.linkish {
+  font: inherit;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.linkish:hover { text-decoration: underline; }
+
 /* A row in an archive.org list: what it is, when, and the button that
    takes it. Same shape whether it is an item or a file inside one. */
 .ia-item {

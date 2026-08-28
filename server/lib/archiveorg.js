@@ -303,8 +303,33 @@ async function audioFilesOf(identifier, { fetchImpl = fetch } = {}) {
   };
 }
 
+// The handful of recordings a podcaster is most likely to want, ready
+// to pick from: the newest items, each reduced to its first playable
+// file. Five, because somebody with more than five to choose between is
+// not choosing - they are searching, and the address box takes a paste.
+async function recentEpisodes({ email, limit = 5, fetchImpl = fetch } = {}) {
+  const { items, total } = await itemsFor({ email, rows: limit, fetchImpl });
+  const out = [];
+  for (const item of items) {
+    let found;
+    try { found = await audioFilesOf(item.identifier, { fetchImpl }); }
+    catch { continue; }
+    const file = (found.files || [])[0];
+    if (!file) continue;
+    out.push({
+      identifier: item.identifier,
+      title: item.title || found.title,
+      name: file.name.split('/').pop(),
+      url: file.url,
+      seconds: file.seconds,
+      date: item.date,
+    });
+  }
+  return { episodes: out, total };
+}
+
 module.exports = {
   identifierFor, freeIdentifier, exists, metaHeaders, headerValue, errorFrom,
   overLimit, put, metadataFor, filenameFor, COLLECTION, ENDPOINT,
-  whoami, itemsFor, audioFilesOf, SEARCH,
+  whoami, itemsFor, audioFilesOf, recentEpisodes, SEARCH,
 };
