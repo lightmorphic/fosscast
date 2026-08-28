@@ -13,6 +13,7 @@ const fs = require('fs');
 const { esc, adminPage, ICONS, withEmbedded, BRAND } = require('./html');
 const auth = require('./auth');
 const CATEGORIES = require('./categories');
+const feedAliases = require('./feedaliases');
 const { probeDuration, ensureWebImage, ensureVideoPoster, typeFor } = require('./media');
 const importer = require('./import');
 const { sendMail, configured: mailConfigured } = require('./mailer');
@@ -1181,6 +1182,21 @@ function createAdminRouter(ctx) {
           address you log in with.</p>
           <label class="check-label"><input type="checkbox" name="explicit" value="1" class="check"${show.explicit ? ' checked' : ''}> Explicit content</label>
           <label class="check-label"><input type="checkbox" name="locked" value="1" class="check"${show.locked ? ' checked' : ''}> Lock the feed (tells other hosts not to import it without permission)</label>
+
+          <div class="subsection">
+            <label for="feedAliases">Feed addresses you used to have</label>
+            <p class="hint">If this show has lived somewhere else, paste the old
+            feed addresses here, one per line, and they will keep working -
+            anyone still asking for them is sent to this feed, and Apple,
+            Spotify and the rest update themselves. You never have to edit a
+            directory entry.</p>
+            <textarea id="feedAliases" name="feedAliases" rows="3"
+              spellcheck="false" placeholder="/podcast/rss/index/${esc(show.slug)}.xml">${esc((show.feedAliases || []).join('\n'))}</textarea>
+            <p class="hint">This only works for addresses on a domain that
+            points here. An address on your old host's own domain belongs to
+            them - ask them to forward it before you leave, which most hosts
+            offer, and the directories will follow that instead.</p>
+          </div>
         </section>
 
         <section class="panel" id="sec-artwork">
@@ -2094,6 +2110,10 @@ function createAdminRouter(ctx) {
         entry.copyright = String(form.get('copyright') || '').trim().slice(0, 200);
         const guid = String(form.get('podcastGuid') || '').trim().slice(0, 60);
         entry.podcastGuid = /^[a-zA-Z0-9-]{8,}$/.test(guid) ? guid : undefined;
+        // Old feed addresses on the podcaster's own domain. Anything
+        // unusable is dropped rather than stored, so the box always
+        // shows back exactly what is in force.
+        entry.feedAliases = feedAliases.parse(form.get('feedAliases'));
         entry.locked = form.get('locked') === '1';
         entry.lockedOwner = user.email;
         const fundingUrl = String(form.get('fundingUrl') || '').trim().slice(0, 500);
