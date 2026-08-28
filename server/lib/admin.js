@@ -10,7 +10,7 @@
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
-const { esc, adminPage, ICONS, withEmbedded, BRAND } = require('./html');
+const { esc, adminPage, ICONS, withEmbedded, isEmbedded, BRAND } = require('./html');
 const auth = require('./auth');
 const CATEGORIES = require('./categories');
 
@@ -1687,11 +1687,16 @@ function createAdminRouter(ctx) {
       access: tail((held.archiveAccessKey || '').trim()),
       secret: tail((held.archiveSecretKey || '').trim()),
     };
+    // Framed inside somebody else's dashboard, signing in is their job:
+    // the person reading this got here through their sign-in, not this
+    // one, and a second password box only invites them to change a
+    // credential they never use. The page is then what is left of it.
+    const embedded = isEmbedded();
     return adminPage({
-      title: 'Account',
+      title: embedded ? 'Archive' : 'Account',
       active: 'account',
-      body: `<h1 class="page-title">Account</h1>
-      <section class="panel narrow">
+      body: `<h1 class="page-title">${embedded ? 'Archive' : 'Account'}</h1>
+      ${embedded ? '' : `<section class="panel narrow">
         <h2>Change password</h2>
         <p class="hint">Signed in as ${esc(user.email)}.</p>
         ${message ? `<p class="form-ok">${esc(message)}</p>` : ''}
@@ -1705,7 +1710,7 @@ function createAdminRouter(ctx) {
           <input id="again" name="again" type="password" autocomplete="new-password" minlength="12" required>
           <button class="btn-primary" type="submit">Change password</button>
         </form>
-      </section>
+      </section>`}
 
       ${STUDIO_PUBLISHING ? `<section class="panel narrow">
         <h2>Studio publishing</h2>
@@ -1725,7 +1730,7 @@ function createAdminRouter(ctx) {
           </button>
         </div>
         <p class="hint">Episodes arrive as drafts for you to look over
-        before they go out. See <a href="https://github.com/lightmorphic/fosscast/blob/main/docs/studio-integration.md">the studio integration notes</a>.</p>
+        before they go out. See <a href="https://github.com/lightmorphic/fosscast/blob/main/docs/studio-integration.md" target="_blank" rel="noopener">the studio integration notes</a>.</p>
         <form method="post" action="/admin/account/studio-key">
           <button class="btn-secondary btn-confirm" type="submit">Generate a new key</button>
         </form>
@@ -1756,7 +1761,7 @@ function createAdminRouter(ctx) {
             placeholder="${archiveHeld.secret ? `Held \u2013 ends ${esc(archiveHeld.secret)}` : 'Not set'}">
           <p class="hint">Leave a box empty to keep the key already
           held. They are stored on this server and never shown again. See
-          <a href="https://github.com/lightmorphic/fosscast/blob/main/docs/archive-org.md">the notes on archiving</a>.</p>
+          <a href="https://github.com/lightmorphic/fosscast/blob/main/docs/archive-org.md" target="_blank" rel="noopener">the notes on archiving</a>.</p>
           <button class="btn-primary" type="submit">Save keys</button>
         </form>
         ${archiveHeld.access || archiveHeld.secret ? `<form method="post" action="/admin/account/archive-keys?clear=1">
