@@ -83,9 +83,16 @@ function clientIp(req) {
 // no uploads, no publishing, no chat for anyone to spoil.
 const DEMO = process.env.DEMO_MODE === '1';
 
+// Publishing from a studio can be turned off for an instance that does
+// not want the door open at all - one whose audio lives somewhere else,
+// or that simply never records that way. On by default: an instance
+// that says nothing keeps the feature it always had.
+const STUDIO_PUBLISHING = !/^(0|off|false|no)$/i.test((process.env.STUDIO_PUBLISHING || '').trim());
+
 // The studio's own key: FOSSStudio (or any other studio) sends it to
 // publish a finished recording. Nothing else uses it.
 function studioAuthed(req) {
+  if (!STUDIO_PUBLISHING) return false;
   const token = (admin.settings().studioToken || '').trim();
   const given = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
   if (!token || !given || given.length !== token.length) return false;
