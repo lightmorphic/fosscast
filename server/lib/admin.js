@@ -1116,7 +1116,7 @@ function createAdminRouter(ctx) {
       &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
       &middot; <a href="/admin/episodes">episodes</a></p>
       ${(() => {
-        const tabs = [["basics", "Basics"], ["feed", "Feed"], ["artwork", "Artwork"], ["listen", "Where to listen"], ["support", "Support"], ["analytics", "Analytics"]];
+        const tabs = [["basics", "Basics"], ["feed", "Feed"], ["artwork", "Artwork"], ["listen", "Where to listen"], ["social", "Social"], ["support", "Support"], ["analytics", "Analytics"]];
         const here = tabs.some(([id]) => id === want) ? want : tabs[0][0];
         return `<style>.pane{display:none}.pane-${here}{display:block}</style>
         <nav class="tabs" aria-label="Podcast settings">
@@ -1398,7 +1398,7 @@ function createAdminRouter(ctx) {
           <input id="link-${key}" name="link_${key}" type="url" maxlength="500" value="${esc((show.links || {})[key] || '')}" placeholder="https://">`).join('')}
         </section>
 
-        <section class="panel pane pane-listen" id="sec-social">
+        <section class="panel pane pane-social" id="sec-social">
           <h2>Find us on</h2>
           <p class="hint">Where the show talks to its audience. Anything
           you fill in becomes a button on your page. Matrix first, then
