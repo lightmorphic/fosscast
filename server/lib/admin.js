@@ -1129,6 +1129,29 @@ function createAdminRouter(ctx) {
       &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
       &middot; <a href="/admin/episodes">shows</a></p>
 
+      <section class="panel" id="sec-old-addresses">
+        <h2>Feed addresses you used to have</h2>
+        <p class="hint">If this show has lived somewhere else, put the old feed
+        address here and it keeps working: anyone still asking for it is sent
+        to this show's feed, permanently, so Apple, Spotify and the rest
+        update themselves. You never open a directory or fill in a form.</p>
+        <form method="post" action="/admin/shows/${esc(show.slug)}/settings" data-autosave>
+          <label for="feedAliases">Old address</label>
+          <input id="feedAliases" name="feedAliases" type="text" spellcheck="false"
+            placeholder="/@${esc(show.slug)}/feed.xml"
+            value="${esc((show.feedAliases || []).join(', '))}">
+          <p class="hint">More than one? Separate them with commas. A whole web
+          address is fine &mdash; only the part after the domain is used.</p>
+          <p class="save-state" aria-live="polite"></p>
+        </form>
+        ${(show.feedAliases || []).length ? `<p class="hint">Answering now:
+        ${(show.feedAliases || []).map((a) => `<code>${esc(a)}</code>`).join(' &middot; ')}</p>` : ''}
+        <p class="hint">This only works for an address on a domain that points
+        here. One on your old host's own domain belongs to them &mdash; ask them
+        to forward it before you leave, which most hosts offer, and the
+        directories follow that instead.</p>
+      </section>
+
       <section class="panel" id="sec-feed">
         <h2>Feed check</h2>
         <p class="hint">What Apple, Spotify and the rest look for before
@@ -1183,20 +1206,6 @@ function createAdminRouter(ctx) {
           <label class="check-label"><input type="checkbox" name="explicit" value="1" class="check"${show.explicit ? ' checked' : ''}> Explicit content</label>
           <label class="check-label"><input type="checkbox" name="locked" value="1" class="check"${show.locked ? ' checked' : ''}> Lock the feed (tells other hosts not to import it without permission)</label>
 
-          <div class="subsection">
-            <label for="feedAliases">Feed addresses you used to have</label>
-            <p class="hint">If this show has lived somewhere else, paste the old
-            feed addresses here, one per line, and they will keep working -
-            anyone still asking for them is sent to this feed, and Apple,
-            Spotify and the rest update themselves. You never have to edit a
-            directory entry.</p>
-            <textarea id="feedAliases" name="feedAliases" rows="3"
-              spellcheck="false" placeholder="/podcast/rss/index/${esc(show.slug)}.xml">${esc((show.feedAliases || []).join('\n'))}</textarea>
-            <p class="hint">This only works for addresses on a domain that
-            points here. An address on your old host's own domain belongs to
-            them - ask them to forward it before you leave, which most hosts
-            offer, and the directories will follow that instead.</p>
-          </div>
         </section>
 
         <section class="panel" id="sec-artwork">

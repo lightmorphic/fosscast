@@ -45,7 +45,13 @@ function tidy(line) {
   raw = raw.split('?')[0].split('#')[0];
   // No walking out of the path, no doubled separators, nothing exotic.
   if (raw.includes('..') || raw.includes('//')) return '';
-  if (!/^\/[A-Za-z0-9._~\-/]*$/.test(raw)) return '';
+  // The characters a real feed address uses. `@` is here because
+  // Castopod - and anything else built around handles - serves feeds at
+  // /@name/feed.xml, and leaving it out rejected the single most likely
+  // address anybody would paste into this box. What stays out is what
+  // could confuse a path for something else: spaces, quotes, angle
+  // brackets, backslashes, control characters.
+  if (!/^\/[A-Za-z0-9._~@!$&'()*+,;=:%\-/]*$/.test(raw)) return '';
   if (raw.length > 200) return '';
   // A trailing slash and no trailing slash are the same address here.
   if (raw.length > 1 && raw.endsWith('/')) raw = raw.slice(0, -1);
