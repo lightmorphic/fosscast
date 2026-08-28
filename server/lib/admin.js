@@ -650,7 +650,7 @@ function createAdminRouter(ctx) {
         <p class="hint"><a href="/shows/${esc(show.slug)}">Public page</a>
         &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
         &middot; <a href="/admin/podcast">podcast</a>
-        &middot; <a href="/admin/episodes">shows</a></p>
+        &middot; <a href="/admin/episodes">episodes</a></p>
       </section>`
       : `<section class="panel hero">
         <h1>Welcome to ${esc(BRAND)}</h1>
@@ -664,7 +664,7 @@ function createAdminRouter(ctx) {
       active: 'dashboard',
       body: `${hero}
       <section class="grid">
-        <a class="panel stat" href="/admin/episodes"><span class="stat-n">${episodeList.length - drafts}</span><span>published show${episodeList.length - drafts === 1 ? '' : 's'}</span></a>
+        <a class="panel stat" href="/admin/episodes"><span class="stat-n">${episodeList.length - drafts}</span><span>published episode${episodeList.length - drafts === 1 ? '' : 's'}</span></a>
         <a class="panel stat" href="/admin/episodes"><span class="stat-n">${drafts}</span><span>draft${drafts === 1 ? '' : 's'}</span></a>
         <a class="panel stat" href="/admin/stats"><span class="stat-n">${stats ? Object.values(stats.data().totals).reduce((a, b) => a + b, 0) : 0}</span><span>downloads all time</span></a>
       </section>
@@ -683,30 +683,30 @@ function createAdminRouter(ctx) {
       <td><a href="/admin/episodes/${esc(episode.id)}">${esc(episode.title)}</a>${episode.draft ? ' <span class="tag">draft</span>' : ''}</td>
       <td>${esc(episode.date)}</td>
       <td class="media-cell"><a href="/shows/${esc(show.slug)}/${esc(episode.slug || episode.id)}">page</a> &middot; <a href="/embed/${esc(episode.id)}">embed</a></td>
-      <td class="actions">${deleteButton(`/admin/episodes/${esc(episode.id)}/delete`, 'Delete show')}</td>
+      <td class="actions">${deleteButton(`/admin/episodes/${esc(episode.id)}/delete`, 'Delete episode')}</td>
     </tr>`).join('');
     return adminPage({
       title: 'Shows',
       active: 'episodes',
-      body: `<h1 class="page-title">Shows</h1>
+      body: `<h1 class="page-title">Episodes</h1>
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
       <p class="hint">${esc(show.name)} &middot; <a href="/shows/${esc(show.slug)}">public page</a>
       &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
       &middot; <a href="/admin/podcast">podcast details</a></p>
 
       <section class="panel">
-        <h2>All shows</h2>
+        <h2>All episodes</h2>
         <table>
-          <caption class="sr-only">Shows of ${esc(show.name)}</caption>
+          <caption class="sr-only">Episodes of ${esc(show.name)}</caption>
           <thead><tr><th>Title</th><th>Date</th><th>Links</th><th></th></tr></thead>
-          <tbody>${rows || '<tr><td colspan="4" class="hint">No shows yet.</td></tr>'}</tbody>
+          <tbody>${rows || '<tr><td colspan="4" class="hint">No episodes yet.</td></tr>'}</tbody>
         </table>
       </section>
 
       <div class="cols">
       <div>
       <section class="panel">
-        <h2>New show</h2>
+        <h2>New episode</h2>
         <form method="post" action="/admin/shows/${esc(show.slug)}/episodes">
           <label for="title">Title</label>
           <input id="title" name="title" required maxlength="200">
@@ -725,7 +725,7 @@ function createAdminRouter(ctx) {
           <p class="hint" id="upload-status"></p>
           <label for="mediaUrl">Or media URL (your own storage, archive.org, anywhere reachable)</label>
           <input id="mediaUrl" name="mediaUrl" maxlength="1000" placeholder="https://archive.org/download/...">
-          <label for="epArt">Show cover art (optional)</label>
+          <label for="epArt">Episode cover art (optional)</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels. Leave it
           empty and the show uses the podcast's artwork.</p>
           <input id="epArt" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="epArtwork" data-status="epart-status" data-preview="epart-preview-img">
@@ -737,20 +737,7 @@ function createAdminRouter(ctx) {
           <label class="check-label"><input type="checkbox" name="draft" value="1" class="check"> Save as draft (hidden from the public site and feed)</label>
           ${archiveReady() ? `<label class="check-label"><input type="checkbox" name="archive" value="1" class="check"> Also send the audio to archive.org (it gets a permanent home there; downloads are still counted here)</label>`
             : `<p class="hint">Add your <a href="/admin/account">Internet Archive keys</a> and episodes can be sent to archive.org for permanent keeping as you publish them.</p>`}
-          <button class="btn-primary" type="submit">Publish show</button>
-        </form>
-      </section>
-      </div>
-      <div>
-      <section class="panel">
-        <h2>Import from an existing feed</h2>
-        <p class="hint">Paste a podcast's RSS URL: every show (episode)
-        comes in with its metadata (media stays at the old URLs until you
-        re-upload). Missing details are filled from the feed.</p>
-        <form method="post" action="/admin/shows/${esc(show.slug)}/import">
-          <label for="feedUrl">Feed URL</label>
-          <input id="feedUrl" name="feedUrl" type="url" required maxlength="1000" placeholder="https://example.com/feed.xml">
-          <button class="btn-primary" type="submit">Import shows</button>
+          <button class="btn-primary" type="submit">Publish episode</button>
         </form>
       </section>
       </div>
@@ -1127,7 +1114,7 @@ function createAdminRouter(ctx) {
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
       <p class="hint">${esc(show.name)} &middot; <a href="/shows/${esc(show.slug)}">public page</a>
       &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
-      &middot; <a href="/admin/episodes">shows</a></p>
+      &middot; <a href="/admin/episodes">episodes</a></p>
       ${(() => {
         const tabs = [["basics", "Basics"], ["feed", "Feed"], ["artwork", "Artwork"], ["listen", "Where to listen"], ["support", "Support"], ["analytics", "Analytics"]];
         const here = tabs.some(([id]) => id === want) ? want : tabs[0][0];
@@ -1137,6 +1124,19 @@ function createAdminRouter(ctx) {
             href="/admin/podcast?s=${id}">${esc(label)}</a>`).join('')}
         </nav>`;
       })()}
+
+      <section class="panel pane pane-feed" id="sec-import">
+        <h2>Import from an existing feed</h2>
+        <p class="hint">Paste a podcast's RSS address and every episode comes
+        in with its details, keeping the identifiers that stop listeners
+        re-downloading anything. The audio stays where it is until you move
+        it yourself.</p>
+        <form method="post" action="/admin/shows/${esc(show.slug)}/import">
+          <label for="feedUrl">Feed address</label>
+          <input id="feedUrl" name="feedUrl" type="url" required maxlength="1000" placeholder="https://example.com/feed.xml">
+          <button class="btn-primary" type="submit">Import episodes</button>
+        </form>
+      </section>
 
       <section class="panel pane pane-feed" id="sec-old-addresses">
         <h2>Feed addresses you used to have</h2>
@@ -1457,7 +1457,7 @@ function createAdminRouter(ctx) {
       ['Category', !!show.category, 'Choose a category.'],
       ['Language', !!show.language, 'Set the language.'],
       ['Author', !!show.author, 'Add an author name.'],
-      ['A published show', published.length > 0, 'Publish at least one show before submitting.'],
+      ['A published episode', published.length > 0, 'Publish at least one episode before submitting.'],
       ['File sizes known', published.every((e) => Number(e.bytes) > 0),
         'A show has no file size in the feed. Re-save it so the size can be read.'],
       ['Durations known', published.every((e) => Number(e.duration) > 0),
@@ -1579,8 +1579,8 @@ function createAdminRouter(ctx) {
     return adminPage({
       title: episode.title,
       active: 'episodes',
-      body: `<h1 class="page-title">Edit show</h1>
-      <p class="hint"><a href="/admin/episodes">&larr; Shows</a></p>
+      body: `<h1 class="page-title">Edit episode</h1>
+      <p class="hint"><a href="/admin/episodes">&larr; Episodes</a></p>
       <section class="panel">
         <form method="post" action="/admin/episodes/${esc(episode.id)}" data-autosave>
           <label for="title">Title</label>
@@ -1599,7 +1599,7 @@ function createAdminRouter(ctx) {
           <input id="mediaUrl" name="mediaUrl" maxlength="1000" value="${esc(episode.mediaUrl)}">
           <label for="epDescription">Description</label>
           <textarea id="epDescription" name="description" rows="4" maxlength="4000">${esc(episode.description)}</textarea>
-          <label for="epArt">Show cover art (optional)</label>
+          <label for="epArt">Episode cover art (optional)</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels. Empty
           means the podcast's artwork is used.</p>
           <input id="epArt" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="epArtwork" data-status="epart-status">
@@ -2062,7 +2062,7 @@ function createAdminRouter(ctx) {
     const showMatch = p.match(/^\/admin\/shows\/([a-z0-9-]+)(\/episodes|\/delete|\/settings|\/import)?$/);
     if (showMatch) {
       const show = shows().find((s) => s.slug === showMatch[1]);
-      if (!show) { html(res, adminPage({ title: 'Not found', body: '<p>Show not found.</p>' }), 404); return true; }
+      if (!show) { html(res, adminPage({ title: 'Not found', body: '<p>Episode not found.</p>' }), 404); return true; }
       const action = showMatch[2] || '';
 
       if (!action && req.method === 'GET') { redirect(res, '/admin/episodes'); return true; }
