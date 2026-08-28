@@ -24,6 +24,14 @@ const STUDIO_PUBLISHING = !/^(0|off|false|no)$/i.test((process.env.STUDIO_PUBLIS
 // work. MEDIA_UPLOADS=off takes it off the forms; the address box, which
 // every instance has, becomes the way in.
 const MEDIA_UPLOADS = !/^(0|off|false|no)$/i.test((process.env.MEDIA_UPLOADS || '').trim());
+
+// Where "the notes on archiving" should send somebody. Unset, the
+// project's own documentation on GitHub, which is right for a person
+// who chose to self-host. An operator running this for customers points
+// it at their own help page instead: those customers did not choose
+// GitHub and have no reason to end up there.
+const ARCHIVE_HELP = (process.env.HELP_ARCHIVE_URL || '').trim()
+  || 'https://github.com/lightmorphic/fosscast/blob/main/docs/archive-org.md';
 const feedAliases = require('./feedaliases');
 const { probeDuration, ensureWebImage, ensureVideoPoster, typeFor } = require('./media');
 const importer = require('./import');
@@ -1783,7 +1791,7 @@ function createAdminRouter(ctx) {
           <input id="ia-secret" name="secretKey" type="password" autocomplete="off"
             placeholder="${archiveHeld.secret ? `Held \u2013 ends ${esc(archiveHeld.secret)}` : 'Not set'}">
           <p class="hint">Leave a box empty to keep the key already held.
-          See <a href="https://github.com/lightmorphic/fosscast/blob/main/docs/archive-org.md" target="_blank" rel="noopener">the notes on archiving</a>.</p>
+          See <a href="${esc(ARCHIVE_HELP)}" target="_blank" rel="noopener">the notes on archiving</a>.</p>
           <button class="btn-primary" type="submit">Save keys</button>
         </form>
         <p class="hint" id="ia-who" aria-live="polite"></p>
