@@ -1,0 +1,107 @@
+<!doctype html>
+<html lang="en" data-accent="deep_orange">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Accessibility - FOSSCast</title>
+<meta name="description" content="How accessible this website is against WCAG 2.1 AA, what is known to fall short, and how to tell us about a barrier.">
+<link rel="canonical" href="https://fosscast.org/accessibility.html">
+<link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/Manrope.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/site.css">
+<link rel="stylesheet" href="/css/marketing.css">
+<meta property="og:title" content="Accessibility - FOSSCast">
+<meta property="og:description" content="How accessible this website is against WCAG 2.1 AA, what is known to fall short, and how to tell us about a barrier.">
+<meta property="og:type" content="article">
+<meta property="og:url" content="https://fosscast.org/accessibility.html">
+<meta property="og:site_name" content="FOSSCast">
+<meta property="og:locale" content="en_GB">
+<meta name="twitter:card" content="summary">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to the content</a>
+
+<header class="top">
+  <a class="wordmark" href="/" aria-label="FOSSCast home">
+    <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span>FOSSCast</span>
+  </a>
+  <nav class="top-nav">
+    <a class="top-link" href="/#install">Install</a>
+    <a class="top-link" href="/#features">Features</a>
+    <a class="top-link" href="/#hosted">Hosted</a>
+    <a class="top-link" href="https://github.com/lightmorphic/fosscast">GitHub</a>
+  </nav>
+</header>
+
+<main id="content" tabindex="-1" class="legal">
+<h1>Accessibility</h1>
+<h2>What we aim for</h2>
+<p>WCAG 2.1 level AA, on this website and in the software's own pages. We
+check by driving the real pages in a real browser rather than by reading
+the code.</p>
+
+<h2>What is true of this site today</h2>
+<ul>
+  <li>Every picture that carries meaning has alternative text.</li>
+  <li>Every button and link has a name a screen reader can read.</li>
+  <li>Every keyboard tab stop shows a visible focus ring, and there is a
+  skip link before the menu.</li>
+  <li>Nothing scrolls sideways down to a 320 pixel wide screen, or at
+  200% zoom.</li>
+  <li>Every text and background pair on the page meets the AA contrast
+  ratio, in light and in dark.</li>
+  <li>The page language is declared and zoom is not blocked.</li>
+</ul>
+
+<h2>What is known to fall short</h2>
+<p>Checked on 31 August 2026. Three inline links in the footer area are
+21 pixels tall rather than the 24 the target-size rule asks for. Inline
+links in a run of text are exempt from that rule, so this is noted
+rather than counted as a failure, and it is the only thing outstanding.</p>
+<p>An automated check finds roughly half of accessibility problems. A
+clear result means nothing obvious is broken. It is not a claim of legal
+compliance, and it is not a substitute for somebody using the site with a
+screen reader.</p>
+
+<h2>Telling us about a barrier</h2>
+<p>Email the address on the front page, or open an issue on
+<a href="https://github.com/lightmorphic/fosscast">the repository</a>.
+Tell us the page and what happened, and which assistive technology you
+were using if any. We will say what we can do and when.</p>
+<p>In the United Kingdom you can also contact the Equality Advisory and
+Support Service at
+<a href="https://www.equalityadvisoryservice.com/">equalityadvisoryservice.com</a>.</p>
+
+<nav class="legal-more" aria-label="The rest of the small print">
+  <p>The rest of it:
+  <a href="/privacy.html">Privacy</a>,
+  <a href="/cookies.html">Cookies</a>,
+  <a href="/terms.html">Terms</a>,
+  <b>Accessibility</b>,
+  <a href="/complaints.html">Complaints</a>,
+  and <a href="/">back to FOSSCast</a>.</p>
+</nav>
+</main>
+
+<footer class="foot">
+  <div class="sub-foot">
+    <p>&copy; Lightmorphic Ltd. Registered in England and Wales, company
+    number 17423646. Registered office: 82A James Carter Road, Mildenhall,
+    IP28 7DE. FOSSCast is free software under the
+    <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3</a>.<br>
+    Page last updated <time datetime="2026-08-31">31 August 2026</time>.</p>
+    <nav class="sub-foot-links" aria-label="Legal">
+      <a href="/privacy.html">Privacy</a>
+      <a href="/cookies.html">Cookies</a>
+      <a href="/terms.html">Terms</a>
+      <b>Accessibility</a>
+      <a href="/complaints.html">Complaints</a>
+    </nav>
+  </div>
+</footer>
+</body>
+</html>
