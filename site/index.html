@@ -8,9 +8,42 @@
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/site.css">
 <link rel="stylesheet" href="/css/marketing.css">
+<link rel="canonical" href="https://fosscast.org/">
 <meta property="og:title" content="FOSSCast">
 <meta property="og:description" content="Self-hosted podcast hosting, done properly. One pasted file to install. Free and open source.">
 <meta property="og:type" content="website">
+<meta property="og:url" content="https://fosscast.org/">
+<meta property="og:site_name" content="FOSSCast">
+<meta property="og:locale" content="en_GB">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="FOSSCast">
+<meta name="twitter:description" content="Self-hosted podcast hosting, done properly. One pasted file to install. Free and open source.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "FOSSCast",
+      "url": "https://fosscast.org/",
+      "applicationCategory": "Podcast hosting",
+      "operatingSystem": "Linux, via Docker",
+      "license": "https://www.gnu.org/licenses/gpl-3.0.html",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" },
+      "description": "Self-hosted podcast hosting. Your own website, host pages, membership links and RSS feeds built to what Apple, Spotify and Podcast Index ask for. One pasted file installs it.",
+      "codeRepository": "https://github.com/lightmorphic/fosscast",
+      "author": { "@type": "Organization", "name": "Lightmorphic", "url": "https://lightmorphic.com" }
+    },
+    {
+      "@type": "Organization",
+      "name": "Lightmorphic",
+      "url": "https://lightmorphic.com",
+      "sameAs": ["https://github.com/lightmorphic"]
+    }
+  ]
+}
+</script>
 <meta name="theme-color" content="#ff5721">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
@@ -62,7 +95,7 @@
       <span class="eyebrow">New</span>
       <h2>A website that looks like your show, not like ours</h2>
       <p>The Look tab hands the design to you. Fourteen preset colours or
-      any hex code you like &mdash; and every other shade, in light mode
+      any hex code you like. Every other shade, in light mode
       and dark, is worked out from the one you pick, including a link
       colour checked for contrast so nothing you choose can end up
       unreadable.</p>
@@ -79,7 +112,7 @@
         <li>Five typefaces, three page widths, three episode layouts, four cover sizes</li>
         <li>Force light or dark, or follow the visitor; hide the switch if you like</li>
         <li>Your own tagline and footer line, and a custom CSS box for anything else</li>
-        <li>A live preview of your real front page, and it saves as you go &mdash; there is no Save button</li>
+        <li>A live preview of your real front page, and it saves as you go. There is no Save button</li>
       </ul>
     </div>
 
@@ -112,7 +145,7 @@
     <div class="panel">
       <h2>Bring your back catalogue</h2>
       <p>Paste your current RSS feed and every episode comes across with
-      its metadata and its identity &mdash; GUIDs and all &mdash; so
+      its metadata and its identity, GUIDs and all, so
       directories treat the move as the same show rather than a new one.</p>
     </div>
 
@@ -129,7 +162,7 @@
       <p>Months as bars, days as a curve, doughnuts for apps and
       countries, a heatmap of when people actually listen, and how long
       an episode keeps earning. Every chart is drawn on your own server
-      from counters that cannot be joined back to a person &mdash; no
+      from counters that cannot be joined back to a person. No
       charting library, no script, nobody else in the loop.</p>
     </div>
 
@@ -158,7 +191,7 @@
     <div class="panel wide">
       <h2>The small things</h2>
       <ul class="ticks ticks-cols">
-        <li>Editing saves itself &mdash; podcast details, hosts, episodes, design</li>
+        <li>Editing saves itself: podcast details, hosts, episodes, design</li>
         <li>Deleting always takes a second, deliberate click</li>
         <li>Drafts and dated episodes stay hidden until their moment</li>
         <li>Seasons, trailers and bonus episodes, properly tagged</li>
@@ -175,7 +208,7 @@
     <h2>Redesign a show without installing anything</h2>
     <p>These are the same choices the Look tab offers, working on a
     miniature of a real show page. Nothing is loaded from anywhere and
-    nothing is saved &mdash; have a play.</p>
+    nothing is saved. Have a play.</p>
 
     <div class="demo-layout" id="demo-root">
       <div class="demo-controls">
@@ -294,8 +327,8 @@
   <section class="panel hosted-panel" id="hosted">
     <span class="eyebrow">Hosted</span>
     <h2>Or let us run it for you</h2>
-    <p>Same software &mdash; the identical public code, not a special
-    edition &mdash; with none of the server work. Your own machine, your
+    <p>Same software, the identical public code rather than a special
+    edition, with none of the server work. Your own machine, your
     own domain, updates and backups looked after, and someone to ask when
     something looks wrong.</p>
     <p>Your audio, your artwork and your listeners stay yours, and you
@@ -351,8 +384,8 @@
     <h2>The whole installation is this file</h2>
     <p>A Linux machine with Docker, a domain pointed at it, ports 80 and
     443 open. Paste this into <code>docker-compose.yml</code>, edit the
-    block at the top &mdash; everything you need to change is up there,
-    and the domain is typed once &mdash; then run
+    block at the top. Everything you need to change is up there,
+    and the domain is typed once. Then run
     <code>docker compose up -d</code>.</p>
 
     <div class="code-card">
@@ -436,13 +469,13 @@ docker compose up -d</code></pre>
 </main>
 
 <footer class="foot">
-  <p class="sister">FOSSCast publishes the show &mdash;
+  <p class="sister">FOSSCast publishes the show:
   <a href="https://fossstudio.org" translate="no">FOSSStudio</a> is where you make it:
   <b>a self-hosted video podcast studio, a StreamYard replacement for everyone.</b>
   Guests join by link with no account and no download, up to ten of them,
   with a soundboard, intro videos and per-person recording. Go live on
   your own watch page, at your own address, with its own chat beside the
-  video &mdash; and out to YouTube at the same time if you want it. One
+  video, and out to YouTube at the same time if you want it. One
   click publishes a finished recording straight into FOSSCast.</p>
 
   <a class="lightmorphic-badge" href="https://lightmorphic.com" target="_blank" rel="noopener noreferrer" translate="no">
