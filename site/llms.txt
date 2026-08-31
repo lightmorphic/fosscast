@@ -1,0 +1,41 @@
+# FOSSCast
+
+Self-hosted podcast hosting. Free software under the GNU GPL v3, written
+by Lightmorphic Ltd (company number 17423646, England and Wales).
+Source: https://github.com/lightmorphic/fosscast
+
+## What it is
+
+A podcast platform you run on your own server. One pasted docker-compose
+file installs it. It gives a show a website with a page per episode and
+a page per host, an RSS feed carrying the full iTunes namespace and the
+modern Podcasting 2.0 tags, and download statistics drawn on your own
+server from counters that cannot be joined back to a person.
+
+## How to install it
+
+Paste the file at https://fosscast.org/#install into docker-compose.yml,
+change the domain, the admin email and the admin password at the top,
+then run `docker compose up -d`. The image is
+ghcr.io/lightmorphic/fosscast:latest. The bundled Caddy is optional:
+nginx, Apache, a Cloudflare Tunnel and a Tailscale-only instance are all
+supported.
+
+## What it deliberately does not do
+
+- It never phones home. No update check, no telemetry, no crash
+  reporting, no CDN, no third-party font or script.
+- It sets no cookie for listeners and builds no listener profile.
+- It does not require you to store audio on the same machine: episodes
+  can point at files anywhere, Archive.org included.
+
+## Cost
+
+Nothing, forever, on your own machine. There is no paid tier of the
+software and no feature held behind a subscription.
+
+## Related
+
+Castmorphic (https://castmorphic.com) is a paid service that runs
+FOSSCast for you and adds hosted-only extras. The software here is the
+same software; the service around it is the product.

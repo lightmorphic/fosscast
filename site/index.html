@@ -4,8 +4,9 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>FOSSCast - self-hosted podcast hosting, done properly</title>
-<meta name="description" content="Free, self-hosted podcast hosting. Your own website with your own colours, host pages, membership links, and RSS feeds built to what Apple, Spotify and Podcast Index actually want. One pasted file to install.">
+<meta name="description" content="Free, self-hosted podcast hosting. Your own website, host pages, membership links and a feed built to what Apple and Spotify ask for. One file installs it.">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/Manrope.woff2" as="font" type="font/woff2" crossorigin>
 <link rel="stylesheet" href="/css/site.css">
 <link rel="stylesheet" href="/css/marketing.css">
 <link rel="canonical" href="https://fosscast.org/">
@@ -37,17 +38,104 @@
     },
     {
       "@type": "Organization",
-      "name": "Lightmorphic",
+      "@id": "https://fosscast.org/#org",
+      "name": "Lightmorphic Ltd",
       "url": "https://lightmorphic.com",
-      "sameAs": ["https://github.com/lightmorphic"]
+      "legalName": "Lightmorphic Ltd",
+      "identifier": "17423646",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "82A James Carter Road",
+        "addressLocality": "Mildenhall",
+        "postalCode": "IP28 7DE",
+        "addressCountry": "GB"
+      },
+      "sameAs": [
+        "https://github.com/lightmorphic",
+        "https://castmorphic.com",
+        "https://find-and-update.company-information.service.gov.uk/company/17423646"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://fosscast.org/#site",
+      "url": "https://fosscast.org/",
+      "name": "FOSSCast",
+      "publisher": { "@id": "https://fosscast.org/#org" },
+      "inLanguage": "en-GB"
+    },
+    {
+      "@type": "WebPage",
+      "url": "https://fosscast.org/",
+      "name": "FOSSCast",
+      "isPartOf": { "@id": "https://fosscast.org/#site" },
+      "dateModified": "2026-08-31"
     }
   ]
 }
 </script>
-<meta name="theme-color" content="#ff5721">
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "What does it cost to run?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Nothing beyond the machine. FOSSCast is GPL v3 and always will be. A small VPS handles a podcast comfortably; bandwidth is the only thing that scales with your audience."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Can I leave?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Yes, and it is deliberately easy. Your episodes are files on your disk and your data is plain JSON beside them. Your feed is a standard RSS feed with a stable GUID, so moving elsewhere is a DNS change and a redirect."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Do my listeners get tracked?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "No. There is no analytics service, no third-party font, no script from anyone else, and no cookie for a listener. Download counts come from your own server logs, by episode, not by person."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Do I need to know Docker?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "You need to be able to paste a file and run one command. If that already sounds like a bad evening, the hosted option exists precisely for you."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Is video supported?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Yes. Episodes can be audio or video, hosted here or anywhere reachable by URL, and the page picks the right player."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Where does live streaming fit?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "It does not, and that is deliberate. FOSSCast is the published show; recording and going live are a separate job for a separate tool, so your public site stays small, fast and hard to break."
+   }
+  }
+ ]
+}
+</script>
 </head>
 <body>
+<a class="skip" href="#content">Skip to the content</a>
 
 <header class="top">
   <a class="wordmark" href="/" aria-label="FOSSCast home">
@@ -62,7 +150,7 @@
   </nav>
 </header>
 
-<main class="wrap">
+<main class="wrap" id="content" tabindex="-1">
 
   <section class="panel hero mkt-hero">
     <p class="status"><span aria-hidden="true">&#9679;</span> Free and open source, GPL v3</p>
@@ -240,7 +328,7 @@
         </div>
 
         <p class="demo-label">Corners <b id="demo-radius-value">18px</b></p>
-        <input type="range" id="demo-radius" min="0" max="34" value="18" aria-label="Corner rounding">
+        <input type="range" id="demo-radius" min="0" max="34" value="18" autocomplete="off" aria-label="Corner rounding">
 
         <p class="demo-label">Host photos</p>
         <div class="demo-chips" data-set="shape">
@@ -267,7 +355,7 @@
             </div>
             <div class="demo-card demo-hero">
               <div class="demo-cover" aria-hidden="true">
-                <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
               </div>
               <div class="demo-hero-text">
                 <p class="demo-tagline">Two nerds, one microphone</p>
@@ -482,7 +570,7 @@ docker compose up -d</code></pre>
     <span>Created by</span>
     <img src="/img/lightmorphic-dark-tb-250x50-sq.webp" alt="Lightmorphic" width="125" height="25" loading="lazy">
     <span class="external-link-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
         <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
         <path d="M15 3h6v6"/>
         <line x1="10" y1="14" x2="21" y2="3"/>
@@ -491,6 +579,21 @@ docker compose up -d</code></pre>
   </a>
 
   <span class="gpl">Free software &middot; <a href="https://www.gnu.org/licenses/gpl-3.0.html">GPL-3.0</a> &middot; <a href="https://github.com/lightmorphic/fosscast">Source</a></span>
+
+  <div class="sub-foot">
+    <p>&copy; Lightmorphic Ltd. Registered in England and Wales, company
+    number 17423646. Registered office: 82A James Carter Road, Mildenhall,
+    IP28 7DE. FOSSCast is free software under the
+    <a href="https://www.gnu.org/licenses/gpl-3.0.html">GNU GPL v3</a>.<br>
+    Page last updated <time datetime="2026-08-31">31 August 2026</time>.</p>
+    <nav class="sub-foot-links" aria-label="Legal">
+      <a href="/privacy.html">Privacy</a>
+      <a href="/cookies.html">Cookies</a>
+      <a href="/terms.html">Terms</a>
+      <a href="/accessibility.html">Accessibility</a>
+      <a href="/complaints.html">Complaints</a>
+    </nav>
+  </div>
 </footer>
 
 <script>
