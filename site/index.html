@@ -124,10 +124,10 @@
   },
   {
    "@type": "Question",
-   "name": "Where does live streaming fit?",
+   "name": "How do I update it?",
    "acceptedAnswer": {
     "@type": "Answer",
-    "text": "It does not, and that is deliberate. FOSSCast is the published show; recording and going live are a separate job for a separate tool, so your public site stays small, fast and hard to break."
+    "text": "Two commands, and your data is in a named volume that is left alone: docker compose pull then docker compose up -d ."
    }
   }
  ]
@@ -140,145 +140,177 @@
 <header class="top">
   <a class="wordmark" href="/" aria-label="FOSSCast home">
     <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
-    <span>FOSSCast</span>
+    <span translate="no">FOSSCast</span>
   </a>
   <nav class="top-nav">
-    <a class="top-link" href="#install">Install</a>
-    <a class="top-link" href="#features">Features</a>
+    <a class="top-link" href="#features">What it does</a>
+    <a class="top-link" href="#try">Try it</a>
     <a class="top-link" href="#hosted">Hosted</a>
-    <a class="top-link" href="https://github.com/lightmorphic/fosscast">GitHub</a>
+    <a class="top-link" href="https://github.com/lightmorphic/fosscast">Source</a>
   </nav>
 </header>
 
-<main class="wrap" id="content" tabindex="-1">
+<main id="content" tabindex="-1">
 
-  <section class="panel hero mkt-hero">
-    <p class="status"><span aria-hidden="true">&#9679;</span> Free and open source, GPL v3</p>
-    <h1>Your podcast, your server,<br>your website.</h1>
-    <p class="lede">FOSSCast gives your show a proper home: a page per
-    episode, a page per host, colours you choose yourself, and RSS feeds
-    every podcast app understands. One pasted file installs it. Nothing
-    it serves ever calls anybody else.</p>
-    <div class="cta-row">
-      <a class="btn-primary" href="#features">See what it does</a>
-      <a class="btn-secondary" href="#install">Install it in one paste</a>
+  <!-- The thesis: the installation is one file, so the file is the hero.
+       Real text, selectable and copyable, with the three lines you
+       actually change marked. Nothing else competes with it. -->
+  <section class="opening">
+    <div class="opening-words">
+      <h1>Your podcast on your own<br>server, by tonight.</h1>
+      <p class="lede">A page for every episode, a page for every host, a
+      feed every app accepts, and colours you pick yourself. It is one
+      file and one command. Nothing it serves ever calls anybody
+      else.</p>
+      <p class="opening-run">Then: <code>docker compose up -d</code></p>
+      <p class="opening-note">Linux, Docker, a domain pointed at the
+      machine, ports 80 and 443 open. The certificate arrives on its
+      own.</p>
     </div>
-    <ul class="spec-strip">
-      <li><b>1</b> file to paste</li>
-      <li><b>0</b> trackers, fonts or scripts from anyone else</li>
-      <li><b>0</b> npm dependencies at runtime</li>
-      <li><b>&pound;0</b> forever, on your own box</li>
-    </ul>
-  </section>
 
-  <section class="section-head" id="features">
-    <h2>What you get</h2>
-    <p class="lede">Everything below is in the free, self-hosted edition.
-    There is no paid tier of the software, and no feature waiting behind
-    a subscription.</p>
-  </section>
-
-  <section class="grid">
-    <div class="panel wide feature-lead">
-      <span class="eyebrow">New</span>
-      <h2>A website that looks like your show, not like ours</h2>
-      <p>The Look tab hands the design to you. Fourteen preset colours or
-      any hex code you like. Every other shade, in light mode
-      and dark, is worked out from the one you pick, including a link
-      colour checked for contrast so nothing you choose can end up
-      unreadable.</p>
-      <div class="swatch-demo" aria-hidden="true">
-        <span style="--sw:#ff5721"></span><span style="--sw:#e91e63"></span>
-        <span style="--sw:#8b5cf6"></span><span style="--sw:#2563eb"></span>
-        <span style="--sw:#0ea5e9"></span><span style="--sw:#0d9488"></span>
-        <span style="--sw:#16a34a"></span><span style="--sw:#d97706"></span>
-        <span style="--sw:#8d6e63"></span><span style="--sw:#475569"></span>
+    <figure class="file" aria-labelledby="file-name">
+      <figcaption class="file-bar">
+        <span class="file-name" id="file-name">docker-compose.yml</span>
+        <button type="button" class="file-copy" id="copy-compose"
+          data-copied="Copied">Copy the file</button>
+      </figcaption>
+      <div class="file-body">
+        <pre id="compose"><code><span class="l">x-config: <span class="a">&amp;config</span></span><span class="l edit">  DOMAIN: podcast.example.com          <span class="c"># your address</span></span><span class="l edit">  ADMIN_EMAIL: you@example.com         <span class="c"># the first login</span></span><span class="l edit">  ADMIN_PASSWORD: change-me-to-something-long</span><span class="l"></span><span class="l">services:</span><span class="l">  app:</span><span class="l">    image: ghcr.io/lightmorphic/fosscast:latest</span><span class="l">    restart: unless-stopped</span><span class="l">    environment: <span class="a">*config</span></span><span class="l">    volumes:</span><span class="l">      - fosscast_data:/data</span><span class="l">    read_only: true</span><span class="l">    tmpfs: [/tmp]</span><span class="l">    cap_drop: [ALL]</span><span class="l">    security_opt: [no-new-privileges:true]</span><span class="l"></span><span class="l">  caddy:</span><span class="l">    image: caddy:2-alpine</span><span class="l">    restart: unless-stopped</span><span class="l">    environment: <span class="a">*config</span></span><span class="l">    command: sh -c 'caddy reverse-proxy --from "$$DOMAIN" --to app:3100'</span><span class="l">    ports: ["80:80", "443:443"]</span><span class="l">    volumes:</span><span class="l">      - caddy_data:/data</span><span class="l">      - caddy_config:/config</span><span class="l">    cap_add: [NET_BIND_SERVICE]</span><span class="l"></span><span class="l">volumes:</span><span class="l">  fosscast_data:</span><span class="l">  caddy_data:</span><span class="l">  caddy_config:</span></code></pre>
       </div>
-      <ul class="ticks">
-        <li>Backgrounds: plain, a colour, a gradient at any angle, or your own image with dim, blur and tiling</li>
-        <li>Cards solid, outlined or glass; corners from hard square to fully round</li>
-        <li>Five typefaces, three page widths, three episode layouts, four cover sizes</li>
-        <li>Force light or dark, or follow the visitor; hide the switch if you like</li>
-        <li>Your own tagline and footer line, and a custom CSS box for anything else</li>
-        <li>A live preview of your real front page, and it saves as you go. There is no Save button</li>
-      </ul>
+      <p class="file-legend"><span class="key" aria-hidden="true"></span>
+      The three lines you change. Everything else is already right.</p>
+    </figure>
+  </section>
+
+  <!-- Receipts. Every claim on this page that can be proved by a command
+       is proved by that command, with the output it really gives. -->
+  <section class="receipts" aria-labelledby="receipts-h">
+    <h2 id="receipts-h">Claims, and how to check them yourself</h2>
+    <p class="lede">Every line below is something a marketing page would
+    simply assert. Run the command instead.</p>
+
+    <div class="receipt-list">
+      <article class="receipt">
+        <h3>It brings no dependencies with it</h3>
+        <p>Not a small number. None. The whole app is the standard
+        library and 7,171 lines you could read in an afternoon.</p>
+        <pre class="shell"><code><span class="p">$</span> jq .dependencies server/package.json
+<span class="o">{}</span></code></pre>
+      </article>
+
+      <article class="receipt">
+        <h3>Nothing it serves calls anybody else</h3>
+        <p>No tracker, no font from Google, no script from a CDN, no
+        cookie for a listener. Your audience is watched by nobody,
+        including us, because we are not in the request.</p>
+        <pre class="shell"><code><span class="p">$</span> curl -s https://demo.fosscast.org/ \
+    | grep -cE 'src="https?://|@import|googleapis'
+<span class="o">0</span></code></pre>
+      </article>
+
+      <article class="receipt">
+        <h3>It is free, and stays free</h3>
+        <p>GPL v3, which is the kind of free that cannot be taken back
+        later. There is no paid tier of the software and no feature
+        waiting behind a subscription.</p>
+        <pre class="shell"><code><span class="p">$</span> head -2 LICENSE
+<span class="o">GNU GENERAL PUBLIC LICENSE
+Version 3, 29 June 2007</span></code></pre>
+      </article>
+
+      <article class="receipt">
+        <h3>It is tested, and small</h3>
+        <p>A hundred and thirty-one tests, no framework, run with the
+        one that ships with Node. The image is 109 MB and carries the
+        app and everything it serves.</p>
+        <pre class="shell"><code><span class="p">$</span> cd server &amp;&amp; npm test
+<span class="o"># tests 131
+# pass 131
+# fail 0</span></code></pre>
+      </article>
+    </div>
+  </section>
+
+  <section class="what" id="features" aria-labelledby="what-h">
+    <h2 id="what-h">What you get, all of it, free</h2>
+    <p class="lede">There is no self-hosted edition and a better one.
+    This is the product.</p>
+
+    <div class="what-grid">
+      <article class="thing thing-wide">
+        <h3>A website that looks like your show, not like ours</h3>
+        <p>The Look tab hands the design to you. Fourteen preset colours
+        or any hex code you like. Every other shade, light and dark, is
+        worked out from the one you pick, including a link colour checked
+        for contrast so nothing you choose can end up unreadable.</p>
+        <ul class="spec">
+          <li>Backgrounds plain, one colour, a gradient at any angle, or your own image with dim, blur and tiling</li>
+          <li>Cards solid, outlined or glass; corners from hard square to fully round</li>
+          <li>Five typefaces, three page widths, three episode layouts, four cover sizes</li>
+          <li>Force light or dark, or follow the visitor; hide the switch if you like</li>
+          <li>Your own tagline and footer line, and a custom CSS box for anything else</li>
+          <li>A live preview of your real front page, saving as you go. There is no Save button</li>
+        </ul>
+      </article>
+
+      <article class="thing">
+        <h3>Statistics without surveillance</h3>
+        <p>Months as bars, days as a curve, doughnuts for apps and
+        countries, a heatmap of when people actually listen, and how long
+        an episode keeps earning. Every chart is drawn on your own server
+        from counters that cannot be joined back to a person. No charting
+        library, no script, nobody else in the loop.</p>
+      </article>
+
+      <article class="thing">
+        <h3>Feeds that get accepted first time</h3>
+        <p>Full iTunes namespace, Podcasting 2.0 transcripts, chapters,
+        people and funding, real file sizes and durations. A feed check in
+        the dashboard lists exactly what Apple, Spotify and the rest look
+        for, and what is still missing.</p>
+      </article>
+
+      <article class="thing">
+        <h3>Your hosts, properly introduced</h3>
+        <p>Every host gets a photo, a role and a write-up: a card on your
+        Hosts page and a page of their own. Two of you or twenty, in the
+        order you choose. They travel in the feed as well, so apps can put
+        a face to a voice.</p>
+      </article>
+
+      <article class="thing">
+        <h3>Getting paid</h3>
+        <p>Patreon, Buy Me a Coffee, Ko-fi, Liberapay, GitHub Sponsors,
+        Open Collective and PayPal. Paste your page, get a button on your
+        site and a <code>podcast:funding</code> tag in the feed. No
+        account yet? Each one has a sign-up link beside it.</p>
+      </article>
+
+      <article class="thing">
+        <h3>Bring your back catalogue</h3>
+        <p>Paste your current RSS feed and every episode comes across with
+        its metadata and its identity, GUIDs and all, so directories treat
+        the move as the same show rather than a new one.</p>
+      </article>
+
+      <article class="thing">
+        <h3>Media anywhere</h3>
+        <p>Upload to your own server or point at files hosted elsewhere,
+        archive.org included. Both are first class. Range requests are
+        handled properly, so players seek instantly.</p>
+      </article>
+
+      <article class="thing">
+        <h3>Fits the server you already have</h3>
+        <p>The bundled Caddy is optional, never assumed. nginx, Apache, a
+        Cloudflare Tunnel, a tailnet-only instance behind Tailscale: all
+        supported, all documented, all tested.</p>
+      </article>
     </div>
 
-    <div class="panel">
-      <span class="eyebrow">New</span>
-      <h2>Your hosts, properly introduced</h2>
-      <p>Every host gets a photo, a role and a write-up: a card on your
-      Hosts page and a page of their own. Two of you or twenty, in the
-      order you choose. They travel in the feed as well, so apps can put
-      a face to a voice.</p>
-    </div>
-
-    <div class="panel">
-      <span class="eyebrow">New</span>
-      <h2>Getting paid</h2>
-      <p>Patreon, Buy Me a Coffee, Ko-fi, Liberapay, GitHub Sponsors,
-      Open Collective and PayPal. Paste your page, get a button on your
-      site and a <code>podcast:funding</code> tag in the feed. No account
-      yet? Each one has a sign-up link beside it.</p>
-    </div>
-
-    <div class="panel">
-      <h2>Feeds that get accepted first time</h2>
-      <p>Full iTunes namespace, Podcasting 2.0 transcripts, chapters,
-      people and funding, real file sizes and durations. A feed check in
-      the dashboard lists exactly what Apple, Spotify and the rest look
-      for, and what is still missing.</p>
-    </div>
-
-    <div class="panel">
-      <h2>Bring your back catalogue</h2>
-      <p>Paste your current RSS feed and every episode comes across with
-      its metadata and its identity, GUIDs and all, so
-      directories treat the move as the same show rather than a new one.</p>
-    </div>
-
-    <div class="panel">
-      <h2>Media anywhere</h2>
-      <p>Upload to your own server or point at files hosted elsewhere,
-      archive.org included. Both are first class. Range requests are
-      handled properly, so players seek instantly.</p>
-    </div>
-
-    <div class="panel">
-      <span class="eyebrow">New</span>
-      <h2>Statistics without surveillance</h2>
-      <p>Months as bars, days as a curve, doughnuts for apps and
-      countries, a heatmap of when people actually listen, and how long
-      an episode keeps earning. Every chart is drawn on your own server
-      from counters that cannot be joined back to a person. No
-      charting library, no script, nobody else in the loop.</p>
-    </div>
-
-    <div class="panel">
-      <h2>Nothing phones home</h2>
-      <p>No trackers, no third-party fonts or scripts, no cookies for
-      listeners. Download counts are worked out on your own server
-      without following anybody around. Even a custom CSS box has its
-      off-site requests stripped.</p>
-    </div>
-
-    <div class="panel">
-      <h2>Fits the server you already have</h2>
-      <p>The bundled Caddy is optional, never assumed. nginx, Apache, a
-      Cloudflare Tunnel, a tailnet-only instance behind Tailscale: all
-      supported, all documented, all tested.</p>
-    </div>
-
-    <div class="panel">
-      <h2>Fast by default</h2>
-      <p>Every uploaded image gets a small web copy made for it while the
-      full-size original goes to the directories. Pages are plain HTML
-      and one stylesheet: no framework, no build step, no bundle.</p>
-    </div>
-
-    <div class="panel wide">
-      <h2>The small things</h2>
-      <ul class="ticks ticks-cols">
+    <div class="small-things">
+      <h3>And the small things, which are most of the work</h3>
+      <ul class="spec spec-cols">
         <li>Editing saves itself: podcast details, hosts, episodes, design</li>
         <li>Deleting always takes a second, deliberate click</li>
         <li>Drafts and dated episodes stay hidden until their moment</li>
@@ -287,16 +319,16 @@
         <li>Chapters typed as plain lines of text</li>
         <li>Password reset by email, or from the command line</li>
         <li>A read-only demo mode for showing the thing off</li>
+        <li>Every uploaded image gets a small web copy made for it</li>
+        <li>Pages are plain HTML and one stylesheet: no framework, no build step</li>
       </ul>
     </div>
   </section>
-
-  <section class="panel wide demo-panel" id="try">
-    <span class="eyebrow">Try it here</span>
-    <h2>Redesign a show without installing anything</h2>
-    <p>These are the same choices the Look tab offers, working on a
+  <section class="try" id="try" aria-labelledby="try-h">
+    <h2 id="try-h">Restyle a show without installing anything</h2>
+    <p class="lede">The same choices the Look tab offers, working on a
     miniature of a real show page. Nothing is loaded from anywhere and
-    nothing is saved. Have a play.</p>
+    nothing is saved.</p>
 
     <div class="demo-layout" id="demo-root">
       <div class="demo-controls">
@@ -402,32 +434,23 @@
     </div>
   </section>
 
-  <section class="panel" id="one-podcast">
-    <span class="eyebrow">By design</span>
-    <h2>One instance, one podcast</h2>
-    <p>FOSSCast runs a single show per instance, on purpose. It keeps the
-    whole thing small enough to read in an afternoon and to trust with
-    your audience, and it means the free edition is the entire product:
-    no multi-tenant complexity you are paying for in bugs. Running three
-    shows? Run three instances; they are tiny.</p>
+  <section class="decision" id="one-podcast" aria-labelledby="decision-h">
+    <h2 id="decision-h">One instance, one podcast</h2>
+    <p>This is a decision, not a limitation we have not got round to
+    fixing. A single show per instance keeps the whole thing small enough
+    to read in an afternoon and to trust with your audience, and it means
+    the free edition is the entire product rather than the cheap half of
+    a multi-tenant system you are paying for in bugs. Running three
+    shows? Run three instances. They are tiny.</p>
+    <p>The same reasoning keeps live streaming out. FOSSCast is the
+    published show. Recording and going live are a different job for a
+    different tool, so your public site stays small, fast and hard to
+    break.</p>
   </section>
 
-  <section class="panel hosted-panel" id="hosted">
-    <span class="eyebrow">Hosted</span>
-    <h2>Or let us run it for you</h2>
-    <p>Same software, the identical public code rather than a special
-    edition, with none of the server work. Your own machine, your
-    own domain, updates and backups looked after, and someone to ask when
-    something looks wrong.</p>
-    <p>Your audio, your artwork and your listeners stay yours, and you
-    can take the whole thing with you whenever you like: it is plain
-    files and a standard feed.</p>
-    <p><a class="btn-primary" href="mailto:hello@fosscast.org?subject=Hosting%20my%20podcast%20on%20FOSSCast">Ask about hosting</a></p>
-  </section>
-
-  <section class="panel">
-    <h2>Questions people actually ask</h2>
-    <div class="faq">
+  <section class="asked" aria-labelledby="asked-h">
+    <h2 id="asked-h">Questions people actually ask</h2>
+    <div class="asked-list">
       <details>
         <summary>What does it cost to run?</summary>
         <p>Nothing beyond the machine. FOSSCast is GPL v3 and always
@@ -445,7 +468,8 @@
         <summary>Do my listeners get tracked?</summary>
         <p>No. There is no analytics service, no third-party font, no
         script from anyone else, and no cookie for a listener. Download
-        counts come from your own server logs, by episode, not by person.</p>
+        counts come from your own server logs, by episode, not by
+        person.</p>
       </details>
       <details>
         <summary>Do I need to know Docker?</summary>
@@ -459,102 +483,40 @@
         reachable by URL, and the page picks the right player.</p>
       </details>
       <details>
-        <summary>Where does live streaming fit?</summary>
-        <p>It does not, and that is deliberate. FOSSCast is the published
-        show; recording and going live are a separate job for a separate
-        tool, so your public site stays small, fast and hard to break.</p>
+        <summary>How do I update it?</summary>
+        <p>Two commands, and your data is in a named volume that is left
+        alone: <code>docker compose pull</code> then
+        <code>docker compose up -d</code>.</p>
       </details>
     </div>
   </section>
 
-  <section class="panel install-panel" id="install">
-    <span class="eyebrow">Installing</span>
-    <h2>The whole installation is this file</h2>
-    <p>A Linux machine with Docker, a domain pointed at it, ports 80 and
-    443 open. Paste this into <code>docker-compose.yml</code>, edit the
-    block at the top. Everything you need to change is up there,
-    and the domain is typed once. Then run
-    <code>docker compose up -d</code>.</p>
-
-    <div class="code-card">
-      <div class="code-head">
-        <span>docker-compose.yml</span>
-        <button class="btn-copy-code" type="button" data-copy>Copy</button>
-      </div>
-<pre><code id="compose">x-config: &amp;config
-  DOMAIN: podcast.example.com          # your public address
-  ADMIN_EMAIL: you@example.com         # the first admin account
-  ADMIN_PASSWORD: change-me-to-something-long
-
-services:
-  app:
-    image: ghcr.io/lightmorphic/fosscast:latest
-    restart: unless-stopped
-    environment: *config
-    volumes:
-      - fosscast_data:/data
-    read_only: true
-    tmpfs: [/tmp]
-    cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
-
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    environment: *config
-    command: sh -c 'caddy reverse-proxy --from "$$DOMAIN" --to app:3100'
-    ports: ["80:80", "443:443"]
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
-    cap_add: [NET_BIND_SERVICE]
-
-volumes:
-  fosscast_data:
-  caddy_data:
-  caddy_config:</code></pre>
-    </div>
-
-    <p>No checkout, no build, no <code>.env</code>, no Caddyfile. The
-    image carries the app and everything it serves; the HTTPS certificate
-    arrives on its own. Log in at <code>/admin</code> with the email and
-    password you put in the file.</p>
-    <div class="two-up">
-      <div>
-        <h3>Updating</h3>
-        <pre><code>docker compose pull
-docker compose up -d</code></pre>
-        <p class="hint">Your data lives in a named volume and is left
-        alone.</p>
-      </div>
-      <div>
-        <h3>Already running a proxy?</h3>
-        <p>Delete the <code>caddy</code> service, publish the app on
-        <code>127.0.0.1:3100</code>, and point nginx, Apache, a Cloudflare
-        Tunnel or Tailscale Serve at it. FOSSCast never assumes it owns
-        ports 80 and 443.</p>
-        <p>Proxy on a different machine? Publish on that box's private or
-        Tailscale address instead of loopback, and pass
-        <code>X-Forwarded-For</code> and <code>X-Forwarded-Proto</code>.
-        The README has the nginx block.</p>
-      </div>
-    </div>
-    <p class="hint">It is the same image the maintainer's own shows run
-    on, built from <code>main</code> on every push. What you install is
-    what we use.</p>
+  <section class="hosted" id="hosted" aria-labelledby="hosted-h">
+    <h2 id="hosted-h">If you would rather not run a server</h2>
+    <p>Castmorphic runs this same software for you, the identical public
+    code rather than a special edition, with none of the server work.
+    Your own domain, updates and backups looked after, and somebody to
+    ask when something looks wrong.</p>
+    <p>Your audio, your artwork and your listeners stay yours, and you can
+    take the whole thing with you whenever you like. It is plain files and
+    a standard feed, and this page tells you how to run it yourself for
+    nothing, which is the point.</p>
+    <p class="hosted-go"><a class="btn-primary" href="mailto:hello@fosscast.org?subject=Hosting%20my%20podcast%20on%20FOSSCast">Ask about hosting</a>
+    <a class="btn-quiet" href="https://castmorphic.com">See what it costs</a></p>
   </section>
 
-  <section class="panel cta-final">
-    <h2>Own your show's home</h2>
-    <p class="lede">One pasted file, five minutes, and the podcast is
-    yours again.</p>
-    <div class="cta-row">
-      <a class="btn-primary" href="#install">Install FOSSCast</a>
-      <a class="btn-secondary" href="https://github.com/lightmorphic/fosscast">Read the source</a>
-    </div>
+  <section class="last" aria-labelledby="last-h">
+    <h2 id="last-h">That is the whole pitch</h2>
+    <p>Copy the file at the top, change three lines, run one command. If
+    it is not for you, nothing was lost but an evening, and the code is
+    there to read either way.</p>
+    <p class="last-go"><a class="btn-primary" href="#content">Back to the file</a>
+    <a class="btn-quiet" href="https://github.com/lightmorphic/fosscast">Read the source</a></p>
   </section>
 
 </main>
+
+
 
 <footer class="foot">
   <p class="sister">FOSSCast publishes the show:
@@ -596,6 +558,7 @@ docker compose up -d</code></pre>
   </div>
 </footer>
 
+
 <script>
 // The playground: chips and swatches set custom properties on the
 // miniature, which is styled entirely by those properties. No canvas,
@@ -632,17 +595,28 @@ docker compose up -d</code></pre>
   });
 })();
 
-document.addEventListener('click', function (e) {
-  var button = e.target.closest('[data-copy]');
-  if (!button) return;
+// The copy button. It confirms in place rather than throwing a toast,
+// and it says what happened rather than showing a tick nobody can read
+// aloud. If the clipboard is refused, the file is still selectable.
+(function copyFile() {
+  var button = document.getElementById('copy-compose');
   var code = document.getElementById('compose');
-  navigator.clipboard.writeText(code.textContent).then(function () {
-    var was = button.textContent;
-    button.textContent = 'Copied';
-    button.classList.add('copied');
-    setTimeout(function () { button.textContent = was; button.classList.remove('copied'); }, 1800);
+  if (!button || !code || !navigator.clipboard) return;
+  button.addEventListener('click', function () {
+    var text = Array.prototype.map.call(code.querySelectorAll('.l'), function (l) {
+      return l.textContent;
+    }).join('\n') + '\n';
+    navigator.clipboard.writeText(text).then(function () {
+      var was = button.textContent;
+      button.textContent = button.dataset.copied;
+      button.classList.add('done');
+      setTimeout(function () {
+        button.textContent = was;
+        button.classList.remove('done');
+      }, 1800);
+    });
   });
-});
+})();
 </script>
 
 </body>

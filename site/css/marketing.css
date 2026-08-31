@@ -1,216 +1,379 @@
-/* Type never sits on the raw accent: #ff5721 measures 3.16:1 against
-   white, below the floor. Same hue, deepened until it clears 4.5, and
-   used only where the accent is carrying words. The accent itself is
-   untouched, because it is the brand colour. */
-:root { --accent-text: #c7441a; --success-text: #2c6a2e; }
+/* fosscast.org
+   -----------------------------------------------------------------
+   The page has one idea and everything follows from it: a person and a
+   machine each have a voice here, and this software keeps the machine's
+   part deliberately small. So prose is set in Manrope, and everything
+   the machine says - the file, the commands, their output, the field
+   names - is set in the reader's own monospace, whatever that is on
+   their box. It costs nothing to download and it is their choice of
+   terminal font, which for this audience is the right gesture.
+
+   Colour is four values doing four jobs. Ink on paper for reading;
+   blue-grey for the machine's asides, which is what a comment is; the
+   deep orange only for the three lines you actually change and for the
+   one action per screen; and nothing else. No gradients on type, no
+   glow, no decoration that is not carrying information.
+*/
+
+:root {
+  /* Type never sits on the raw accent: #ff5721 measures 3.16:1 against
+     white, below the floor. Same hue, deepened until it clears 4.5. */
+  --accent-text: #c7441a;
+  --success-text: #2c6a2e;
+  --comment: #5b6f7c;
+  --rule: rgba(24, 24, 40, 0.10);
+  --file-bg: #fbfbfc;
+  --mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo,
+          Consolas, "DejaVu Sans Mono", monospace;
+  --measure: 62ch;
+}
 @media (prefers-color-scheme: dark) {
-  :root { --accent-text: #ff7f55; --success-text: #4bae4f; }
+  :root:not([data-theme="light"]) {
+    --accent-text: #ff7f55;
+    --success-text: #4bae4f;
+    --comment: #93a7b3;
+    --rule: rgba(255, 255, 255, 0.10);
+    --file-bg: #101014;
+  }
+}
+:root[data-theme="dark"] {
+  --accent-text: #ff7f55;
+  --success-text: #4bae4f;
+  --comment: #93a7b3;
+  --rule: rgba(255, 255, 255, 0.10);
+  --file-bg: #101014;
 }
 
-/* Marketing page only: the app's own stylesheet carries everything else. */
+/* ---------- the page ---------- */
 
-.mkt-hero { padding: 3rem 2rem; }
-.mkt-hero h1 { font-size: 2.5rem; line-height: 1.15; }
-@media (max-width: 40rem) {
-  .mkt-hero { padding: 2rem 1.25rem; }
-  .mkt-hero h1 { font-size: 2rem; }
-  .mkt-hero h1 br { display: none; }
+main {
+  max-width: 64rem;
+  width: 100%;
+  /* The body is a flex column, and a flex item sizes to its widest
+     unbreakable content unless told otherwise. The file is full of
+     lines that cannot break, so without this it holds the whole page
+     open on a narrow phone. */
+  min-width: 0;
+  margin: 0 auto;
+  padding: 0 1.5rem 4rem;
 }
 
-.cta-row {
-  display: flex;
-  gap: 0.75rem;
-  flex-wrap: wrap;
-  margin-top: 1.5rem;
+main > section {
+  padding: 4.5rem 0;
+  border-bottom: 1px solid var(--rule);
 }
-.cta-row .btn-primary, .cta-row .btn-secondary { margin-top: 0; text-decoration: none; }
+main > section:last-child { border-bottom: 0; }
 
-.btn-secondary {
-  display: inline-block;
-  font: inherit;
-  font-weight: 600;
-  color: var(--fg);
-  background: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0.625rem 1.25rem;
-  cursor: pointer;
+main h1 {
+  font-size: clamp(2.1rem, 5.2vw, 3.1rem);
+  line-height: 1.05;
+  letter-spacing: -0.035em;
+  margin: 0 0 1.25rem;
+  text-wrap: balance;
 }
-.btn-secondary:hover { border-color: var(--muted-fg); }
-
-.eyebrow {
-  display: inline-block;
-  font-size: 0.75rem;
-  font-weight: 700;
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--accent-text);
-  margin-bottom: 0.5rem;
-}
-
-.feature-lead h2 { font-size: 1.5rem; letter-spacing: -0.01em; }
-
-.ticks {
-  list-style: none;
-  margin: 1rem 0 0;
-  padding: 0;
-  display: grid;
-  gap: 0.5rem;
-}
-.ticks li {
-  position: relative;
-  padding-left: 1.75rem;
-  font-size: 0.9375rem;
-  color: var(--muted-fg);
-}
-.ticks li::before {
-  content: "";
-  position: absolute;
-  left: 0;
-  top: 0.45em;
-  width: 0.75rem;
-  height: 0.4rem;
-  border-left: 2px solid var(--accent);
-  border-bottom: 2px solid var(--accent);
-  transform: rotate(-45deg);
-}
-
-pre {
-  background: var(--muted);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 1rem 1.25rem;
-  overflow-x: auto;
-  font-size: 0.875rem;
-  line-height: 1.7;
-}
-pre code { background: none; padding: 0; word-break: normal; }
-
-.hosted-panel { border-color: var(--accent); }
-
-/* ---------- Hero extras ---------- */
-.status {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
+main h2 {
+  font-size: clamp(1.45rem, 2.6vw, 1.9rem);
+  line-height: 1.15;
+  letter-spacing: -0.025em;
   margin: 0 0 0.75rem;
-  font-size: 0.75rem;
-  font-weight: 700;
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
-  color: var(--success-text);
+  text-wrap: balance;
 }
-.spec-strip {
-  list-style: none;
-  margin: 2rem 0 0;
-  padding: 1.25rem 0 0;
-  border-top: 1px solid var(--border);
+main h3 {
+  font-size: 1.0625rem;
+  line-height: 1.3;
+  letter-spacing: -0.012em;
+  margin: 0 0 0.5rem;
+}
+main p { max-width: var(--measure); }
+.lede { font-size: 1.0625rem; color: var(--muted-fg); margin-top: 0; }
+
+/* ---------- the opening: the file is the argument ---------- */
+
+.opening {
   display: grid;
-  gap: 1rem 2rem;
-  grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  grid-template-columns: minmax(0, 20rem) minmax(0, 1fr);
+  gap: 2.5rem 3rem;
+  align-items: start;
+  padding-top: 3.5rem;
+}
+.opening-words h1 { margin-top: 0; }
+.opening-run {
+  font-family: var(--mono);
   font-size: 0.875rem;
   color: var(--muted-fg);
+  margin: 1.5rem 0 0;
 }
-.spec-strip b {
-  display: block;
-  font-size: 1.75rem;
-  font-weight: 700;
-  line-height: 1.1;
-  letter-spacing: -0.02em;
-  color: var(--accent-text);
+.opening-run code {
+  font-family: inherit;
+  color: var(--fg);
+  font-weight: 600;
+  background: var(--muted);
+  padding: 0.15rem 0.4rem;
+  border-radius: 0.25rem;
+}
+.opening-note {
+  font-size: 0.875rem;
+  color: var(--comment);
+  margin: 0.75rem 0 0;
+  max-width: 30ch;
 }
 
-/* ---------- The install block ---------- */
-.install-panel { border-color: var(--accent); }
-.code-card {
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
+/* The file itself. Bordered like a document rather than a card, and
+   left to be as tall as it is: shrinking it would be hiding it. */
+.file {
+  margin: 0;
+  border: 1px solid var(--rule);
+  border-radius: 0.75rem;
+  background: var(--file-bg);
   overflow: hidden;
-  margin: 1.25rem 0;
 }
-.code-head {
+.file-bar {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 1rem;
-  padding: 0.5rem 0.75rem 0.5rem 1rem;
-  background: var(--muted);
-  border-bottom: 1px solid var(--border);
+  padding: 0.6rem 0.75rem 0.6rem 1rem;
+  border-bottom: 1px solid var(--rule);
+}
+.file-name {
+  font-family: var(--mono);
   font-size: 0.8125rem;
-  font-weight: 600;
   color: var(--muted-fg);
-  font-family: ui-monospace, monospace;
 }
-.code-card pre {
-  margin: 0;
-  border: 0;
-  border-radius: 0;
-  background: var(--panel);
-}
-.btn-copy-code {
+.file-copy {
   font: inherit;
-  font-size: 0.75rem;
+  font-size: 0.8125rem;
   font-weight: 700;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
   color: var(--on-accent);
   background: var(--accent);
   border: 0;
-  border-radius: 999px;
-  padding: 0.3rem 0.75rem;
+  border-radius: 0.5rem;
+  padding: 0.4rem 0.8rem;
   cursor: pointer;
+  min-height: 36px;
 }
-.btn-copy-code:hover { background: var(--accent-hover); }
-.btn-copy-code.copied { background: var(--success); }
-
-.two-up {
-  display: grid;
-  gap: 1.5rem;
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
-  margin-top: 1.5rem;
-}
-.two-up h3 { margin: 0 0 0.5rem; font-size: 1rem; font-weight: 600; }
-.two-up pre { margin: 0 0 0.5rem; }
-
-/* ---------- Sections ---------- */
-.section-head { text-align: center; max-width: 44rem; margin-inline: auto; }
-.section-head h2 { font-size: 1.75rem; letter-spacing: -0.02em; margin: 0 0 0.5rem; }
-.section-head .lede { margin-inline: auto; }
-
-.swatch-demo { display: flex; flex-wrap: wrap; gap: 0.5rem; margin: 1.25rem 0 0.5rem; }
-.swatch-demo span {
-  width: 1.75rem;
-  height: 1.75rem;
-  border-radius: 50%;
-  background: var(--sw);
-  box-shadow: 0 0 0 1px var(--panel-border) inset;
-}
-
-.ticks-cols { grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr)); }
-
-/* ---------- FAQ ---------- */
-.faq { display: grid; gap: 0.25rem; }
-.faq details {
-  border-bottom: 1px solid var(--border);
+.file-copy:hover { background: var(--accent-hover); }
+.file-copy.done { background: var(--success-text); color: #fff; }
+.file-body { overflow-x: auto; }
+.file pre {
+  margin: 0;
   padding: 0.75rem 0;
+  font-family: var(--mono);
+  font-size: 0.75rem;
+  line-height: 1.45;
+  tab-size: 2;
 }
-.faq details:last-child { border-bottom: 0; }
-.faq summary {
-  cursor: pointer;
-  font-weight: 600;
-  list-style: none;
-  display: flex;
-  justify-content: space-between;
-  gap: 1rem;
-}
-.faq summary::-webkit-details-marker { display: none; }
-.faq summary::after { content: '+'; color: var(--accent); font-weight: 700; }
-.faq details[open] summary::after { content: '\2212'; }
-.faq p { margin: 0.625rem 0 0; color: var(--muted-fg); }
+.file code { font-family: inherit; background: none; padding: 0; }
+.file .l { display: block; min-height: 1.45em; padding: 0 1rem 0 1.25rem; white-space: pre; }
+.file .c { color: var(--comment); }
+.file .a { color: var(--comment); }
 
-.cta-final { text-align: center; }
-.cta-final .lede { margin-inline: auto; }
-.cta-final .cta-row { justify-content: center; }
+/* The three lines you change, and the only place the accent appears in
+   the file. A bar rather than a highlight: a filled row would fight the
+   code, and the point is "these three, not the rest". */
+.file .edit {
+  position: relative;
+  color: var(--accent-text);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+.file .edit::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 3px;
+  background: var(--accent);
+}
+.file .edit .c { color: color-mix(in srgb, var(--accent-text) 70%, var(--comment)); }
+.file-legend {
+  margin: 0;
+  max-width: none;
+  padding: 0.7rem 1rem;
+  border-top: 1px solid var(--rule);
+  font-size: 0.8125rem;
+  color: var(--muted-fg);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+.file-legend .key {
+  width: 3px;
+  height: 1.1em;
+  background: var(--accent);
+  border-radius: 2px;
+  flex: none;
+}
+
+/* ---------- receipts: the signature of this page ---------- */
+
+.receipt-list {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(19rem, 1fr));
+  gap: 2rem 2.5rem;
+}
+.receipt p { color: var(--muted-fg); font-size: 0.9375rem; margin: 0 0 0.9rem; }
+.shell {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-left: 2px solid var(--rule);
+  background: var(--muted);
+  border-radius: 0 0.5rem 0.5rem 0;
+  font-family: var(--mono);
+  font-size: 0.78125rem;
+  line-height: 1.6;
+  overflow-x: auto;
+  white-space: pre;
+}
+.shell code { font-family: inherit; background: none; padding: 0; }
+.shell .p { color: var(--comment); user-select: none; }
+.shell .o { color: var(--fg); font-weight: 600; }
+
+/* ---------- what you get ---------- */
+
+.what-grid {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 2rem 2.5rem;
+}
+.thing p { color: var(--muted-fg); font-size: 0.9375rem; margin: 0; }
+/* The design tab is the biggest thing here and the one the playground
+   below demonstrates, so it gets the width rather than being squeezed
+   into a column and dragging the row out of balance. */
+.thing-wide { grid-column: 1 / -1; }
+.thing-wide p { max-width: var(--measure); }
+.thing-wide .spec { columns: 2; column-gap: 2.5rem; }
+.thing-wide .spec li { break-inside: avoid; }
+.thing code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--fg);
+}
+.spec {
+  list-style: none;
+  margin: 0.9rem 0 0;
+  padding: 0;
+  font-size: 0.875rem;
+  color: var(--muted-fg);
+}
+.spec li {
+  padding: 0.3rem 0 0.3rem 1.1rem;
+  position: relative;
+}
+.spec li::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 0.95em;
+  width: 0.45rem;
+  height: 1px;
+  background: var(--comment);
+}
+.small-things { margin-top: 3rem; }
+.spec-cols { columns: 2; column-gap: 2.5rem; }
+.spec-cols li { break-inside: avoid; }
+
+/* ---------- the playground, the decision, the questions ---------- */
+
+.try .lede, .decision p, .asked .lede { margin-bottom: 0; }
+.decision p + p { margin-top: 1rem; }
+
+.asked-list { margin-top: 1.75rem; max-width: var(--measure); }
+.asked details {
+  border-bottom: 1px solid var(--rule);
+}
+.asked details:first-child { border-top: 1px solid var(--rule); }
+.asked summary {
+  cursor: pointer;
+  list-style: none;
+  padding: 0.95rem 2rem 0.95rem 0;
+  font-weight: 600;
+  position: relative;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+.asked summary::-webkit-details-marker { display: none; }
+.asked summary::after {
+  content: "+";
+  position: absolute;
+  right: 0.25rem;
+  font-family: var(--mono);
+  color: var(--accent-text);
+  font-weight: 700;
+}
+.asked details[open] summary::after { content: "\2212"; }
+.asked p {
+  margin: 0 0 1.1rem;
+  color: var(--muted-fg);
+  font-size: 0.9375rem;
+}
+.asked code {
+  font-family: var(--mono);
+  font-size: 0.9em;
+  color: var(--fg);
+  background: var(--muted);
+  padding: 0.1rem 0.35rem;
+  border-radius: 0.25rem;
+}
+
+.hosted p { color: var(--muted-fg); }
+.hosted p:first-of-type { color: inherit; }
+.hosted-go, .last-go {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.5rem;
+  max-width: none;
+}
+
+.last h2 { margin-bottom: 0.5rem; }
+.last p { color: var(--muted-fg); }
+
+/* ---------- the two buttons this page has ---------- */
+
+.btn-primary, .btn-quiet {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  padding: 0.6rem 1.15rem;
+  border-radius: 0.6rem;
+  font-weight: 700;
+  font-size: 0.9375rem;
+  text-decoration: none;
+  margin-top: 0;
+}
+.btn-primary { background: var(--accent); color: var(--on-accent); border: 1px solid transparent; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-quiet {
+  color: var(--fg);
+  border: 1px solid var(--border);
+  background: transparent;
+}
+.btn-quiet:hover { border-color: var(--comment); }
+
+/* ---------- narrower ---------- */
+
+@media (max-width: 62rem) {
+  .opening { grid-template-columns: 1fr; gap: 2rem; }
+  .opening-note { max-width: var(--measure); }
+  main > section { padding: 3.25rem 0; }
+}
+/* A grid or flex child will not shrink below its content unless it is
+   told it may. Without this the range slider and the code blocks hold
+   the whole page open at 320px. */
+.demo-layout > *, .receipt, .thing, .file, .file-body { min-width: 0; }
+.shell, .file { max-width: 100%; }
+.demo-controls input[type=range] { max-width: 100%; }
+
+@media (max-width: 34rem) {
+  main { padding-inline: 1rem; }
+  .spec-cols { columns: 1; }
+  .file pre { font-size: 0.72rem; }
+}
 
 /* ---------- The playground ---------- */
 /* A miniature show page, styled entirely by custom properties so the
@@ -376,6 +539,7 @@ html { scroll-behavior: smooth; }
 @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
 
 /* ---------- Footer ---------- */
+
 /* Laid out like FOSSStudio's: the sister-project card across the top,
    then the maker on the left and the licence on the right. */
 .foot {
@@ -434,7 +598,9 @@ main.legal .lede { color: var(--muted-fg); }
 
 /* On anything a finger drives, a menu link is a 44px target. */
 @media (max-width: 1024px) {
-  .top-link { min-height: 44px; display: inline-flex; align-items: center; }
+  .top-link,
+  .sub-foot-links a,
+  .gpl a { min-height: 44px; display: inline-flex; align-items: center; }
 }
 
 .legal-more { margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
