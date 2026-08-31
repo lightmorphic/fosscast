@@ -3,7 +3,7 @@
   "version": "0.2.0",
   "private": true,
   "license": "GPL-3.0-only",
-  "description": "The public home of shows recorded on FOSSStudio: live streams, chat and an episode archive.",
+  "description": "Self-hosted podcast hosting: a website, a feed and honest statistics for one show, on your own server.",
   "scripts": {
     "start": "node server.js",
     "test": "node --test"
