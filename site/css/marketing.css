@@ -254,12 +254,11 @@ main > section:last-child { border-bottom: 0; }
   align-items: center;
 }
 /* A grid child sizes to its widest unbreakable content unless it is
-   told it may shrink. The shell block below holds a line that cannot
-   wrap, so without this it pushes the whole page sideways on a phone. */
+   told it may shrink, and the file at the foot of the page is full of
+   lines that cannot wrap. */
 .counted > *, .install > *, .stage-inner > *, .step, .control { min-width: 0; }
 .counted p { color: var(--muted-fg); }
 .counted h2 + p { color: inherit; }
-.counted-proof { font-size: 0.875rem; margin-bottom: 0.6rem; }
 .counted-chart {
   border: 1px solid var(--rule);
   border-radius: 0.9rem;
@@ -271,17 +270,6 @@ main > section:last-child { border-bottom: 0; }
 .chart-bars.in i { transition: height 0.9s cubic-bezier(0.2, 0.7, 0.2, 1); }
 .chart-legend { display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.75rem; color: var(--muted-fg); font-family: var(--mono); }
 
-.shell {
-  margin: 0; padding: 0.85rem 1rem;
-  border-left: 2px solid var(--rule);
-  background: var(--muted);
-  border-radius: 0 0.5rem 0.5rem 0;
-  font-family: var(--mono); font-size: 0.78125rem; line-height: 1.6;
-  overflow-x: auto; white-space: pre; max-width: 100%;
-}
-.shell code { font-family: inherit; background: none; padding: 0; }
-.shell .p { color: var(--comment); user-select: none; }
-.shell .o { color: var(--fg); font-weight: 600; }
 
 /* ------------------------------------------------------- what you get */
 

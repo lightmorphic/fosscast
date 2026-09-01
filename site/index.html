@@ -373,13 +373,18 @@
       <p>There is no analytics service in the loop, no third-party font,
       no script from anybody else, and no cookie for a listener. The
       charts are drawn on your own machine from counters that hold a
-      total and nothing else. No podcast host can tell you somebody
-      pressed play, and this one will not pretend it can.</p>
-      <p class="counted-proof">Check it yourself against what the live
-      demo serves:</p>
-      <pre class="shell"><code><span class="p">$</span> curl -s https://demo.fosscast.org/ \
-    | grep -cE 'src="https?://|@import|googleapis'
-<span class="o">0</span></code></pre>
+      total and nothing else.</p>
+      <p>A download means the audio reached a device. It does not mean
+      anybody listened, because podcast apps fetch new episodes
+      automatically for everyone subscribed. Apple and Spotify can tell
+      you more than that, and it is worth knowing why: they wrote the
+      app, so they can watch what happens inside it, and they can only
+      see the listening that happens there. That is the whole reason
+      they want your show heard in their app and nowhere else. Anybody
+      who simply serves a file, this software included, sees a request
+      and nothing after it.</p>
+      <p>So the number here says downloads, because downloads is what it
+      counts.</p>
     </div>
     <div class="counted-chart" aria-hidden="true">
       <div class="chart-bars" id="chart-bars"></div>
