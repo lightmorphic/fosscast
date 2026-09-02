@@ -1,4 +1,5 @@
 'use strict';
+const { siteDomain } = require('./domain');
 // The admin area: login, dashboard, show and episode management,
 // account settings.
 //
@@ -432,7 +433,7 @@ function createAdminRouter(ctx) {
       if (await archiveorg.overLimit(accessKey, identifier)) {
         throw new Error('archive.org is rationing uploads from this account just now. Try again in a few minutes.');
       }
-      const domain = (process.env.DOMAIN || '').trim();
+      const domain = siteDomain('');
       const result = await archiveorg.put({
         accessKey,
         secretKey,
@@ -1443,7 +1444,7 @@ function createAdminRouter(ctx) {
           another, longest-lived first. Leave it empty and nobody but this
           server ever sees a download.</p>
           ${show.mediaPrefix ? `<p class="hint">Your enclosures now read
-          <code>${esc(prefixed(`https://${process.env.DOMAIN || 'example.org'}/d/EPISODE.mp3`, show.mediaPrefix))}</code></p>
+          <code>${esc(prefixed(`https://${siteDomain('example.org')}/d/EPISODE.mp3`, show.mediaPrefix))}</code></p>
           <p class="hint">This does send your listeners through somebody
           else on their way to the audio, the player on your own site
           included. That is what a prefix is for, but it is a third party
@@ -1563,7 +1564,7 @@ function createAdminRouter(ctx) {
     const editable = stored !== null;
     const text = editable ? transcripts.toLines(stored) : '';
     const tool = transcripts.transcriber();
-    const domain = (process.env.DOMAIN || 'localhost').trim();
+    const domain = siteDomain();
     const audio = /^https?:\/\//i.test(episode.mediaUrl || '')
       ? episode.mediaUrl
       : `https://${domain}${episode.mediaUrl || ''}`;
@@ -1954,7 +1955,7 @@ function createAdminRouter(ctx) {
   async function route(req, res, url) {
     const p = url.pathname;
     if (!p.startsWith('/admin')) return false;
-    const domain = (process.env.DOMAIN || 'localhost').trim();
+    const domain = siteDomain();
 
     // One-time sign-in link (from the fleet panel's auto-login). The
     // token is minted on the box and used once; consuming it burns the
@@ -2151,7 +2152,7 @@ function createAdminRouter(ctx) {
       if (form.get('live')) {
         const items = episodes().filter((e) => e.showId === show.id)
           .sort((a, b) => (a.date < b.date ? 1 : -1));
-        html(res, showPage(shows()[0], items, (process.env.DOMAIN || 'localhost').trim()));
+        html(res, showPage(shows()[0], items, siteDomain()));
         return true;
       }
       html(res, lookPage(shows()[0], form.get('reset') ? 'Back to the default look.' : 'Saved.'));

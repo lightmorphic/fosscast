@@ -7,7 +7,11 @@ services:
       context: .
       dockerfile: server/Dockerfile
     restart: unless-stopped
-    env_file: .env
+    # Optional: a first run has no .env yet, and compose must not refuse
+    # to start over a file the app creates itself.
+    env_file:
+      - path: .env
+        required: false
     environment:
       # Inside the container the app always listens on 3100; HTTP_PORT
       # in .env only changes the host port it is published on.
@@ -46,7 +50,11 @@ services:
   caddy:
     image: caddy:2-alpine
     restart: unless-stopped
-    env_file: .env
+    # Optional: a first run has no .env yet, and compose must not refuse
+    # to start over a file the app creates itself.
+    env_file:
+      - path: .env
+        required: false
     ports:
       - "80:80"
       - "443:443"
