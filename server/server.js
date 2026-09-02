@@ -17,7 +17,8 @@ const transcripts = require('./lib/transcripts');
 const HTTP_PORT = Number(process.env.HTTP_PORT || 3100);
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const WEB_DIR = path.resolve(process.env.WEB_DIR || path.join(__dirname, '..', 'web'));
-const DOMAIN = (process.env.DOMAIN || 'localhost').trim();
+const { siteDomain } = require('./lib/domain');
+const DOMAIN = siteDomain();
 const VERSION = require('./package.json').version;
 
 const store = new Store(DATA_DIR);

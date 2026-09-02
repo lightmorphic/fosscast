@@ -16,7 +16,7 @@ const crypto = require('crypto');
 
 const store = new Store(process.env.DATA_DIR || path.join(__dirname, 'data'));
 const users = store.load('users', []);
-const DOMAIN = (process.env.DOMAIN || 'localhost').trim();
+const DOMAIN = require('./lib/domain').siteDomain();
 
 if (users.length === 0) {
   console.error('No accounts exist yet.');
