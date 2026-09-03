@@ -360,9 +360,18 @@ function hostPhoto(host) { return host.photoWeb || host.photo || ''; }
 
 // The show's own menu. Pages beyond the front page only appear once
 // there is something on them.
+// A contact page served by something beside this - a form the operator
+// hosts, a helpdesk - joins the menu when CONTACT_PATH names its
+// same-site path. Unset, the menu is as it was.
+const CONTACT_PATH = (() => {
+  const raw = (process.env.CONTACT_PATH || '').trim();
+  return raw.startsWith('/') && !raw.includes('//') ? raw : '';
+})();
+
 function siteNav(show, current = '') {
   const items = [['/', 'Home', current === 'home']];
   if (hosts(show).length) items.push(['/hosts', 'Hosts', current === 'hosts']);
+  if (CONTACT_PATH) items.push([CONTACT_PATH, 'Contact', current === 'contact']);
   return items.length > 1 ? items : [];
 }
 

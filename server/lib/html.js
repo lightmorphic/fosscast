@@ -77,6 +77,15 @@ function siteMenu(nav = []) {
     .join('')}</nav>`;
 }
 
+// An operator may run something beside this that wants a script on
+// every public page - a chat bubble, a form helper, analytics they host
+// themselves. PAGE_EMBED names a same-site path to that script and it is
+// loaded at the end of every public page. Unset, nothing is loaded.
+const PAGE_EMBED = (() => {
+  const raw = (process.env.PAGE_EMBED || '').trim();
+  return raw.startsWith('/') && !raw.includes('//') ? raw : '';
+})();
+
 function publicPage({ title, description, body, image, icon, nav = [], theme = null, footer = '' }) {
   const look = theme ? require('./theme').normalise(theme) : null;
   // A fixed light or dark choice is the operator's; "auto" leaves it to
@@ -120,6 +129,7 @@ ${body}
     <img src="${BRAND_MARK}" alt="${esc(BRANDED ? BRAND : 'Lightmorphic')}" width="32" height="32" loading="lazy">
   </a>
 </footer>
+${PAGE_EMBED ? `<script src="${esc(PAGE_EMBED)}" defer></script>` : ''}
 <script>
 
 // Tooltips: one bubble, appended to the body, positioned in viewport
