@@ -37,6 +37,12 @@ const MIME = {
   '.json': 'application/json',
 };
 
+// The same reasoning as the media files below: a feed is meant to be
+// read by anything, and a page listing a show's latest episodes reads it
+// from the visitor's own browser. Without this the browser refuses, and
+// the page shows whatever somebody last typed in by hand.
+const FEED_CORS = { 'Access-Control-Allow-Origin': '*' };
+
 function send(res, status, body, headers = {}) {
   res.writeHead(status, headers);
   res.end(body);
@@ -330,7 +336,10 @@ function route(req, res) {
   // directories update themselves and stop relying on it.
   const aliased = feedAliases.match(store.load('shows', []), p);
   if (aliased) {
-    res.writeHead(301, { Location: `/shows/${aliased.slug}/feed.xml` });
+    // The header goes on the redirect too: a browser checks every hop of
+    // a chain, so an alias without it fails a page the real address
+    // would have served.
+    res.writeHead(301, { Location: `/shows/${aliased.slug}/feed.xml`, ...FEED_CORS });
     return res.end();
   }
 
@@ -347,6 +356,7 @@ function route(req, res) {
       stats.recordFeed(clientIp(req), req.headers['user-agent'] || '');
       return send(res, 200, publicSite.feed(show, items, DOMAIN), {
         'Content-Type': 'application/rss+xml; charset=utf-8',
+        ...FEED_CORS,
       });
     }
     return sendHtml(res, publicSite.showPage(show, items, DOMAIN));

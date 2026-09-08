@@ -4,6 +4,13 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- The feed says it may be read by any page. A website that lists a
+  show's latest episodes now reads the feed straight from the visitor's
+  browser, which every other podcast host already allows and which no
+  podcast app will notice. It is the feed only: the rest of the site
+  stays closed to other people's pages, and the feed carries nothing
+  that was not already public.
+
 - The dashboard can live inside your own shell. Set `FRAME_ANCESTORS`
   to the one origin allowed to frame the admin - a homelab wall, an
   agency panel, a portal - and it may; unset means what it always
