@@ -2,7 +2,11 @@
 
 All notable changes to FOSSCast are documented here.
 
-## Unreleased
+## 0.2.1 - 2026-09-08
+
+Three small things, all of them about FOSSCast getting on with software it
+does not control: a website that wants to read the feed, a shell that wants
+to hold the dashboard, and tests that keep the standalone promise honest.
 
 - The feed says it may be read by any page. A website that lists a
   show's latest episodes now reads the feed straight from the visitor's
