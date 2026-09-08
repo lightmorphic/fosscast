@@ -183,14 +183,6 @@ function socialLinks(show) {
     .map(([key, label, , icon]) => ({ url: social[key], label, icon }));
 }
 
-function socialRow(show) {
-  const list = socialLinks(show);
-  if (!list.length) return '';
-  return `<div class="subscribe social">
-    <span class="sub-label">Find us on</span>
-    ${list.map((l) => `<a class="sub-btn" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${l.icon}<span>${esc(l.label)}</span></a>`).join('')}
-  </div>`;
-}
 
 // Everything a listener can pay through: the services above, plus the
 // funding URL typed in by hand.
@@ -204,14 +196,6 @@ function supportLinks(show) {
   return list;
 }
 
-function supportRow(show) {
-  const list = supportLinks(show);
-  if (!list.length) return '';
-  return `<div class="subscribe support">
-    <span class="sub-label">Support the show</span>
-    ${list.map((l) => `<a class="sub-btn" href="${esc(l.url)}" target="_blank" rel="noopener noreferrer">${l.icon}<span>${esc(l.label)}</span></a>`).join('')}
-  </div>`;
-}
 
 const RSS_ICON = '<svg viewBox="0 0 24 24" aria-hidden="true"><path fill="currentColor" d="M5 3c8.8 0 16 7.2 16 16h-3C18 11.8 12.2 6 5 6V3zm0 6c5.5 0 10 4.5 10 10h-3c0-3.9-3.1-7-7-7V9zm1.5 6a2.5 2.5 0 1 1 0 5 2.5 2.5 0 0 1 0-5z"/></svg>';
 
@@ -758,4 +742,4 @@ function embedPage(show, episode, domain = '') {
 `;
 }
 
-module.exports = { prefixed, bannerKind, bannerMarkup, landing, showsIndex, showPage, episodePage, hostsPage, hostPage, hosts, hostSlug, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, listenCard, supportRow, supportLinks, socialRow, socialLinks, slugify, APPS, SUPPORT, SOCIAL };
+module.exports = { prefixed, bannerKind, bannerMarkup, landing, showsIndex, showPage, episodePage, hostsPage, hostPage, hosts, hostSlug, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, listenCard, supportLinks, socialLinks, slugify, APPS, SUPPORT, SOCIAL };
