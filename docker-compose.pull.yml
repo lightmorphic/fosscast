@@ -1,7 +1,7 @@
 # FOSSCast, the whole thing, from a single file.
 #
 # Everything you need to change is in the block at the top. Paste this
-# into docker-compose.yml, edit those four lines, and run:
+# into docker-compose.yml, edit those three lines, and run:
 #
 #   docker compose up -d
 #
