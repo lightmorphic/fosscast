@@ -139,7 +139,7 @@ a:hover { text-decoration-color: currentColor; }
 /* Links that are already a control - buttons, cards, nav, anything with
    its own box - say so by their shape and take no underline. */
 .btn-primary, .btn-secondary, .btn-icon, .sub-btn, .site-link, .admin-link,
-.host-card, .show-card, .episode-art-link, .powered-by, .swatch, .wordmark {
+.host-card, .show-card, .episode-art-link, .powered-by, .wordmark {
   text-decoration: none;
 }
 a:focus-visible, button:focus-visible, input:focus-visible,
@@ -578,18 +578,6 @@ body.embedded .wrap { padding-top: 0.5rem; }
    column's width like every card: its own padding on top of the page's
    made it 48px narrower than the cards under it. */
 .show-banner { margin: 0; }
-.show-banner video {
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 1;
-  object-fit: cover;
-  border-radius: var(--panel-radius);
-}
-/* Reduced motion is handled in script: pausing a video is not something
-   CSS can do, and animation-play-state here only ever looked like it
-   did. See stillBanner() in html.js. */
-.limits { margin: 0.5rem 0 0.75rem; }
-.limits li > span:first-child { color: var(--accent); }
 .show-banner img {
   display: block;
   width: 100%;
@@ -702,7 +690,7 @@ body.embedded .wrap { padding-top: 0.5rem; }
 
 /* A pop-up: the page keeps its place underneath, and what was asked for
    sits in the middle of the screen with a way out at the top right. */
-.ia-back {
+.modal-back {
   position: fixed;
   inset: 0;
   z-index: 40;
@@ -712,8 +700,8 @@ body.embedded .wrap { padding-top: 0.5rem; }
   background: rgba(9, 9, 11, 0.45);
   backdrop-filter: blur(3px);
 }
-.ia-back[hidden] { display: none; }
-.ia-modal {
+.modal-back[hidden] { display: none; }
+.modal-card {
   position: relative;
   width: min(34rem, 100%);
   max-height: 82vh;
@@ -724,8 +712,8 @@ body.embedded .wrap { padding-top: 0.5rem; }
   box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.35);
   padding: 1.5rem 1.6rem 1.75rem;
 }
-.ia-modal h2 { margin: 0 2rem 0.35rem 0; font-size: 1.2rem; }
-.ia-x {
+.modal-card h2 { margin: 0 2rem 0.35rem 0; font-size: 1.2rem; }
+.modal-x {
   position: absolute;
   top: 0.6rem;
   right: 0.75rem;
@@ -737,31 +725,7 @@ body.embedded .wrap { padding-top: 0.5rem; }
   cursor: pointer;
   padding: 0.25rem 0.4rem;
 }
-.ia-x:hover { color: var(--fg); }
-
-/* One recording to choose: its file name, and the address underneath so
-   nobody has to guess which one it is. The whole row is the button. */
-.ia-choice {
-  display: block;
-  width: 100%;
-  text-align: left;
-  font: inherit;
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0.7rem 0.85rem;
-  margin-top: 0.6rem;
-  cursor: pointer;
-}
-.ia-choice:hover { border-color: var(--accent); }
-.ia-choice strong { display: block; font-size: 0.9375rem; }
-.ia-choice span {
-  display: block;
-  color: var(--muted-fg);
-  font-size: 0.78rem;
-  margin-top: 0.2rem;
-  word-break: break-all;
-}
+.modal-x:hover { color: var(--fg); }
 
 /* The embed snippet, with its copy button in the corner. */
 .embed-code { position: relative; margin: 0.75rem 0; }
@@ -802,8 +766,6 @@ body.embedded .wrap { padding-top: 0.5rem; }
 }
 /* A check that failed carries its remedy, so it wants a line to itself. */
 .checks li.check-bad { grid-column: 1 / -1; }
-/* The upload limits use the same marks but are sentences, not labels. */
-.limits { grid-template-columns: 1fr; }
 .checks li { display: flex; gap: 0.625rem; align-items: flex-start; font-size: 0.9375rem; }
 .checks li > span:first-child { font-weight: 700; flex: none; width: 1rem; text-align: center; }
 .check-ok > span:first-child { color: var(--success); }
@@ -1021,66 +983,12 @@ body.embedded .wrap { padding-top: 0.5rem; }
   .preview-frame-wrap { aspect-ratio: 4 / 3; }
 }
 
-.swatches { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
-.swatch {
-  width: 2.25rem;
-  height: 2.25rem;
-  border-radius: 50%;
-  border: 2px solid transparent;
-  background: var(--sw);
-  cursor: pointer;
-  padding: 0;
-  box-shadow: 0 0 0 1px var(--panel-border) inset;
-}
-.swatch:hover { transform: scale(1.06); }
-.swatch.current { border-color: var(--fg); box-shadow: 0 0 0 2px var(--panel); }
-input[type="color"] { width: 100%; height: 2.5rem; padding: 0.25rem; cursor: pointer; }
-input[type="range"] { width: 100%; accent-color: var(--accent); }
-
-/* A choice is a chip in a row, not a full-width slab. The radio itself
-   is taken out of the flow - the global `input { width: 100% }` would
-   otherwise stretch it across the card and shove the label sideways -
-   but it stays focusable, and the chip shows the focus ring. */
-.picks { display: flex; flex-wrap: wrap; gap: 0.375rem; }
-.pick {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.4rem 0.75rem;
-  border: 1px solid var(--border);
-  border-radius: 999px;
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 500;
-  margin: 0;
-  position: relative;
-}
-.pick input[type="radio"] {
-  position: absolute;
-  opacity: 0;
-  width: 1px;
-  height: 1px;
-  margin: 0;
-  padding: 0;
-}
-.pick:hover { border-color: var(--accent); }
-.pick.current { background: var(--accent-container); color: var(--on-accent-container); border-color: transparent; }
-.pick:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
-.pick-hint { margin: 0.375rem 0 0; min-height: 1.1em; }
-.pick-hint:empty { display: none; }
-.group-label { margin: 1rem 0 0.375rem; font-size: 0.8125rem; font-weight: 600; color: var(--muted-fg); }
-.panel > .picks:first-of-type { margin-top: 0.25rem; }
-
-/* Small controls that belong on one line with their label. */
 .inline-fields { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
 .inline-label { display: inline; margin: 0; font-size: 0.8125rem; font-weight: 600; color: var(--muted-fg); white-space: nowrap; }
-.inline-label b { font-variant-numeric: tabular-nums; color: var(--fg); }
 .hex-field { width: 7rem; font-family: ui-monospace, monospace; }
 .color-chip { width: 2.75rem; height: 2.25rem; padding: 0.2rem; border-radius: var(--radius); }
-.inline-range { width: auto; flex: 1; min-width: 6rem; }
-.slider-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.75rem; }
-.slider-row .inline-label { width: 7.5rem; }
 
-/* The custom CSS box folds away until it is wanted. */
+/* A card that folds away until it is wanted. */
 details.panel > summary { cursor: pointer; list-style: none; }
 details.panel > summary::-webkit-details-marker { display: none; }
 details.panel > summary h2 { display: inline; }
@@ -1121,7 +1029,6 @@ details.panel[open] > summary { margin-bottom: 0.75rem; }
 .save-state.saved::before { content: '\2713\00a0'; }
 .save-state.failed { color: var(--danger); }
 
-.bg-preview { display: block; width: 100%; max-height: 9rem; object-fit: cover; border-radius: var(--radius); margin: 0.75rem 0; }
 #custom-css { font-family: ui-monospace, monospace; font-size: 0.8125rem; }
 
 /* ---------- Themed extras (public) ---------- */
@@ -1347,102 +1254,15 @@ details.panel[open] > summary { margin-bottom: 0.75rem; }
 .table-scroll { overflow-x: auto; }
 td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 
-/* A card can hold more than one thing - artwork, then a banner, then a
-   banner video - and a rule between them says where one ends and the
-   next begins without needing another card. */
+/* A card can hold more than one thing - artwork, then a banner - and a
+   rule between them says where one ends and the next begins without
+   needing another card. */
 .subsection + .subsection {
   margin-top: 1.5rem;
   padding-top: 1.5rem;
   border-top: 1px solid var(--border);
 }
-.subsection > label:first-child,
-.subsection > .group-label:first-child { margin-top: 0; }
-
-/* A recipe folded into a card: shown when wanted, out of the way when
-   not, and numbered because it is a sequence. */
-/* Clear of the limits list above it: the summary is a heading for the
-   thing you open, not the last line of the list. */
-.recipe { margin: 1.5rem 0 1rem; }
-.recipe > summary {
-  cursor: pointer;
-  font-size: 0.875rem;
-  font-weight: 600;
-  color: var(--link);
-  list-style: none;
-}
-.recipe > summary::-webkit-details-marker { display: none; }
-.recipe > summary::before { content: '+ '; font-weight: 700; }
-.recipe[open] > summary::before { content: '\2212 '; }
-.steps {
-  margin: 0.75rem 0 0.5rem;
-  padding-left: 1.25rem;
-  display: grid;
-  gap: 0.5rem;
-  font-size: 0.875rem;
-  color: var(--muted-fg);
-}
-.steps b { color: var(--fg); font-weight: 600; }
-.recipe code { display: inline-block; margin-top: 0.25rem; white-space: pre-wrap; }
-
-/* ---------- Choosing what the banner looks at ---------- */
-/* The clip as it is, with the banner's own shape drawn over it in red.
-   Whatever is inside the box is what the strip will show. */
-/* The same width as the strip underneath it: judging a crop against a
-   preview of a different size is guesswork, and the two sitting flush
-   makes the red box read as what it is - a window onto the picture. */
-.focus-picker {
-  position: relative;
-  display: block;
-  width: 100%;
-  margin: 0.75rem 0;
-  line-height: 0;
-  border-radius: var(--radius);
-  overflow: hidden;
-  background: #000;
-}
-.focus-picker video { display: block; width: 100%; height: auto; }
-.focus-box {
-  position: absolute;
-  top: 0;
-  left: 0;
-  box-sizing: border-box;
-  border: 2px solid #ff3b30;
-  border-radius: 2px;
-  cursor: grab;
-  touch-action: none;
-  /* Everything outside the box is dimmed by an enormous shadow, so the
-     framing reads at a glance rather than needing to be worked out. */
-  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
-}
-.focus-box::after {
-  content: 'Banner';
-  position: absolute;
-  top: 0.25rem;
-  left: 0.4rem;
-  font-size: 0.6875rem;
-  font-weight: 700;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-  color: #fff;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
-  line-height: 1.2;
-}
-.focus-box:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
-.dragging .focus-box { cursor: grabbing; }
-.locked-x.locked-y .focus-box { cursor: default; }
-
-.focus-result {
-  border-radius: var(--radius);
-  overflow: hidden;
-  margin: 0.5rem 0 0.75rem;
-  background: var(--muted);
-}
-.focus-result video {
-  display: block;
-  width: 100%;
-  aspect-ratio: 4 / 1;
-  object-fit: cover;
-}
+.subsection > label:first-child { margin-top: 0; }
 
 /* A refused upload says what to change about the file. That is worth
    reading, so it does not get the same grey as a progress line. */

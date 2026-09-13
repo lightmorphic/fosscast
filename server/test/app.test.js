@@ -257,8 +257,7 @@ test('the look: the accent colour and words of your own', async () => {
   // Editing saves as it goes: one request stores the change and answers
   // with the page as it now stands, which is what the preview shows.
   const live = await (await fetch(`${BASE}/admin/look`, form({
-    accent: '#16a34a', bgMode: 'default', panel: 'outline', radius: '0',
-    font: 'mono', width: 'narrow', episodes: 'row', mode: 'light', live: '1',
+    accent: '#16a34a', live: '1',
   }))).text();
   assert.ok(live.includes('--accent-light: #16a34a'), 'the answer is the front page itself');
   assert.ok(!live.includes('look-form'), 'not the admin page');
