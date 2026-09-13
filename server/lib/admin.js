@@ -116,13 +116,26 @@ function createAdminRouter(ctx) {
   const { podcastPage, createPodcastPage } = podcastScreens({ episodes, settings });
   const { dashboard, accountPage } = accountScreens({ settings, shows, episodes, stats });
 
-  // Bootstrap: with no users yet, ADMIN_EMAIL + ADMIN_PASSWORD from the
-  // environment create the first admin account at startup.
+  // ADMIN_EMAIL and ADMIN_PASSWORD are true every time the app starts,
+  // not only the first time.
+  //
+  // They used to create the first account and then be ignored forever.
+  // So a first run that failed for some other reason still left an
+  // account behind, and every later correction to the compose file did
+  // nothing: you pasted the password the file told you to paste and were
+  // told it was wrong. There is no way to work that out from the outside,
+  // and nobody should have to.
+  //
+  // While those two lines are in the file they decide what the login is.
+  // Take them out and the account is yours to manage from the panel.
   function bootstrap() {
     const list = users();
     const email = (process.env.ADMIN_EMAIL || '').trim().toLowerCase();
     const password = process.env.ADMIN_PASSWORD || '';
-    if (list.length === 0 && email && password) {
+    if (!email || !password) return;
+
+    const existing = list.find((u) => u.email === email);
+    if (!existing) {
       list.push({
         id: crypto.randomUUID(),
         email,
@@ -130,7 +143,17 @@ function createAdminRouter(ctx) {
         createdAt: new Date().toISOString(),
       });
       store.save('users', list);
-      console.log(`Created admin account ${email} from environment`);
+      console.log(`Created admin account ${email} from the settings`);
+      return;
+    }
+
+    // The account is there but the password in the file no longer opens
+    // it - somebody edited the file after the first run, which is exactly
+    // what a person does when they cannot get in. Make the file true.
+    if (!auth.verifyPassword(password, existing.hash)) {
+      existing.hash = auth.hashPassword(password);
+      store.save('users', list);
+      console.log(`Reset the password for ${email} to the one in the settings`);
     }
   }
 
