@@ -1,0 +1,686 @@
+/* fosscast.org
+   -----------------------------------------------------------------
+   The page opens on the thing the software makes: a real show page,
+   drawn in HTML, restyling itself. Colour, background, cards, corners,
+   layout, all changing on their own for a few seconds and then handed
+   over to the visitor with the same controls the software gives them.
+   What you watch is what you get, because it is the same mechanism.
+
+   The stage keeps its own dark ground whatever the visitor's theme,
+   the way a product shot does. Everything below follows their theme.
+
+   All motion is CSS on transform and opacity, and all of it stops for
+   anyone who has asked their machine for less movement.
+*/
+
+:root {
+  --accent-text: #c7441a;
+  --success-text: #2c6a2e;
+  --comment: #5b6f7c;
+  --rule: rgba(24, 24, 40, 0.10);
+  --file-bg: #fbfbfc;
+  --ink: #0a0a0d;
+  --ink-2: #14141a;
+  --on-ink: #f6f5f3;
+  --on-ink-quiet: #a8a8b4;
+  --mono: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo,
+          Consolas, "DejaVu Sans Mono", monospace;
+  --measure: 62ch;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --accent-text: #ff7f55; --success-text: #4bae4f; --comment: #93a7b3;
+    --rule: rgba(255, 255, 255, 0.10); --file-bg: #101014;
+  }
+}
+:root[data-theme="dark"] {
+  --accent-text: #ff7f55; --success-text: #4bae4f; --comment: #93a7b3;
+  --rule: rgba(255, 255, 255, 0.10); --file-bg: #101014;
+}
+
+/* The beta strip. Grey panel, a mark, no painted colour: the words do
+   the work. First thing on the page, above the wordmark, because a
+   visitor deciding whether to trust this with a podcast needs it before
+   anything else we have to say. */
+.beta-strip {
+  border-bottom: 1px solid var(--rule);
+  background: var(--file-bg);
+  padding: 0.75rem 1rem;
+}
+.beta-strip p {
+  margin: 0 auto;
+  max-width: var(--measure);
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+.beta-strip b { font-weight: 700; }
+.beta-strip .beta-quiet { color: var(--comment); }
+
+main { min-width: 0; }
+main h2 {
+  font-size: clamp(1.6rem, 3.4vw, 2.4rem);
+  line-height: 1.08;
+  letter-spacing: -0.03em;
+  margin: 0 0 0.6rem;
+  text-wrap: balance;
+}
+main h3 { font-size: 1.0625rem; line-height: 1.3; letter-spacing: -0.012em; margin: 0 0 0.4rem; }
+main p { max-width: var(--measure); }
+.lede { font-size: 1.0625rem; color: var(--muted-fg); margin-top: 0; }
+
+main > section:not(.stage) {
+  max-width: 64rem;
+  margin: 0 auto;
+  padding: 4.5rem 1.5rem;
+  border-bottom: 1px solid var(--rule);
+}
+main > section:last-child { border-bottom: 0; }
+
+/* ---------------------------------------------------------- the stage */
+
+.stage {
+  background: var(--ink);
+  color: var(--on-ink);
+  padding: 3.5rem 1.5rem 4rem;
+  overflow: hidden;
+  position: relative;
+}
+/* A slow wash of the show's current colour behind everything, so the
+   whole stage shifts as the miniature restyles itself. */
+.stage::before {
+  content: "";
+  position: absolute;
+  inset: -30% -10% auto -10%;
+  height: 70%;
+  background: radial-gradient(60% 60% at 70% 40%,
+    color-mix(in srgb, var(--stage-accent, #ff5721) 30%, transparent), transparent 70%);
+  transition: background 1.2s ease;
+  pointer-events: none;
+}
+.stage-inner {
+  position: relative;
+  max-width: 78rem;
+  margin: 0 auto;
+  display: grid;
+  grid-template-columns: minmax(0, 27rem) minmax(0, 1fr);
+  gap: 3rem 4rem;
+  align-items: center;
+}
+.stage h1 {
+  font-size: clamp(2.4rem, 6vw, 4.1rem);
+  line-height: 0.98;
+  letter-spacing: -0.045em;
+  margin: 0 0 1.25rem;
+  color: #fff;
+}
+.stage-em { color: var(--on-ink-quiet); }
+.stage-swap {
+  color: var(--stage-accent, #ff5721);
+  transition: color 1.2s ease;
+  display: inline-block;
+}
+.stage-lede {
+  color: var(--on-ink-quiet);
+  font-size: 1.0625rem;
+  max-width: 34ch;
+  margin: 0 0 1.75rem;
+}
+.stage-go { display: flex; flex-wrap: wrap; gap: 0.75rem; }
+
+.wave { display: block; width: 100%; max-width: 22rem; height: 34px; margin-top: 2.25rem; opacity: 0.85; }
+.wave rect { fill: var(--stage-accent, #ff5721); transform-origin: center; }
+
+/* The window. Cropped off the right edge on a wide screen so it reads
+   as a real thing continuing past the page rather than a card. */
+.stage-screen { min-width: 0; }
+/* The miniature changes height as its layout changes, and a hero that
+   resizes under the reader is a hero that shoves the whole page about.
+   The frame holds the tallest state and the page never moves. */
+.screen-frame {
+  display: grid;
+  grid-template-columns: 1fr;
+  border-radius: 1rem;
+  overflow: hidden;
+  box-shadow: 0 40px 90px -40px rgba(0,0,0,0.85), 0 0 0 1px rgba(255,255,255,0.07);
+  transform: perspective(1600px) rotateY(-7deg) rotateX(2deg);
+  transform-origin: left center;
+}
+.screen-caption {
+  margin: 1rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--on-ink-quiet);
+  font-family: var(--mono);
+}
+
+/* ------------------------------------------------------- the controls */
+
+.hands-head {
+  display: grid;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  gap: 0.5rem 3rem;
+  align-items: baseline;
+}
+.hands-head h2 { margin-bottom: 0; }
+.demo-controls {
+  margin: 2rem 0 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+  gap: 1.75rem 2.5rem;
+  align-items: start;
+}
+.control { min-width: 0; }
+.hands-more {
+  margin: 2rem 0 0;
+  color: var(--muted-fg);
+  font-size: 0.9375rem;
+}
+
+/* ------------------------------------------------------- the journey */
+
+.steps {
+  list-style: none;
+  margin: 2.5rem 0 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 2rem;
+}
+.step { min-width: 0; opacity: 0; transform: translateY(14px); }
+.step.in { opacity: 1; transform: none; transition: opacity 0.5s ease, transform 0.5s ease; }
+.step p { color: var(--muted-fg); font-size: 0.9375rem; margin: 0; }
+.step-art {
+  display: block;
+  height: 5.5rem;
+  margin-bottom: 1rem;
+  border-radius: 0.75rem;
+  background: var(--muted);
+  position: relative;
+  overflow: hidden;
+}
+
+/* Pages being written. */
+.art-file {
+  position: absolute; left: 1rem; width: 2.4rem; height: 3.1rem;
+  border-radius: 0.25rem; background: var(--panel);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  top: 1.2rem;
+}
+.art-file:nth-child(2) { left: 2.1rem; top: 1.5rem; opacity: 0.75; }
+.art-file-new { left: 3.2rem; top: 1.8rem; opacity: 0; border-top: 3px solid var(--accent); }
+.in .art-file-new { animation: drop-in 0.7s 0.25s ease both; }
+@keyframes drop-in { from { opacity: 0; transform: translateY(-14px) rotate(-4deg); } to { opacity: 1; transform: none; } }
+
+/* The feed leaving. */
+.art-feed { position: absolute; inset: 0; }
+.art-rss {
+  position: absolute; left: 1rem; top: 50%;
+  width: 1.6rem; height: 1.6rem; margin-top: -0.8rem;
+  color: var(--accent); fill: currentColor;
+}
+.art-feed i {
+  position: absolute; left: 3rem; top: 50%;
+  width: 0.6rem; height: 0.6rem; margin-top: -0.3rem;
+  border-radius: 50%; background: var(--accent); opacity: 0;
+}
+.in .art-feed i { animation: fly 2.6s linear infinite; }
+.in .art-feed i:nth-child(3) { animation-delay: 0.52s; }
+.in .art-feed i:nth-child(4) { animation-delay: 1.04s; }
+.in .art-feed i:nth-child(5) { animation-delay: 1.56s; }
+.in .art-feed i:nth-child(6) { animation-delay: 2.08s; }
+@keyframes fly {
+  0% { opacity: 0; transform: translateX(0) scale(0.5); }
+  10% { opacity: 1; transform: translateX(0.6rem) scale(1); }
+  85% { opacity: 1; }
+  100% { opacity: 0; transform: translateX(11rem) scale(0.4); }
+}
+
+/* The apps arriving. */
+.art-apps { position: absolute; inset: 0; display: flex; align-items: center; justify-content: center; gap: 0.5rem; }
+.art-apps { flex-wrap: wrap; padding: 0 0.75rem; }
+.art-apps b {
+  padding: 0.3rem 0.6rem; border-radius: 999px;
+  background: var(--panel); color: var(--muted-fg);
+  font-size: 0.7rem; font-weight: 700; white-space: nowrap;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.18);
+  opacity: 0; transform: scale(0.7);
+}
+.in .art-apps b { animation: pop 0.45s ease both; }
+.in .art-apps b:nth-child(2) { animation-delay: 0.12s; }
+.in .art-apps b:nth-child(3) { animation-delay: 0.24s; }
+.in .art-apps b:nth-child(4) { animation-delay: 0.36s; }
+@keyframes pop { to { opacity: 1; transform: none; } }
+
+/* The numbers coming back. */
+.art-bars { position: absolute; inset: auto 1rem 1rem 1rem; display: flex; align-items: flex-end; gap: 0.3rem; height: 3.4rem; }
+.art-bars i { flex: 1; background: var(--accent); border-radius: 2px 2px 0 0; height: 8%; transform-origin: bottom; }
+.in .art-bars i { animation: grow 0.8s ease both; }
+.in .art-bars i:nth-child(1) { animation-delay: 0.05s; --h: 35%; }
+.in .art-bars i:nth-child(2) { animation-delay: 0.12s; --h: 62%; }
+.in .art-bars i:nth-child(3) { animation-delay: 0.19s; --h: 48%; }
+.in .art-bars i:nth-child(4) { animation-delay: 0.26s; --h: 88%; }
+.in .art-bars i:nth-child(5) { animation-delay: 0.33s; --h: 70%; }
+.in .art-bars i:nth-child(6) { animation-delay: 0.40s; --h: 100%; }
+.in .art-bars i:nth-child(7) { animation-delay: 0.47s; --h: 55%; }
+@keyframes grow { to { height: var(--h); } }
+
+/* ------------------------------------------------------- counted */
+
+.counted {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 20rem);
+  gap: 2.5rem 3rem;
+  align-items: center;
+}
+/* A grid child sizes to its widest unbreakable content unless it is
+   told it may shrink, and the file at the foot of the page is full of
+   lines that cannot wrap. */
+.counted > *, .install > *, .stage-inner > *, .step, .control { min-width: 0; }
+.counted p { color: var(--muted-fg); }
+.counted h2 + p { color: inherit; }
+.counted-chart {
+  border: 1px solid var(--rule);
+  border-radius: 0.9rem;
+  padding: 1.1rem;
+  background: var(--panel);
+}
+.chart-bars { display: flex; align-items: flex-end; gap: 0.4rem; height: 9rem; }
+.chart-bars i { flex: 1; border-radius: 3px 3px 0 0; background: var(--accent); height: 4%; transform-origin: bottom; }
+.chart-bars.in i { transition: height 0.9s cubic-bezier(0.2, 0.7, 0.2, 1); }
+.chart-legend { display: flex; justify-content: space-between; margin-top: 0.5rem; font-size: 0.75rem; color: var(--muted-fg); font-family: var(--mono); }
+
+
+/* ------------------------------------------------------- what you get */
+
+.what-grid {
+  margin-top: 2rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 2rem 2.5rem;
+}
+.thing { min-width: 0; }
+.thing p { color: var(--muted-fg); font-size: 0.9375rem; margin: 0; }
+.spec { list-style: none; margin: 0.9rem 0 0; padding: 0; font-size: 0.875rem; color: var(--muted-fg); }
+.spec li { padding: 0.3rem 0 0.3rem 1.1rem; position: relative; }
+.spec li::before { content: ""; position: absolute; left: 0; top: 0.95em; width: 0.45rem; height: 1px; background: var(--comment); }
+.small-things { margin-top: 3rem; }
+.spec-cols { columns: 2; column-gap: 2.5rem; }
+.spec-cols li { break-inside: avoid; }
+
+/* ------------------------------------------------------- questions */
+
+.asked-list { margin-top: 1.75rem; max-width: var(--measure); }
+.asked details { border-bottom: 1px solid var(--rule); }
+.asked details:first-child { border-top: 1px solid var(--rule); }
+.asked summary {
+  cursor: pointer; list-style: none;
+  padding: 0.95rem 2rem 0.95rem 0;
+  font-weight: 600; position: relative;
+  min-height: 44px; display: flex; align-items: center;
+}
+.asked summary::-webkit-details-marker { display: none; }
+.asked summary::after { content: "+"; position: absolute; right: 0.25rem; font-family: var(--mono); color: var(--accent-text); font-weight: 700; }
+.asked details[open] summary::after { content: "\2212"; }
+.asked p { margin: 0 0 1.1rem; color: var(--muted-fg); font-size: 0.9375rem; }
+.asked code, .install code, .thing code {
+  font-family: var(--mono); font-size: 0.9em; color: var(--fg);
+  background: var(--muted); padding: 0.1rem 0.35rem; border-radius: 0.25rem;
+}
+
+/* ------------------------------------------------------- the install */
+
+.install {
+  display: grid;
+  grid-template-columns: minmax(0, 24rem) minmax(0, 1fr);
+  gap: 2.5rem 3rem;
+  align-items: start;
+}
+.install p { color: var(--muted-fg); font-size: 0.9375rem; }
+.install h2 + p { color: inherit; font-size: 1rem; }
+.install-notes { font-size: 0.875rem; }
+.install-go { display: flex; flex-wrap: wrap; gap: 0.75rem; margin-top: 1.5rem; max-width: none; }
+
+.file {
+  margin: 0; min-width: 0; max-width: 100%;
+  border: 1px solid var(--rule);
+  border-radius: 0.75rem;
+  background: var(--file-bg);
+  overflow: hidden;
+}
+.file-bar {
+  display: flex; align-items: center; justify-content: space-between; gap: 1rem;
+  padding: 0.5rem 0.6rem 0.5rem 1rem;
+  border-bottom: 1px solid var(--rule);
+}
+.file-name { font-family: var(--mono); font-size: 0.8125rem; color: var(--muted-fg); }
+.file-copy {
+  font: inherit; font-size: 0.8125rem; font-weight: 700;
+  color: var(--on-accent); background: var(--accent);
+  border: 0; border-radius: 0.5rem; padding: 0.4rem 0.8rem;
+  cursor: pointer; min-height: 36px;
+}
+.file-copy:hover { background: var(--accent-hover); }
+.file-copy.done { background: var(--success-text); color: #fff; }
+.file-body { overflow-x: auto; min-width: 0; }
+.file pre { margin: 0; padding: 0.75rem 0; font-family: var(--mono); font-size: 0.7rem; line-height: 1.5; }
+.file code { font-family: inherit; background: none; padding: 0; }
+.file .l { display: block; min-height: 1.5em; padding: 0 1rem 0 1.25rem; white-space: pre; }
+.file .c, .file .a { color: var(--comment); }
+.file .edit {
+  position: relative; color: var(--accent-text); font-weight: 600;
+  background: color-mix(in srgb, var(--accent) 7%, transparent);
+}
+.file .edit::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); }
+.file-legend {
+  margin: 0; max-width: none;
+  padding: 0.7rem 1rem; border-top: 1px solid var(--rule);
+  font-size: 0.8125rem; color: var(--muted-fg);
+  display: flex; align-items: center; gap: 0.5rem;
+}
+.file-legend .key { width: 3px; height: 1.1em; background: var(--accent); border-radius: 2px; flex: none; }
+
+/* ------------------------------------------------------- buttons */
+
+.btn-primary, .btn-ghost {
+  display: inline-flex; align-items: center; min-height: 44px;
+  padding: 0.6rem 1.15rem; border-radius: 0.6rem;
+  font-weight: 700; font-size: 0.9375rem; text-decoration: none; margin-top: 0;
+}
+.btn-big { font-size: 1rem; padding: 0.8rem 1.5rem; min-height: 52px; }
+.btn-primary { background: var(--accent); color: var(--on-accent); border: 1px solid transparent; }
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-ghost { color: inherit; border: 1px solid currentColor; background: transparent; opacity: 0.85; }
+.btn-ghost:hover { opacity: 1; }
+
+/* ------------------------------------------------------- narrower */
+
+@media (max-width: 68rem) {
+  .steps { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .stage-inner { grid-template-columns: 1fr; gap: 2.5rem; }
+  .screen-frame { transform: none; }
+  .stage-lede { max-width: var(--measure); }
+  .counted, .install, .hands-head { grid-template-columns: 1fr; }
+}
+@media (max-width: 40rem) {
+  .steps { grid-template-columns: 1fr; }
+  main > section:not(.stage) { padding: 3.25rem 1rem; }
+  .stage { padding-inline: 1rem; }
+  .spec-cols { columns: 1; }
+  .file pre { font-size: 0.66rem; }
+}
+
+/* Somebody who has asked their machine for less movement gets a page
+   that simply arrives, already in its best state. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .step { opacity: 1; transform: none; }
+}
+
+/* ---------- The playground ---------- */
+/* A miniature show page, styled entirely by custom properties so the
+   controls beside it can restyle it live. Everything is drawn here:
+   no screenshots, no images, nothing fetched. */
+.demo-layout {
+  display: grid;
+  gap: 1.5rem;
+  grid-template-columns: minmax(0, 15rem) minmax(0, 1fr);
+  align-items: start;
+  margin-top: 1.25rem;
+}
+@media (max-width: 52rem) { .demo-layout { grid-template-columns: 1fr; } }
+
+.demo-label { margin: 1rem 0 0.4rem; font-size: 0.8125rem; font-weight: 600; color: var(--muted-fg); }
+.demo-label:first-child { margin-top: 0; }
+.demo-label b { color: var(--fg); font-variant-numeric: tabular-nums; }
+.demo-swatches, .demo-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.demo-swatch {
+  width: 1.75rem; height: 1.75rem; padding: 0;
+  border-radius: 50%; border: 2px solid transparent;
+  background: var(--sw); cursor: pointer;
+  box-shadow: 0 0 0 1px var(--panel-border) inset;
+}
+.demo-swatch.current { border-color: var(--fg); }
+.demo-chip {
+  font: inherit; font-size: 0.8125rem; font-weight: 500;
+  padding: 0.3rem 0.7rem; border-radius: 999px;
+  border: 1px solid var(--border); background: transparent; color: var(--fg);
+  cursor: pointer;
+}
+.demo-chip:hover { border-color: var(--accent); }
+.demo-chip.current { background: var(--accent-container); color: var(--on-accent-container); border-color: transparent; }
+#demo-radius { width: 100%; accent-color: var(--accent); margin-top: 0.25rem; }
+
+.demo-site {
+  --demo-accent: #ff5721;
+  /* The demo shows what a real FOSSCast site does, and a real one
+     derives a contrast-checked shade before it puts the accent on
+     words. Whatever swatch is pressed, the text version is deepened
+     the same way. */
+  --demo-accent-text: color-mix(in srgb, var(--demo-accent) 78%, #000);
+  --demo-radius: 18px;
+  --demo-bg: #ffffff;
+  --demo-fg: #16161a;
+  --demo-muted: rgba(22, 22, 26, 0.62);
+  --demo-card: #ffffff;
+  --demo-line: rgba(16, 16, 20, 0.12);
+  --demo-shadow: 0 1px 2px rgba(24, 24, 40, 0.06), 0 10px 24px -18px rgba(24, 24, 40, 0.5);
+  border: 1px solid var(--border);
+  border-radius: 0.875rem;
+  overflow: hidden;
+  background: var(--demo-bg);
+  color: var(--demo-fg);
+  transition: background 200ms ease, color 200ms ease;
+}
+.demo-site[data-bg="tint"] { --demo-bg: #fdf0f4; --demo-card: rgba(255,255,255,0.92); }
+.demo-site[data-bg="gradient"] {
+  --demo-bg: linear-gradient(155deg, #1e1b4b, #831843);
+  --demo-fg: #ffffff;
+  --demo-muted: rgba(255, 255, 255, 0.72);
+  --demo-card: rgba(22, 22, 30, 0.6);
+  --demo-line: rgba(255, 255, 255, 0.14);
+}
+.demo-site[data-bg="night"] {
+  --demo-bg: #0b0b0e;
+  --demo-fg: #fafafa;
+  --demo-muted: rgba(250, 250, 250, 0.66);
+  --demo-card: #1b1d29;
+  --demo-line: rgba(255, 255, 255, 0.09);
+}
+.demo-site[data-cards="outline"] { --demo-shadow: none; }
+.demo-site[data-cards="glass"] { --demo-shadow: none; }
+
+.demo-chrome {
+  display: flex; gap: 0.375rem; padding: 0.5rem 0.75rem;
+  background: var(--muted); border-bottom: 1px solid var(--border);
+}
+.demo-chrome span { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--muted-fg); opacity: 0.35; }
+.demo-page {
+  height: 29rem;
+  overflow: hidden; padding: 1rem;
+  display: grid; gap: 0.75rem; align-content: start; }
+
+.demo-nav { display: flex; gap: 0.375rem; justify-content: flex-end; }
+.demo-nav-link { font-size: 0.75rem; padding: 0.2rem 0.6rem; border-radius: 999px; color: var(--demo-muted); }
+.demo-nav-link.current { color: var(--demo-accent-text); background: color-mix(in srgb, var(--demo-accent) 14%, transparent); }
+
+.demo-card {
+  background: var(--demo-card);
+  border: 1px solid var(--demo-line);
+  border-radius: var(--demo-radius);
+  box-shadow: var(--demo-shadow);
+  padding: 0.75rem;
+  transition: border-radius 160ms ease, background 200ms ease;
+}
+.demo-site[data-cards="glass"] .demo-card { backdrop-filter: blur(8px); }
+.demo-hero { display: flex; gap: 0.875rem; align-items: center; }
+.demo-cover {
+  width: 4rem; height: 4rem; flex: none;
+  border-radius: calc(var(--demo-radius) * 0.6);
+  display: grid; place-items: center;
+  color: #fff;
+  background: linear-gradient(140deg, var(--demo-accent), color-mix(in srgb, var(--demo-accent) 45%, #111));
+}
+.demo-cover svg { width: 2rem; height: 2rem; }
+.demo-show-title { margin: 0.1rem 0 0.15rem; font-size: 1.0625rem; font-weight: 700; letter-spacing: -0.01em; }
+.demo-tagline { margin: 0; font-size: 0.75rem; font-weight: 600; color: var(--demo-accent-text); }
+.demo-muted { margin: 0; font-size: 0.75rem; color: var(--demo-muted); }
+.demo-buttons { display: flex; gap: 0.3rem; margin-top: 0.5rem; flex-wrap: wrap; }
+.demo-pill {
+  font-size: 0.6875rem; padding: 0.2rem 0.55rem; border-radius: 999px;
+  border: 1px solid var(--demo-line); color: var(--demo-muted);
+}
+
+.demo-episode { display: flex; gap: 0.75rem; align-items: center; }
+.demo-episode-title { margin: 0; font-size: 0.8125rem; font-weight: 600; }
+.demo-thumb {
+  width: 2.75rem; height: 2.75rem; flex: none;
+  border-radius: calc(var(--demo-radius) * 0.5);
+  background: linear-gradient(140deg, color-mix(in srgb, var(--demo-accent) 70%, #fff), var(--demo-accent));
+  transition: width 160ms ease, height 160ms ease, border-radius 160ms ease;
+}
+.demo-site[data-episodes="stacked"] .demo-episode { flex-direction: column; align-items: stretch; }
+.demo-site[data-episodes="stacked"] .demo-thumb { width: 100%; height: 3.5rem; }
+.demo-site[data-episodes="compact"] .demo-episode { padding: 0.45rem 0.7rem; }
+.demo-site[data-episodes="compact"] .demo-thumb { width: 1.6rem; height: 1.6rem; }
+
+.demo-hosts { display: grid; gap: 0.75rem; grid-template-columns: 1fr 1fr; }
+.demo-host { display: flex; gap: 0.625rem; align-items: center; }
+.demo-face {
+  width: 2.25rem; height: 2.25rem; flex: none;
+  display: grid; place-items: center;
+  font-size: 0.6875rem; font-weight: 700; color: #fff;
+  background: linear-gradient(140deg, var(--demo-accent), color-mix(in srgb, var(--demo-accent) 50%, #111));
+  border-radius: 50%;
+  transition: border-radius 160ms ease;
+}
+.demo-site[data-shape="rounded"] .demo-face { border-radius: calc(var(--demo-radius) * 0.5); }
+.demo-site[data-shape="square"] .demo-face { border-radius: 0; }
+.demo-role { margin: 0; font-size: 0.6875rem; color: var(--demo-accent-text); }
+.demo-note { margin: 0.625rem 0 0; }
+@media (prefers-reduced-motion: reduce) {
+  .demo-card, .demo-thumb, .demo-face, .demo-site { transition: none; }
+}
+
+/* ---------- The header stays put ---------- */
+/* Sticky rather than fixed: it keeps its place in the flow, so nothing
+   below it has to be pushed down by a magic number, and it still holds
+   its position as the page scrolls under it. */
+.top {
+  position: sticky;
+  top: 0;
+  z-index: 40;
+  background: color-mix(in srgb, var(--bg) 86%, transparent);
+  backdrop-filter: blur(10px) saturate(1.1);
+  -webkit-backdrop-filter: blur(10px) saturate(1.1);
+  border-bottom: 1px solid var(--panel-border);
+  /* Full width, but its contents stay lined up with the column below. */
+  max-width: none;
+  padding: 1rem max(1.5rem, calc(50vw - 32rem));
+}
+/* An anchor lands below the header, not behind it. */
+:target, section[id] { scroll-margin-top: 5.5rem; }
+html { scroll-behavior: smooth; }
+@media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+
+/* ---------- Footer ---------- */
+
+
+/* The waveform's own motion, kept here beside the stage it belongs to. */
+@keyframes wave-bob {
+  0%, 100% { transform: scaleY(0.55); }
+  50% { transform: scaleY(1); }
+}
+
+/* Laid out like FOSSStudio's: the sister-project card across the top,
+   then the maker on the left and the licence on the right. */
+.foot {
+  flex-direction: row;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 64rem;
+  margin: 3rem auto 0;
+  width: 100%;
+}
+.sister {
+  flex-basis: 100%;
+  order: -1;
+  margin: 0;
+  padding: 1rem 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--panel);
+  text-align: center;
+  font-size: 0.875rem;
+  color: var(--muted-fg);
+  max-width: none;
+}
+.sister b { color: var(--fg); font-weight: 600; }
+.sister a { font-weight: 700; }
+.gpl { font-size: 0.8125rem; color: var(--muted-fg); }
+@media (max-width: 40rem) {
+  .foot { justify-content: center; text-align: center; }
+}
+
+
+/* ---------- The skip link and the legal line ---------- */
+/* Hidden until somebody tabs to it. Parked off the top of the page by a
+   guessed distance is how it ends up poking two pixels into view on a
+   screen with slightly larger text, so it is clipped away to nothing
+   instead and given its size back only on focus. */
+.skip {
+  position: absolute;
+  width: 1px; height: 1px;
+  margin: -1px; padding: 0; border: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.skip:focus {
+  left: 0.5rem; top: 0.5rem;
+  z-index: 50;
+  width: auto; height: auto;
+  margin: 0; padding: 0.5rem 0.9rem;
+  overflow: visible;
+  clip-path: none;
+  background: var(--panel); color: var(--fg);
+  border: 2px solid var(--accent);
+  border-radius: 0.5rem;
+  font-weight: 700; text-decoration: none;
+}
+main:focus { outline: none; }
+
+.sub-foot { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border);
+  display: flex; flex-wrap: wrap; gap: 0.75rem 2rem; align-items: baseline;
+  justify-content: space-between; width: 100%; }
+.sub-foot p { margin: 0; font-size: 0.8125rem; color: var(--muted-fg); max-width: 62ch; }
+.sub-foot-links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
+.sub-foot-links a { font-size: 0.8125rem; color: var(--muted-fg); text-decoration: none; }
+.sub-foot-links a:hover { color: var(--fg); text-decoration: underline; }
+
+/* The small print pages: one column, easy to read, nothing clever. */
+main.legal { max-width: 46rem; }
+main.legal h1 { font-size: 2rem; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
+main.legal h2 { font-size: 1.25rem; margin-top: 2rem; }
+main.legal p, main.legal li { max-width: 65ch; line-height: 1.65; }
+main.legal .lede { color: var(--muted-fg); }
+
+/* On anything a finger drives, a menu link is a 44px target. */
+@media (max-width: 1024px) {
+  .top-link,
+  .sub-foot-links a,
+  .gpl a { min-height: 44px; display: inline-flex; align-items: center; }
+}
+
+.legal-more { margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
+.legal-more p { font-size: 0.875rem; color: var(--muted-fg); }
+
+/* A tap should not wait to see whether it was a double tap, and a
+   heading should not leave one word alone on the last line. */
+html, body { touch-action: manipulation; }
+h1, h2, h3, .mkt-hero h1, main.legal h1 { text-wrap: balance; }

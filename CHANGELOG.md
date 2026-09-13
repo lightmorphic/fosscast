@@ -1,0 +1,637 @@
+# Changelog
+
+All notable changes to FOSSCast are documented here.
+
+## 0.1.0 - 2026-09-13
+
+The first release published openly, and the number says what it is: a
+beta. Nothing in the app changed for it. What changed is that the
+project now states plainly what it is, who owns it, what it will never
+grow into, and that it is not yet ready to be the only copy of
+somebody's podcast.
+
+**This is a public beta. It is not ready to be relied on. Data loss and
+breaking changes are possible. Please do not put a real show on it
+yet.** The README says so above everything else, and releases are
+marked as pre-release on GitHub.
+
+- The licence is the GNU AGPL v3, where it had been the GPL v3. The
+  difference is one clause: the GPL asks for changes to be shared only
+  when the software is handed to someone; the AGPL asks for them when
+  the software is run for someone over a network as well. This project
+  is the free edition of a hosted service, so that is the case that
+  matters. Nothing changes for anyone who runs it for themselves.
+  `TRADEMARKS.md` is new beside it: the code is free, the names are not.
+
+The number goes back from 0.2.1 on purpose. The repository is starting
+again in public, and a nought at the front says beta before anybody has
+read a word; 1.0 is for the day it can be relied on.
+
+- `NOTICE.md`, so the ownership claim can be checked rather than taken
+  on trust. Every line of FOSSCast is Lightmorphic's own work; the only
+  third-party material in the repository is the Manrope typeface, and
+  there are no runtime npm dependencies at all. The file lists what the
+  app runs inside (Node, Alpine, ffmpeg, Caddy) and says plainly that
+  the inline brand icons are drawings of other people's trademarks.
+
+- `CONTRIBUTING.md` rewritten for the beta. Bug reports and discussion
+  are wanted; code is not merged, because one person owning all of it is
+  what makes the hosted edition possible, and a patch from a stranger
+  would end that for the patch. It now also says what happens after the
+  beta: either a contributor agreement, or contributions under the AGPL
+  with the relicensing right given up. That has not been decided.
+
+- The README says what FOSSCast does *not* do, and that the list is
+  settled rather than a queue: no members, no advertising, no
+  newsletter, no blog, no studio, no listener accounts, one show per
+  instance. It also says where to report a problem, and that the people
+  who write it will host it for you if you would rather not run a
+  server.
+
+- Operational details that belonged to the maintainer rather than the
+  project are out of the tree: a server address and hostname in
+  `docs/ARCHITECTURE.md`, and a path to a private key file that the
+  deploy scripts defaulted to. The scripts take `FOSSCAST_SSH_KEY` and
+  say so.
+
+## 0.2.1 - 2026-09-08
+
+Three small things, all of them about FOSSCast getting on with software it
+does not control: a website that wants to read the feed, a shell that wants
+to hold the dashboard, and tests that keep the standalone promise honest.
+
+- The feed says it may be read by any page. A website that lists a
+  show's latest episodes now reads the feed straight from the visitor's
+  browser, which every other podcast host already allows and which no
+  podcast app will notice. It is the feed only: the rest of the site
+  stays closed to other people's pages, and the feed carries nothing
+  that was not already public.
+
+- The dashboard can live inside your own shell. Set `FRAME_ANCESTORS`
+  to the one origin allowed to frame the admin - a homelab wall, an
+  agency panel, a portal - and it may; unset means what it always
+  meant: nobody. Separately, a request carrying `X-Embedded: 1`
+  (inject it from your reverse proxy) renders admin pages without
+  FOSSCast's own top bar, since the shell around the frame already
+  has navigation. Content, page titles, the demo notice and a
+  sign-out link all stay, and every permission check runs unchanged.
+- Tests that hold FOSSCast to standing on its own: no source file may
+  mention a hosted service, the one-file install may reference nothing
+  but the published image, no page may fetch anything from a third
+  party, and every hook - the Archive, the analytics prefix, the studio
+  publish API - must stay inert until somebody configures it. The
+  promise was already true; now it cannot quietly stop being true.
+
+## 0.2.0 - 2026-08-25
+
+Everything since the first release. The short version: a podcast can be
+run entirely from the dashboard and look like its own site rather than a
+template, and downloads are counted wherever the audio actually lives,
+including at the Internet Archive.
+
+- An analytics prefix field, for OP3, Podtrac and the rest. Set it and
+  every enclosure - and the player on your own site - goes through them
+  first. Left empty, nobody but this server ever sees a download.
+- A mail server that offers STARTTLS and then cannot speak TLS used to
+  take the whole site down with it. Now it costs one unsent email.
+
+- Episodes can be sent to the Internet Archive in one click. Add your own
+  archive.org key pair on the account page and an episode's audio goes to
+  archive.org under your own account, with the title, author, description,
+  date and language it already has here. The media address follows it
+  there; the feed does not change, and downloads are still counted,
+  because the counting redirect handles offsite media. Together those two
+  mean a podcast can outlive its server without losing its statistics.
+
+- Episodes whose media lives elsewhere are counted at last. The feed and
+  the player publish a link back to this server, which records the
+  download and then sends the listener on to the real file. No audio
+  passes through the server -- only the request does -- so a show
+  hosting its own files finally has a statistics page that fills up.
+- Two faults found while reviewing that work, both older than it: a
+  request for a badly escaped path threw inside the request handler and
+  **ended the process** -- one request, site down until the container
+  restarted. Decoding is safe now, and nothing thrown while routing can
+  take the server with it.
+- The redirect only answers for episodes the public can already see. A
+  draft or a dated-ahead episode would otherwise have had its audio
+  handed out to anyone with the link, which is the opposite of
+  scheduling.
+- `CONTRIBUTING.md`: bug reports yes, pull requests no, and the
+  licensing reason why.
+- The bundled Manrope typeface now ships with its OFL licence text.
+
+- The "remove the FOSSCast footer" checkbox has a section of its own on
+  the Look tab, called Footer, so it appears in the side rail instead of
+  hiding under the tagline. The note beside it is shorter and quieter:
+  the checkbox comes first, the reason second.
+
+- Uploading a banner video now saves itself and refreshes what is on
+  screen. Two faults, one cause: the hidden field holding the path was
+  being set by script, which fires no event, so the form never learned
+  about it -- and the change event from the file picker had already
+  fired and saved the *previous* value before the new file finished
+  arriving. A replacement clip could be uploaded and simply lost. The
+  framing box and the preview strip now re-point at the new file and
+  re-measure it, since the new clip is rarely the same shape as the old
+  one; a first video, where the picker is not on the page yet, waits for
+  the save and reloads.
+
+- A refused upload now says so in red, in a panel with a warning sign,
+  rather than in the same grey as the progress line above it. The
+  message explains what to change about the file, which was worth
+  reading and easy to miss; the file picker is also cleared, so the
+  corrected file can be chosen without the browser ignoring it as a
+  duplicate.
+
+- A banner video may now run to 15 seconds and 2 MB, up from 10 and
+  1.5 MB. Under a megabyte and five to eight seconds is still the aim,
+  and the 1.5 Mbps rate limit is unchanged -- which is what keeps the
+  longer allowance from turning into a heavier file.
+
+- Banner image and banner video are both 976 x 244 -- the size the strip
+  is drawn at, and nothing more. It is decoration, not a photograph
+  anyone will study, so carrying two or four times the pixels it can
+  show was costing bandwidth for nothing. The still's web copy comes
+  down from 1920 to 976 with it.
+
+- The FOSSCast footer can be turned off. A checkbox on the Look tab,
+  unticked by default, removes both marks from the public pages while
+  leaving the show's own footer line where it is. The dashboard keeps
+  its branding either way: that is our software, not their website.
+
+- Every public page carries a footer: the FOSSCast mark and name on the
+  left linking to fosscast.org, the Lightmorphic mark on the right
+  linking to lightmorphic.com, and the show's own footer line between
+  them when it has set one. This replaces the single unbranded mark that
+  sat in the corner.
+
+- The framing picker is the same width as the banner preview under it.
+  Judging a crop against a preview of a different size is guesswork, and
+  the red box now spans exactly what the strip will show.
+
+- With both a banner image and a banner video uploaded, the podcast page
+  asks which the front page uses -- Image, Video or Random -- at the top
+  of the banner, where the decision belongs. Random tosses a coin on
+  every visit. With only one of the two uploaded there is nothing to
+  choose, so the question is not asked and whichever exists is used.
+
+- A banner video is no longer cropped before it is uploaded. Shrink it
+  keeping its own shape -- a 16:9 clip becomes 1280 x 720 -- and choose
+  what the banner shows by dragging a red 4:1 box over the playing video
+  in the dashboard, with the result playing underneath as it will
+  appear. The choice is stored as a position, so nothing is cut from the
+  file and it can be changed at any time.
+- The upload rules follow: any shape is welcome so long as it covers the
+  strip (1280 x 320 minimum, 1920 x 1080 maximum). The HandBrake preset
+  only scales now, keeping the aspect ratio, and says so.
+
+- The banner video limits come down to what a small server can afford to
+  send a thousand times, and the ceilings now sit just above the
+  recommendation rather than far above it: aim for 1280 x 320, under
+  1 MB, five to eight seconds and about 1 Mbps; refused past 1440 x 360,
+  1.5 MB, 10 seconds or 1.5 Mbps. The bitrate rule is new -- two seconds
+  at 6 Mbps costs the same to serve as ten sensible ones, and a
+  file-size cap alone never caught it.
+- A HandBrake preset is downloadable from the podcast page: import it
+  and every setting is made, including deleting the audio track and
+  ticking web optimised.
+- The podcast page carries a HandBrake recipe: dimensions, RF 30, delete
+  the audio track, tick web optimised. There is an ffmpeg one-liner for
+  anyone who would rather type it.
+
+- The banner is drawn 976 x 244 points wide, so its web copy is now made
+  at 1920 rather than 1024: it was being shown at very nearly the size it
+  was stored at, which is soft on any decent screen. Artwork keeps its
+  1024 copy, being shown at 160.
+- The sizes are stated where they are needed: 1920 x 480 for a banner
+  image or video, which is exactly twice the drawn size, with a note
+  that a phone crops the strip to 3:1 so the middle is what survives.
+- The feed check flows into columns. Ten short ticks down the left of a
+  full-width card left two thirds of it empty; the card is now 259px
+  tall instead of 460.
+
+- Cards that hold more than one thing now rule them apart: artwork,
+  website banner and banner video are three parts of one card rather
+  than one run of fields, and the Look tab's Layout and Photos cards are
+  divided the same way.
+- A banner video can play once instead of looping. The checkbox sits
+  with the video field; unticked, it plays through and holds on its last
+  frame.
+
+- Listening, following and chipping in have a card of their own on the
+  show page: three columns of equal width under Listen, Follow and
+  Support, separated by a hairline, with the feed address along the
+  bottom in a field of its own beside a Copy button. They were three
+  loose rows of different lengths tacked under the description, ending
+  wherever they happened to end.
+
+- Host cards summarise the whole write-up rather than its first
+  paragraph. A host who opens with "Hi there!" and puts their life story
+  in the paragraphs after it was getting a one-line card beside
+  four-line ones; the summary now runs the paragraphs together and cuts
+  at a word, so every card carries the same amount. The block is four
+  lines tall either way, so a genuinely brief host still lines up.
+- The banner matches the cards below it. It carried its own padding on
+  top of the page's, which made it 48 pixels narrower than everything
+  else in the column.
+
+- Stats grew from two charts into a page: eight headline numbers, twelve
+  months as bars, thirty days as a curve, feed pulls a day (the nearest
+  honest thing to a subscriber count), doughnuts for apps and countries,
+  bars for platforms and languages, a day-by-hour heatmap of when people
+  actually listen, busiest days, how long an episode keeps earning, and
+  every episode with its share of the total.
+- Every chart is SVG drawn on the server. No charting library, no script
+  on the page, nothing fetched from anyone: the stats page is as private
+  as the counting behind it, and it takes its colours from the theme.
+- What is recorded grew, but only as counters: app, platform, language,
+  hour, weekday, month, and the age of an episode when it was
+  downloaded. There is still no row for any listener anywhere, and a
+  test asserts that neither an address nor a raw user agent is ever
+  written to disk.
+- Countries appear when the proxy says so -- Cloudflare's `CF-IPCountry`
+  or nginx's `X-Country-Code`. FOSSCast will not look an address up
+  itself: that would mean shipping a database or asking somebody else
+  about your listeners.
+
+- A banner can be video: a few seconds in the same 4:1 strip, playing
+  silently on a loop, with the still banner as its poster while it loads
+  and for anyone who has asked their device for less motion.
+- It is measured on arrival and refused if it is too much: 1920 x 480,
+  8 MB and 20 seconds are the ceilings, 1280 x 320 the recommendation,
+  and the message says which one was missed and by how much. Nothing is
+  re-encoded -- a small VPS should not be asked to transcode video, so
+  the file you upload is the file your listeners get, and it has to be
+  right before it lands.
+
+- The "Hosts" link under a host's photo has gone: the menu at the top of
+  every page already says Hosts, and repeating it under the picture only
+  crowded the name it sat above.
+- The section rail moves in beside the cards. It was pinned to the edge
+  of the window, which on a wide screen left a corridor of nothing
+  between it and the page; it now sits 12px off the content column,
+  narrows when that is what it takes to fit, and steps aside when it
+  cannot. A trimmed section name shows in full on its tooltip.
+
+- A host's page is two columns now: who they are down one side, their
+  write-up filling the rest. A column of text 634px wide inside a 976px
+  card left a third of the page empty for its whole length, which read
+  as a mistake rather than a margin. The side column sticks as you read.
+- Host cards fill the row they are in. Two hosts used to sit in two
+  thirds of the width with an empty track beside them; they now share
+  the row. A lone host is centred rather than stretched across the
+  page.
+
+- The long admin pages carry a rail of their own sections, floating at
+  the right of the window: one link per card, the one you are reading
+  marked as you scroll. It builds itself from whatever sections a page
+  has -- the podcast details and the Look tab both qualify -- appears
+  only where there is room beside the column, and stays out of the way
+  entirely on a narrow screen.
+
+- Social links: a "Find us on" row beside the listen-on and support
+  buttons, with eighteen places to fill in. Matrix leads, then the rest
+  of the open, federated ones -- Mastodon, PeerTube, Lemmy, Bluesky --
+  then the big platforms. A Matrix room can be given as a `matrix:` URI
+  as well as a matrix.to link.
+
+- Host cards line up with each other again. A short write-up left its
+  photo and name floating in the middle of the card while a long one
+  started at the top, so a row of hosts looked misaligned; everything
+  now starts at the top, and a write-up is shown four lines at most, so
+  one talkative host cannot make their card twice the height of the
+  rest.
+
+- The studio key moves out of the compose file and onto the Account
+  page, under Studio publishing: masked, with show and copy buttons, and
+  a two-click "generate a new key" for when it needs retiring. It was
+  always generated automatically, so asking people to put a blank line
+  for it in their compose file only invited the question of what it was
+  for. `FOSSSTUDIO_TOKEN` still works for setting it in advance, when a
+  studio is configured before the instance exists.
+
+- `PUBLISHER_TOKEN` is now `FOSSSTUDIO_TOKEN`, which says what it is
+  for: the key a studio uses to publish a finished recording into this
+  instance. Nothing breaks on the way: the old environment variable is
+  still read, and an instance that already has a token keeps it -- it
+  is carried over under the new name rather than rotated, because it is
+  sitting in a studio's configuration somewhere.
+
+- Everything an installer edits now sits in one `x-config` block at the
+  top of the compose file, the way FOSSStudio does it, and both services
+  read from it. The domain used to be typed twice -- once for the app,
+  once in Caddy's command line -- which is exactly the sort of thing
+  that goes wrong quietly.
+
+- The marketing site is rewritten around what FOSSCast now does: the
+  Look tab, host pages, membership links, feeds, and a plain statement
+  that nothing phones home. The install is the pasted compose file
+  itself, on the page, with a copy button.
+- It carries a playground: a miniature show page beside real controls
+  for colour, background, cards, corners, host-photo shape and episode
+  layout. Everything is drawn in CSS and restyled live -- no
+  screenshots, no images, nothing fetched from anywhere.
+
+- Installing is one pasted file. `docker-compose.pull.yml` (and the same
+  snippet in the README) needs no checkout, no build, no `.env` and no
+  Caddyfile: the published image now carries the web assets as well as
+  the server, and Caddy is configured by a single command line. Paste,
+  change three values, `docker compose up -d`.
+- The image is therefore built from the repository root rather than
+  `server/`, so `web/` lands inside it. A checkout still mounts its own
+  `web/` over the top for development.
+
+- Editing saves itself everywhere, not just on the Look tab. Podcast
+  details, a host's page and an episode all store what has been typed
+  half a second after the typing stops, with a small line saying
+  "Saving..." then "Saved" where the button used to be. Wander off
+  mid-sentence and it still lands: whatever is waiting is sent as the
+  page unloads.
+- Buttons stay where a button is the point: publishing a new episode,
+  adding a host, importing a feed, creating the podcast, changing a
+  password, logging in. Those are decisions, not edits.
+- Saving without JavaScript still works exactly as it did -- the form
+  posts, the server redirects -- so nothing depends on the new
+  behaviour.
+
+- The Look tab saves itself. There is no Save button to hunt for: pick a
+  colour, drag a slider, type a tagline, and half a second later it is
+  stored and the preview is the saved page rather than a guess at it.
+  One request does both, a small line says "Saving..." then "Saved", and
+  a change still in flight when the page is left is sent on its way
+  rather than lost. The only button left is a small "Back to the
+  default" in the bottom right corner.
+
+- Tooltips are speech bubbles now -- the same blue bubble with white
+  text in light mode and dark, since a tooltip is a label from the
+  interface rather than part of the page it floats over. The tail points
+  at whatever the tooltip describes and swaps ends when the bubble flips
+  to the other side of it.
+- A tooltip can no longer be clipped, covered or pushed off the page:
+  one bubble lives at the end of the body in viewport coordinates,
+  above the whole stack. It goes above its trigger when there is room
+  and below when there is not, stays a clear 8px inside every edge, and
+  slides its tail along to keep pointing at the right thing when it has
+  been nudged sideways to fit. Keyboard focus shows it, Escape hides it,
+  and scrolling dismisses it rather than letting it drift.
+
+- The Look controls are chips, not slabs. Every radio was being stretched
+  to the full width of its card by the global input rule, which pushed
+  the labels into odd narrow columns and made the page enormous. Choices
+  now sit side by side as small pills, with one note underneath for
+  whichever is chosen rather than a note on every option at once; sliders
+  carry their value in their own label; the type chips are drawn in the
+  font they offer; the custom CSS box folds away until wanted; and Save
+  sticks to the bottom of the column however far you scroll.
+
+- Links stop looking like 1996: gone is the browser's blue with a hard
+  underline through the descenders. A link now takes a shade of the
+  show's own colour, with a hair-thin underline set away from the text
+  that fills in on hover. Anything that is already a control -- buttons,
+  cards, nav, subscribe chips -- carries no underline at all, since its
+  shape already says it is clickable.
+- The link shade is derived for readability rather than taken straight
+  from the accent: a bright accent on white is often around 3:1 where
+  body text wants 4.5:1, so the colour is walked darker (or lighter, in
+  dark mode) until it clears the bar. Every preset and any custom hex
+  clears 4.5:1 in both light and dark.
+
+- Photos and artwork get their own controls on the Look tab: host photos
+  can be circles, rounded squares or hard squares, in four sizes, and the
+  cover on the front page has four sizes of its own. The corner slider is
+  for cards -- a circle has no corners to round -- so wanting a bigger
+  circle now has somewhere to go.
+- Corners go up to 48px instead of 32px, so the roundest setting looks
+  clearly different from the default rather than slightly different.
+- A theme field left out of a submission keeps its default instead of
+  falling to zero.
+
+- A Look tab: the public site is the podcaster's, so its appearance is
+  theirs to set. Fourteen preset colours or any hex code you like (with
+  a colour picker), and every other shade -- hovers, tags, soft
+  backgrounds, light and dark alike -- is derived from the one you pick.
+  Backgrounds can be plain, a colour, a gradient at any angle, or an
+  uploaded image with dimming, blur, tile-or-fill and fixed-or-scrolling.
+  Cards can be solid, outlined or glass, with corners from square to very
+  round. Five type choices, three page widths, three episode layouts, a
+  full-bleed banner, a forced light or dark mode with the switch
+  optional, a tagline, your own footer line, and a custom CSS box for
+  anything else. A preview beside the controls is the real front page,
+  re-rendered by the server as you go, so nothing has to be saved to see
+  it -- and one button puts everything back.
+- Surfaces follow the background: pick a pale background and the cards
+  turn light with dark text even for a visitor whose device is set to
+  dark mode, and the other way round. No unreadable combinations.
+- Custom CSS can style anything but cannot reach off the box: imports
+  and remote URLs are stripped, so a themed page still calls out to
+  nobody.
+
+- Removing a host is the same small trash icon as everywhere else,
+  sitting in the bottom right corner of their page rather than a whole
+  card shouting about it. First click arms it, second click removes.
+
+- Memberships and tips: a panel under Funding on the podcast page holds
+  Patreon, Buy Me a Coffee, Ko-fi, Liberapay, GitHub Sponsors, Open
+  Collective and PayPal, each with a sign-up link straight to the
+  service for anyone who has not got an account yet. Paste your page and
+  its button joins a "Support the show" row under the listen-on buttons,
+  and each one goes into the feed as its own `podcast:funding` tag, so
+  apps can offer them too.
+- Cards never touch. A form is not a layout container, so panels inside
+  one sat edge to edge -- the podcast page was a single slab of eight.
+  Stacked panels now keep the same 1.5rem gap the rest of the site uses,
+  and host cards match it.
+
+- Hosts are people, not a list of names. Each one is a record of their
+  own -- name, role, photo and a write-up -- entered on a Hosts tab of
+  its own, in any number, in an order you set. The site gains a Hosts
+  page of cards and a page per host, and the header gains a menu now
+  that the show is more than one page. Photos are shrunk to a fast web
+  copy (640px) on upload, the full file kept for the feed, and a host
+  with no photo shows their initials. The feed's `podcast:person` tags
+  carry the role, the photo and a link to their page, so apps can put a
+  face to a voice. Anyone entered as a "Name | role" line before is
+  carried over automatically.
+
+- Live streaming and chat are gone from FOSSCast: they move to
+  FOSSStudio, where the show is made. Out with them: MediaMTX and RTMP
+  ingest, the live pages and HLS player, the chat room and its
+  moderation, live DVR recordings and their reminders, stream keys,
+  the liveItem feed announcement and podping. What that layer did, as
+  built and proven, is inventoried in docs/live-handover.md for
+  FOSSStudio to take on. FOSSCast is now purely a podcast host, and
+  its only public ports are 80 and 443.
+- Owner details in the feed: a show now carries an owner name and email
+  (`itunes:owner`, `managingEditor`, and the `podcast:locked` owner),
+  which Spotify and Apple both require and reject a feed without. The
+  address is separate from the login, since it is published in the
+  feed.
+- Feeds also declare `itunes:type` (episodic or serial), an optional
+  copyright line, a build date and a generator, and no longer leave
+  blank lines where an optional tag was skipped.
+- Durations are read for externally hosted episodes too, not only
+  uploads, so nothing reaches a directory without a length.
+- A feed check on the show page lists what Apple, Spotify and the rest
+  look for (title, description, artwork, owner email, category,
+  language, author, a published episode, file sizes, durations) and
+  says which are missing and what to do about each.
+- Moving a podcast in keeps its identity: importing an old feed now
+  carries over its `podcast:guid` as well as every episode GUID, and
+  the field can be set by hand, so directories treat the move as the
+  same show rather than a new one.
+- Every episode has its own page (`/shows/<show>/<episode>`), with its
+  artwork, player, chapters, transcript link and share card. The feed
+  links each item to it, which is what podcast apps open from their
+  "visit episode page" button, and titles on the show page link there
+  too.
+- Listen-on buttons: paste your show's address on Apple Podcasts,
+  Spotify, YouTube Music, Amazon Music, Pocket Casts, Overcast or
+  Podcast Index in the dashboard and a button appears on the show and
+  episode pages. RSS and a copy-the-feed button are always there, so
+  listeners are never waiting on a directory approval. Icons are drawn
+  inline; nothing is fetched from any of those companies.
+- Light and dark, chosen by the visitor: a toggle in the header on the
+  public site and in the dashboard, remembered per browser, following
+  the operating system until someone picks. No flash of the wrong
+  theme on load.
+- Artwork everywhere. A show can have a wide website banner (2560 x
+  640) as well as its square artwork (3000 x 3000), and every episode
+  can carry its own cover art, falling back to the show's when it does
+  not. Episode pages, the embedded player and the RSS feed all show
+  it, with per-episode `itunes:image` for apps that support it.
+- Show pages redesigned around that artwork: banner across the top,
+  cover beside the title, and episode cards led by their own artwork
+  with episode number and running time. Share links now carry proper
+  preview images too.
+- Forgotten passwords: the login page can email a reset link (single
+  use, expires in an hour, only its hash is stored, and the reply never
+  reveals whether an address has an account). Where no email is
+  configured, `docker compose exec -T app node reset-password.js` sets
+  a fresh one from the server and prints it once. Both are off in demo
+  mode.
+- Demo mode (`DEMO_MODE=1`): makes an instance completely read-only so
+  its login can be handed to strangers. Settings, episodes, uploads,
+  moderation, the publish API and chat posting are all refused; looking
+  around works normally. The login page shows the credentials and a
+  banner explains the state. Six tests cover it, including that nothing
+  reaches disk and that nobody can leave a message for the next
+  visitor.
+- One-command install: `scripts/install.sh <domain>` sets up an
+  instance on a server in one go (data dir, generated secrets and admin
+  login, firewall rule, the right compose stack, a site file for a
+  Caddy already on the box, health check). Ports are options, so
+  several instances can share a machine.
+- A marketing site for the project lives in `site/`: what FOSSCast is,
+  the live-with-chat difference, how to self-host, and a way to ask
+  about managed hosting. Static files, same house style, no third-party
+  anything.
+- Front it with anything: a new `docker-compose.byo-proxy.yml` runs the
+  stack without the bundled Caddy, `BIND_HOST` chooses the address the
+  app and HLS ports are published on (a Tailscale IP, or 0.0.0.0 for a
+  proxy elsewhere), and `INGEST_HOST` points studios at an address that
+  can actually carry RTMP when the site sits behind a tunnel or proxied
+  DNS. The README documents what a non-Caddy front must handle itself,
+  with a working nginx example: forwarded client IPs (chat bans, rate
+  limiting and download stats all read them), 4 GB upload bodies, no
+  buffering on the chat event stream, and TLS. Cloudflare Tunnel and
+  Tailscale setups are documented too, including the parts that cannot
+  change: RTMP ingest is not HTTP and never rides a tunnel.
+- Security hardening pass: the VPS deploy key is forced-command
+  restricted server-side to exactly the deploy verbs (upload, activate,
+  start, health-check, prune, rollback, status, logs) via
+  scripts/deploy-wrapper.sh, with rsync locked to the releases dir by
+  rrsync. Deploys now pull upstream images so security fixes land
+  automatically. Admin pages refuse to render in iframes; the bundled
+  Caddyfile adds nosniff and Referrer-Policy headers.
+
+## 0.1.0 - 2026-08-15
+
+- Publish API: PUT /api/v1/media then POST /api/v1/episodes with the
+  publisher token pushes an episode from a studio; it arrives as a
+  draft for review by default. This is the small, stable contract a
+  studio "Publish to FOSSCast" button calls, documented in
+  docs/studio-integration.md.
+- Download stats without surveillance: episodes hosted on the instance
+  count one download per listener per episode per day (salted daily
+  hash, never stored raw, no cookies), shown on the dashboard Stats
+  page as a 30-day chart and per-episode totals.
+- Podcasting 2.0: feeds now carry transcript, chapters, person,
+  funding, and locked tags, and while a show streams the feed
+  announces a liveItem (HLS enclosure plus a contentLink to the live
+  page) so supporting podcast apps can tune in natively; an optional
+  podping token notifies the network the moment a stream starts or
+  ends. Episodes gained an edit page with transcript upload (.vtt,
+  .srt, .txt, .json) and a plain-text chapter editor (HH:MM:SS Title
+  per line) served as namespace-format chapters JSON.
+- Live DVR: every live stream is recorded automatically (fMP4 segments,
+  no re-encoding). The dashboard's new Recordings page publishes a
+  recording as an episode in one click (instant stream-copy concat with
+  faststart) or discards it. Unpublished recordings are deleted after 7
+  days with an email reminder to the admins on day 5 (via the new
+  optional SMTP settings and a dependency-free SMTP client).
+- Media uploads: episodes and show artwork upload straight from the
+  dashboard (streamed to disk, up to 4 GB) and are served with proper
+  byte-range support; external URLs (archive.org, anywhere) remain a
+  first-class alternative per episode.
+- Directory-grade feeds: full iTunes namespace (author, artwork, the
+  official Apple category picker, explicit flag, language, episode and
+  season numbers, episode types, durations via ffprobe, real enclosure
+  sizes) plus podcast:guid. Show settings are editable in the
+  dashboard.
+- One-click import: paste an existing podcast's RSS URL and every
+  episode comes in with metadata; missing show settings fill from the
+  feed. De-duplicates by guid and media URL, so re-running is safe.
+- Drafts and scheduling: episodes can be saved as drafts, and
+  future-dated episodes stay hidden from the site and feed until their
+  date arrives.
+- Embeddable player: every episode has a compact player page at
+  /embed/<id> for iframing into any website.
+- This edition manages one podcast: show creation stops at one, and
+  the dashboard says so instead of offering a form that would fail.
+- Live is live: every show has a public live page (`/live/<slug>`)
+  with an HLS player (self-hosted hls.js, Apache-2.0, the project's
+  only vendored client library) that switches on and off automatically
+  as the studio starts and stops streaming, a pulsing live badge on
+  the show page, and playback URLs that never expose stream keys (the
+  app proxies HLS per show).
+- Live chat beside every stream: nickname-only, no accounts, viewer
+  counts, recent-history replay on join. Server-Sent Events transport,
+  still zero runtime npm dependencies. Moderation from the dashboard's
+  new Chat page: ban a message's sender by IP (their messages vanish
+  for everyone instantly, reversible), plus an editable filtered-word
+  list whose matches are star-masked (first and last letter kept)
+  rather than dropping the message. Viewer IPs never reach clients.
+- Chat-only embed view (`/live/<slug>?embed=1`) for studio side panes
+  and OBS browser sources, public JSON/SSE chat and live-status APIs,
+  and docs/studio-integration.md describing how studios link up,
+  including the API the planned on-stream comment overlay will use.
+- Admin dashboard at `/admin`: password login (scrypt hashing,
+  HMAC-signed HttpOnly cookies, per-IP rate limiting with lockout),
+  shows and episodes management, per-show stream keys with reveal, copy
+  and two-click regenerate, change-password. First admin account
+  bootstraps from `ADMIN_EMAIL`/`ADMIN_PASSWORD` in `.env`. Accounts
+  carry roles from day one (admin now, per-podcast owners next), so one
+  instance can host many podcasts on the same code everyone downloads.
+- Public site grew show pages: `/shows`, a page per show with episode
+  players (video or audio picked from the media type), and an RSS feed
+  per show (`/shows/<slug>/feed.xml`) any podcast app can subscribe to.
+  Episode media is a URL: own storage, archive.org, anywhere reachable.
+- Stream keys are now per show (created with the show, managed in the
+  dashboard) instead of one instance-wide `STREAM_KEY`; the MediaMTX
+  auth hook checks against live show keys. Flat JSON data files, no
+  database. Tests cover auth, sessions, rate limiting and the full
+  login/show/episode/feed/stream-auth flow.
+- Deploy scripts drive any instance: FOSSCAST_BASE and FOSSCAST_HTTP_PORT
+  select the install dir, compose project and health port.
+- Instances can stack on one machine: RTMP and HLS host ports are
+  configurable per instance (RTMP_PORT, HLS_PORT), so several podcasts
+  can run side by side behind one reverse proxy, or each on its own
+  machine.
+- Project skeleton: Node app (zero runtime dependencies) serving the
+  landing page, health check and version endpoints; MediaMTX ingest
+  (RTMP in on 1935, HLS out on 8888) with publish authorisation
+  delegated to the app via a stream key while playback stays public;
+  docker-compose stack with bundled Caddy for one-command self-hosting;
+  GHCR image build workflow with weekly rebuilds; release-based deploy
+  and rollback scripts.

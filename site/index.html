@@ -1,0 +1,806 @@
+<!doctype html>
+<html lang="en" data-accent="deep_orange">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>FOSSCast - self-hosted podcast hosting, done properly</title>
+<meta name="description" content="Free, self-hosted podcast hosting. Your own website, host pages, membership links and a feed built to what Apple and Spotify ask for. One file installs it.">
+<link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
+<link rel="preload" href="/fonts/Manrope.woff2" as="font" type="font/woff2" crossorigin>
+<link rel="stylesheet" href="/css/site.css">
+<link rel="stylesheet" href="/css/marketing.css">
+<link rel="canonical" href="https://fosscast.org/">
+<meta property="og:title" content="FOSSCast">
+<meta property="og:description" content="Self-hosted podcast hosting, done properly. One pasted file to install. Free and open source.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://fosscast.org/">
+<meta property="og:site_name" content="FOSSCast">
+<meta property="og:locale" content="en_GB">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="FOSSCast">
+<meta name="twitter:description" content="Self-hosted podcast hosting, done properly. One pasted file to install. Free and open source.">
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@graph": [
+    {
+      "@type": "SoftwareApplication",
+      "name": "FOSSCast",
+      "url": "https://fosscast.org/",
+      "applicationCategory": "Podcast hosting",
+      "operatingSystem": "Linux, via Docker",
+      "license": "https://www.gnu.org/licenses/agpl-3.0.html",
+      "isAccessibleForFree": true,
+      "offers": { "@type": "Offer", "price": "0", "priceCurrency": "GBP" },
+      "description": "Self-hosted podcast hosting. Your own website, host pages, membership links and RSS feeds built to what Apple, Spotify and Podcast Index ask for. One pasted file installs it.",
+      "codeRepository": "https://github.com/lightmorphic/fosscast",
+      "author": { "@type": "Organization", "name": "Lightmorphic", "url": "https://lightmorphic.com" }
+    },
+    {
+      "@type": "Organization",
+      "@id": "https://fosscast.org/#org",
+      "name": "Lightmorphic Ltd",
+      "url": "https://lightmorphic.com",
+      "legalName": "Lightmorphic Ltd",
+      "identifier": "17423646",
+      "address": {
+        "@type": "PostalAddress",
+        "streetAddress": "82A James Carter Road",
+        "addressLocality": "Mildenhall",
+        "postalCode": "IP28 7DE",
+        "addressCountry": "GB"
+      },
+      "sameAs": [
+        "https://github.com/lightmorphic",
+        "https://castmorphic.com",
+        "https://find-and-update.company-information.service.gov.uk/company/17423646"
+      ]
+    },
+    {
+      "@type": "WebSite",
+      "@id": "https://fosscast.org/#site",
+      "url": "https://fosscast.org/",
+      "name": "FOSSCast",
+      "publisher": { "@id": "https://fosscast.org/#org" },
+      "inLanguage": "en-GB"
+    },
+    {
+      "@type": "WebPage",
+      "url": "https://fosscast.org/",
+      "name": "FOSSCast",
+      "isPartOf": { "@id": "https://fosscast.org/#site" },
+      "dateModified": "2026-08-31"
+    }
+  ]
+}
+</script>
+<meta name="theme-color" content="#ffffff" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#09090b" media="(prefers-color-scheme: dark)">
+<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
+<script type="application/ld+json">
+{
+ "@context": "https://schema.org",
+ "@type": "FAQPage",
+ "mainEntity": [
+  {
+   "@type": "Question",
+   "name": "What does it cost to run?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Nothing beyond the machine. FOSSCast is AGPL v3 and always will be. A small VPS handles a podcast comfortably; bandwidth is the only thing that scales with your audience."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Can I leave?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Yes, and it is deliberately easy. Your episodes are files on your disk and your data is plain JSON beside them. Your feed is a standard RSS feed with a stable GUID, so moving elsewhere is a DNS change and a redirect."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Do my listeners get tracked?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "No. There is no analytics service, no third-party font, no script from anyone else, and no cookie for a listener. Download counts come from your own server logs, by episode, not by person."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Do I need to know Docker?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "You need to be able to paste a file and run one command. If that already sounds like a bad evening, the hosted option exists precisely for you."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Is video supported?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Yes. Episodes can be audio or video, hosted here or anywhere reachable by URL, and the page picks the right player."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "Where does live streaming fit?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "It does not, and that is deliberate. FOSSCast is the published show. Recording and going live are a different job for a different tool, so your public site stays small, fast and hard to break."
+   }
+  },
+  {
+   "@type": "Question",
+   "name": "How do I update it?",
+   "acceptedAnswer": {
+    "@type": "Answer",
+    "text": "Two commands, and your data is in a named volume that is left alone: docker compose pull then docker compose up -d ."
+   }
+  }
+ ]
+}
+</script>
+</head>
+<body>
+<a class="skip" href="#content">Skip to the content</a>
+
+<aside class="beta-strip">
+  <p><b>FOSSCast is in public beta and is not ready to be relied on.</b>
+  Data loss and breaking changes are possible, so please do not put a
+  real show on it yet.
+  <span class="beta-quiet">Install it, break it, and tell us what
+  happened - that is exactly what we want right now.</span></p>
+</aside>
+
+<header class="top">
+  <a class="wordmark" href="/" aria-label="FOSSCast home">
+    <svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+    <span translate="no">FOSSCast</span>
+  </a>
+  <nav class="top-nav">
+    <a class="top-link" href="#build">Try it</a>
+    <a class="top-link" href="#features">What it does</a>
+    <a class="top-link" href="#install">Install</a>
+  </nav>
+</header>
+
+<main id="content" tabindex="-1">
+
+  <!-- The stage. A real FOSSCast show page, drawn in HTML rather than
+       screenshotted, restyling itself the moment you arrive: colour,
+       background, cards, corners, layout. It runs through what the Look
+       tab can do and then hands the controls over. Nothing is loaded
+       from anywhere; every frame of it is this page. -->
+  <section class="stage" aria-labelledby="stage-h">
+    <div class="stage-inner">
+      <div class="stage-words">
+        <h1 id="stage-h">Press publish.<br>
+          <span class="stage-em">The rest is</span><br>
+          <span class="stage-swap" id="swap" aria-live="off">already built.</span></h1>
+        <p class="stage-lede">FOSSCast turns a podcast into a proper
+        website: a page for every episode, a page for every host, and a
+        feed every app accepts. On your own server, free, for ever.</p>
+        <div class="stage-go">
+          <a class="btn-primary btn-big" href="#build">Watch it build a show</a>
+          <a class="btn-ghost" href="#install">Or just install it</a>
+        </div>
+        <svg class="wave" viewBox="0 0 600 40" preserveAspectRatio="none" aria-hidden="true">
+          <g id="wave-bars"></g>
+        </svg>
+      </div>
+
+      <div class="stage-screen">
+        <div class="screen-frame">
+          <div class="demo-site" id="demo-site" data-bg="plain" data-cards="solid" data-shape="round" data-episodes="row">
+            <div class="demo-chrome"><span></span><span></span><span></span></div>
+            <div class="demo-page">
+              <div class="demo-nav">
+                <span class="demo-nav-link current">Home</span>
+                <span class="demo-nav-link">Hosts</span>
+              </div>
+              <div class="demo-card demo-hero">
+                <div class="demo-cover" aria-hidden="true">
+                  <svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.4" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>
+                </div>
+                <div class="demo-hero-text">
+                  <p class="demo-tagline">Two nerds, one microphone</p>
+                  <p class="demo-show-title">The Nightly Build</p>
+                  <p class="demo-muted">Free software, argued about properly.</p>
+                  <div class="demo-buttons">
+                    <span class="demo-pill">Apple</span>
+                    <span class="demo-pill">Spotify</span>
+                    <span class="demo-pill">RSS</span>
+                  </div>
+                </div>
+              </div>
+
+              <div class="demo-card demo-episode">
+                <div class="demo-thumb" aria-hidden="true"></div>
+                <div>
+                  <p class="demo-episode-title">42 &middot; The one about init systems</p>
+                  <p class="demo-muted">18 Aug 2026 &middot; 54 min</p>
+                </div>
+              </div>
+              <div class="demo-card demo-episode">
+                <div class="demo-thumb" aria-hidden="true"></div>
+                <div>
+                  <p class="demo-episode-title">41 &middot; Everything is a file, apparently</p>
+                  <p class="demo-muted">11 Aug 2026 &middot; 61 min</p>
+                </div>
+              </div>
+
+              <div class="demo-hosts">
+                <div class="demo-card demo-host">
+                  <span class="demo-face" aria-hidden="true">SS</span>
+                  <div><p class="demo-episode-title">Sam Smith</p><p class="demo-role">host</p></div>
+                </div>
+                <div class="demo-card demo-host">
+                  <span class="demo-face" aria-hidden="true">AB</span>
+                  <div><p class="demo-episode-title">Ada Byron</p><p class="demo-role">co-host</p></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <p class="screen-caption" id="stage-caption">Restyling itself, live. Not a screenshot.</p>
+      </div>
+    </div>
+  </section>
+
+  <!-- The hand-over. The same controls the software gives you, driving
+       the same miniature, so what you just watched is what you get. -->
+  <section class="hands" id="build" aria-labelledby="hands-h">
+    <div class="hands-head">
+      <h2 id="hands-h">Now you drive</h2>
+      <p class="lede">These are the real controls from the Look tab, and
+      that is the real page above responding to them. Every shade you do
+      not choose is worked out from the one you do, in light and in dark,
+      including a link colour checked for contrast so nothing you pick
+      can end up unreadable.</p>
+    </div>
+
+    <div class="demo-controls" id="demo-root">
+      <div class="control">
+        <p class="demo-label">Colour</p>
+        <div class="demo-swatches" role="group" aria-label="Accent colour">
+          <button type="button" class="demo-swatch current" data-accent="#ff5721" style="--sw:#ff5721" aria-label="Deep orange"></button>
+          <button type="button" class="demo-swatch" data-accent="#e91e63" style="--sw:#e91e63" aria-label="Pink"></button>
+          <button type="button" class="demo-swatch" data-accent="#8b5cf6" style="--sw:#8b5cf6" aria-label="Purple"></button>
+          <button type="button" class="demo-swatch" data-accent="#2563eb" style="--sw:#2563eb" aria-label="Blue"></button>
+          <button type="button" class="demo-swatch" data-accent="#0d9488" style="--sw:#0d9488" aria-label="Teal"></button>
+          <button type="button" class="demo-swatch" data-accent="#16a34a" style="--sw:#16a34a" aria-label="Green"></button>
+          <button type="button" class="demo-swatch" data-accent="#d97706" style="--sw:#d97706" aria-label="Amber"></button>
+          <button type="button" class="demo-swatch" data-accent="#475569" style="--sw:#475569" aria-label="Slate"></button>
+        </div>
+      </div>
+
+      <div class="control">
+        <p class="demo-label">Background</p>
+        <div class="demo-chips" data-set="bg">
+          <button type="button" class="demo-chip current" data-bg="plain">Plain</button>
+          <button type="button" class="demo-chip" data-bg="tint">One colour</button>
+          <button type="button" class="demo-chip" data-bg="gradient">Gradient</button>
+          <button type="button" class="demo-chip" data-bg="night">Dark</button>
+        </div>
+      </div>
+
+      <div class="control">
+        <p class="demo-label">Cards</p>
+        <div class="demo-chips" data-set="cards">
+          <button type="button" class="demo-chip current" data-cards="solid">Solid</button>
+          <button type="button" class="demo-chip" data-cards="outline">Outlined</button>
+          <button type="button" class="demo-chip" data-cards="glass">Glass</button>
+        </div>
+      </div>
+
+      <div class="control">
+        <p class="demo-label">Corners <b id="demo-radius-value">18px</b></p>
+        <input type="range" id="demo-radius" min="0" max="34" value="18" autocomplete="off" aria-label="Corner rounding">
+      </div>
+
+      <div class="control">
+        <p class="demo-label">Host photos</p>
+        <div class="demo-chips" data-set="shape">
+          <button type="button" class="demo-chip current" data-shape="round">Circles</button>
+          <button type="button" class="demo-chip" data-shape="rounded">Rounded</button>
+          <button type="button" class="demo-chip" data-shape="square">Square</button>
+        </div>
+      </div>
+
+      <div class="control">
+        <p class="demo-label">Episodes</p>
+        <div class="demo-chips" data-set="episodes">
+          <button type="button" class="demo-chip current" data-episodes="row">Beside</button>
+          <button type="button" class="demo-chip" data-episodes="stacked">Above</button>
+          <button type="button" class="demo-chip" data-episodes="compact">Compact</button>
+        </div>
+      </div>
+    </div>
+
+    <p class="hands-more">Fourteen preset colours or any hex code, five
+    typefaces, three page widths, three episode layouts, four cover
+    sizes, your own tagline and footer line, and a custom CSS box for
+    anything the tabs do not cover.</p>
+  </section>
+  <!-- What happens after publish. The one thing a podcaster actually
+       wants to know, animated as it scrolls into view. -->
+  <section class="journey" aria-labelledby="journey-h">
+    <h2 id="journey-h">One episode, and then it is everywhere</h2>
+    <p class="lede">You add an episode. FOSSCast does the rest of it
+    without being asked.</p>
+
+    <ol class="steps" id="steps">
+      <li class="step">
+        <span class="step-art" aria-hidden="true">
+          <span class="art-file"></span>
+          <span class="art-file"></span>
+          <span class="art-file art-file-new"></span>
+        </span>
+        <h3>Your page is written</h3>
+        <p>An episode page with your notes, your chapters and a player,
+        and the show's front page updated, both plain HTML that a search
+        engine can read.</p>
+      </li>
+      <li class="step">
+        <span class="step-art" aria-hidden="true">
+          <span class="art-feed">
+            <svg class="art-rss" viewBox="0 0 24 24" aria-hidden="true"><circle cx="6" cy="18" r="2.2"/><path d="M4 11a9 9 0 0 1 9 9M4 4a16 16 0 0 1 16 16" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+            <i></i><i></i><i></i><i></i><i></i></span>
+        </span>
+        <h3>The feed goes out</h3>
+        <p>Full iTunes namespace, Podcasting 2.0 transcripts, chapters,
+        people and funding, real file sizes and durations. A feed check
+        tells you what Apple and Spotify still want.</p>
+      </li>
+      <li class="step">
+        <span class="step-art" aria-hidden="true">
+          <span class="art-apps"><b>Apple</b><b>Spotify</b><b>Overcast</b><b>Pocket Casts</b><b>AntennaPod</b></span>
+        </span>
+        <h3>The apps come and get it</h3>
+        <p>Every podcast app pulls the feed on its own schedule. Your
+        listeners get the episode without doing anything, wherever they
+        already listen.</p>
+      </li>
+      <li class="step">
+        <span class="step-art" aria-hidden="true">
+          <span class="art-bars"><i></i><i></i><i></i><i></i><i></i><i></i><i></i></span>
+        </span>
+        <h3>You see what happened</h3>
+        <p>Months as bars, days as a curve, a heatmap of when people
+        listen, and how long an episode keeps earning. Counted on your
+        server, from numbers that cannot be joined back to a person.</p>
+      </li>
+    </ol>
+  </section>
+
+  <section class="counted" aria-labelledby="counted-h">
+    <div class="counted-words">
+      <h2 id="counted-h">Counted, never followed</h2>
+      <p>There is no analytics service in the loop, no third-party font,
+      no script from anybody else, and no cookie for a listener. The
+      charts are drawn on your own machine from counters that hold a
+      total and nothing else.</p>
+      <p>A download means the audio reached a device. It does not mean
+      anybody listened, because podcast apps fetch new episodes
+      automatically for everyone subscribed. Apple and Spotify can tell
+      you more than that, and it is worth knowing why: they wrote the
+      app, so they can watch what happens inside it, and they can only
+      see the listening that happens there. That is the whole reason
+      they want your show heard in their app and nowhere else. Anybody
+      who simply serves a file, this software included, sees a request
+      and nothing after it.</p>
+      <p>So the number here says downloads, because downloads is what it
+      counts.</p>
+    </div>
+    <div class="counted-chart" aria-hidden="true">
+      <div class="chart-bars" id="chart-bars"></div>
+      <div class="chart-legend"><span>Mon</span><span>Sun</span></div>
+    </div>
+  </section>
+
+  <section class="what" id="features" aria-labelledby="what-h">
+    <h2 id="what-h">All of it, free, on your own machine</h2>
+    <p class="lede">There is no self-hosted edition and a better one.
+    This is the product.</p>
+
+    <div class="what-grid">
+      <article class="thing">
+        <h3>Your hosts, properly introduced</h3>
+        <p>Every host gets a photo, a role and a write-up: a card on your
+        Hosts page and a page of their own. Two of you or twenty, in the
+        order you choose. They travel in the feed as well, so apps can
+        put a face to a voice.</p>
+      </article>
+      <article class="thing">
+        <h3>Getting paid</h3>
+        <p>Patreon, Buy Me a Coffee, Ko-fi, Liberapay, GitHub Sponsors,
+        Open Collective and PayPal. Paste your page, get a button on your
+        site and a funding tag in the feed. No account yet? Each one has
+        a sign-up link beside it.</p>
+      </article>
+      <article class="thing">
+        <h3>Bring your back catalogue</h3>
+        <p>Paste your current RSS feed and every episode comes across
+        with its metadata and its identity, GUIDs and all, so directories
+        treat the move as the same show rather than a new one.</p>
+      </article>
+      <article class="thing">
+        <h3>Media anywhere</h3>
+        <p>Upload to your own server or point at files hosted elsewhere,
+        archive.org included. Both are first class. Range requests are
+        handled properly, so players seek instantly.</p>
+      </article>
+      <article class="thing">
+        <h3>Fits the server you already have</h3>
+        <p>The bundled Caddy is optional, never assumed. nginx, Apache, a
+        Cloudflare Tunnel, a tailnet-only instance behind Tailscale: all
+        supported, all documented, all tested.</p>
+      </article>
+      <article class="thing">
+        <h3>One instance, one podcast</h3>
+        <p>A decision, not a shortcut. One show per instance keeps the
+        whole thing small enough to read in an afternoon and to trust
+        with your audience. Running three shows? Run three instances.
+        They are tiny.</p>
+      </article>
+    </div>
+
+    <div class="small-things">
+      <h3>And the small things, which are most of the work</h3>
+      <ul class="spec spec-cols">
+        <li>Editing saves itself: podcast details, hosts, episodes, design</li>
+        <li>Deleting always takes a second, deliberate click</li>
+        <li>Drafts and dated episodes stay hidden until their moment</li>
+        <li>Seasons, trailers and bonus episodes, properly tagged</li>
+        <li>An embeddable player for any episode</li>
+        <li>Chapters typed as plain lines of text</li>
+        <li>Password reset by email, or from the command line</li>
+        <li>A read-only demo mode for showing the thing off</li>
+        <li>Every uploaded image gets a small web copy made for it</li>
+        <li>Pages are plain HTML and one stylesheet: no framework, no build step</li>
+      </ul>
+    </div>
+  </section>
+
+  <section class="asked" aria-labelledby="asked-h">
+    <h2 id="asked-h">Questions people actually ask</h2>
+    <div class="asked-list">
+      <details>
+        <summary>What does it cost to run?</summary>
+        <p>Nothing beyond the machine. FOSSCast is AGPL v3 and always
+        will be. A small VPS handles a podcast comfortably; bandwidth is
+        the only thing that scales with your audience.</p>
+      </details>
+      <details>
+        <summary>Can I leave?</summary>
+        <p>Yes, and it is deliberately easy. Your episodes are files on
+        your disk and your data is plain JSON beside them. Your feed is a
+        standard RSS feed with a stable GUID, so moving elsewhere is a
+        DNS change and a redirect.</p>
+      </details>
+      <details>
+        <summary>Do my listeners get tracked?</summary>
+        <p>No. There is no analytics service, no third-party font, no
+        script from anyone else, and no cookie for a listener. Download
+        counts come from your own server logs, by episode, not by
+        person.</p>
+      </details>
+      <details>
+        <summary>Do I need to know Docker?</summary>
+        <p>You need to be able to paste a file and run one command. If
+        that already sounds like a bad evening, the hosted option exists
+        precisely for you.</p>
+      </details>
+      <details>
+        <summary>Is video supported?</summary>
+        <p>Yes. Episodes can be audio or video, hosted here or anywhere
+        reachable by URL, and the page picks the right player.</p>
+      </details>
+      <details>
+        <summary>Where does live streaming fit?</summary>
+        <p>It does not, and that is deliberate. FOSSCast is the published
+        show. Recording and going live are a different job for a
+        different tool, so your public site stays small, fast and hard to
+        break.</p>
+      </details>
+      <details>
+        <summary>How do I update it?</summary>
+        <p>Two commands, and your data is in a named volume that is left
+        alone: <code>docker compose pull</code> then
+        <code>docker compose up -d</code>.</p>
+      </details>
+    </div>
+  </section>
+
+  <!-- The install, kept small and kept last. It is a good file, but it
+       is the last thing a visitor needs, not the first. -->
+  <section class="install" id="install" aria-labelledby="install-h">
+    <div class="install-words">
+      <h2 id="install-h">Two minutes, if you have a machine</h2>
+      <p>Linux, Docker, a domain pointed at it, ports 80 and 443 open.
+      Paste this into <code>docker-compose.yml</code>, change the three
+      lines at the top, and run <code>docker compose up -d</code>. The
+      certificate arrives on its own and you log in at
+      <code>/admin</code>.</p>
+      <p class="install-notes">No checkout, no build step, no
+      <code>.env</code>, no Caddyfile. The bundled Caddy is optional:
+      delete it and point nginx, Apache, a Cloudflare Tunnel or Tailscale
+      at the app instead.</p>
+      <p class="install-go">
+        <a class="btn-primary" href="https://github.com/lightmorphic/fosscast">Read the source</a>
+        <a class="btn-ghost" href="mailto:hello@fosscast.org?subject=Hosting%20my%20podcast%20on%20FOSSCast">Or have it run for you</a>
+      </p>
+    </div>
+
+    <figure class="file">
+      <figcaption class="file-bar">
+        <span class="file-name">docker-compose.yml</span>
+        <button type="button" class="file-copy" id="copy-compose" data-copied="Copied">Copy</button>
+      </figcaption>
+      <div class="file-body">
+        <pre id="compose"><code><span class="l">x-config: <span class="a">&amp;config</span></span><span class="l edit">  DOMAIN: podcast.example.com          <span class="c"># your address</span></span><span class="l edit">  ADMIN_EMAIL: you@example.com         <span class="c"># the first login</span></span><span class="l edit">  ADMIN_PASSWORD: change-me-to-something-long</span><span class="l"></span><span class="l">services:</span><span class="l">  app:</span><span class="l">    image: ghcr.io/lightmorphic/fosscast:latest</span><span class="l">    restart: unless-stopped</span><span class="l">    environment: <span class="a">*config</span></span><span class="l">    volumes:</span><span class="l">      - fosscast_data:/data</span><span class="l">    read_only: true</span><span class="l">    tmpfs: [/tmp]</span><span class="l">    cap_drop: [ALL]</span><span class="l">    security_opt: [no-new-privileges:true]</span><span class="l"></span><span class="l">  caddy:</span><span class="l">    image: caddy:2-alpine</span><span class="l">    restart: unless-stopped</span><span class="l">    environment: <span class="a">*config</span></span><span class="l">    command: sh -c 'caddy reverse-proxy --from "$$DOMAIN" --to app:3100'</span><span class="l">    ports: ["80:80", "443:443"]</span><span class="l">    volumes:</span><span class="l">      - caddy_data:/data</span><span class="l">      - caddy_config:/config</span><span class="l">    cap_add: [NET_BIND_SERVICE]</span><span class="l"></span><span class="l">volumes:</span><span class="l">  fosscast_data:</span><span class="l">  caddy_data:</span><span class="l">  caddy_config:</span></code></pre>
+      </div>
+      <p class="file-legend"><span class="key" aria-hidden="true"></span>
+      The three lines you change. Everything else is already right.</p>
+    </figure>
+  </section>
+
+</main>
+
+<footer class="foot">
+  <p class="sister">FOSSCast publishes the show:
+  <a href="https://fossstudio.org" translate="no">FOSSStudio</a> is where you make it:
+  <b>a self-hosted video podcast studio, a StreamYard replacement for everyone.</b>
+  Guests join by link with no account and no download, up to ten of them,
+  with a soundboard, intro videos and per-person recording. Go live on
+  your own watch page, at your own address, with its own chat beside the
+  video, and out to YouTube at the same time if you want it. One
+  click publishes a finished recording straight into FOSSCast.</p>
+
+  <a class="lightmorphic-badge" href="https://lightmorphic.com" target="_blank" rel="noopener noreferrer" translate="no">
+    <span>Created by</span>
+    <img src="/img/lightmorphic-dark-tb-250x50-sq.webp" alt="Lightmorphic" width="125" height="25" loading="lazy">
+    <span class="external-link-icon" aria-hidden="true">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
+        <path d="M15 3h6v6"/>
+        <line x1="10" y1="14" x2="21" y2="3"/>
+      </svg>
+    </span>
+  </a>
+
+  <span class="gpl">Free software under the <a href="https://www.gnu.org/licenses/agpl-3.0.html">AGPL v3</a> &middot; <a href="https://github.com/lightmorphic/fosscast">Read the source on GitHub</a></span>
+
+  <div class="sub-foot">
+    <p>&copy; Lightmorphic Ltd. Registered in England and Wales, company
+    number 17423646. Registered office: 82A James Carter Road, Mildenhall,
+    IP28 7DE. FOSSCast is free software under the
+    <a href="https://www.gnu.org/licenses/agpl-3.0.html">GNU AGPL v3</a>.<br>
+    Page last updated <time datetime="2026-09-01">1 September 2026</time>.</p>
+    <nav class="sub-foot-links" aria-label="Legal">
+      <a href="/privacy.html">Privacy</a>
+      <a href="/cookies.html">Cookies</a>
+      <a href="/terms.html">Terms</a>
+      <a href="/accessibility.html">Accessibility</a>
+      <a href="/complaints.html">Complaints</a>
+    </nav>
+  </div>
+</footer>
+
+
+
+<script>
+// ---------------------------------------------------------------------
+// The miniature. Every control writes a data attribute or a custom
+// property on one element, and the stylesheet does the rest. The attract
+// loop below drives exactly the same mechanism, so what a visitor
+// watches on arrival is what the controls hand them.
+// ---------------------------------------------------------------------
+(function playground() {
+  var root = document.getElementById('demo-root');
+  var site = document.getElementById('demo-site');
+  var stage = document.querySelector('.stage');
+  if (!site) return;
+
+  function mark(button, group) {
+    var siblings = button.parentElement.querySelectorAll('.demo-chip, .demo-swatch');
+    Array.prototype.forEach.call(siblings, function (c) { c.classList.toggle('current', c === button); });
+    if (group) site.dataset[group] = button.dataset[group];
+  }
+
+  function accent(value) {
+    site.style.setProperty('--demo-accent', value);
+    if (stage) stage.style.setProperty('--stage-accent', value);
+  }
+
+  accent('#ff5721');
+
+  if (root) {
+    root.addEventListener('click', function (e) {
+      var swatch = e.target.closest('.demo-swatch');
+      if (swatch) { stop(); mark(swatch); accent(swatch.dataset.accent); return; }
+      var chip = e.target.closest('.demo-chip');
+      if (!chip) return;
+      stop();
+      var group = chip.parentElement.dataset.set;
+      mark(chip, group);
+    });
+
+    var radius = document.getElementById('demo-radius');
+    var radiusValue = document.getElementById('demo-radius-value');
+    if (radius) radius.addEventListener('input', function () {
+      stop();
+      site.style.setProperty('--demo-radius', radius.value + 'px');
+      if (radiusValue) radiusValue.textContent = radius.value + 'px';
+    });
+  }
+
+  // ---- the attract loop -----------------------------------------
+  // A designer flicking through the options. It stops for good the
+  // moment anybody touches a control, and it never starts at all for
+  // somebody who has asked for less movement.
+  var quiet = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var timer = null;
+  var stopped = quiet;
+
+  function stop() {
+    stopped = true;
+    if (timer) { clearTimeout(timer); timer = null; }
+    var caption = document.getElementById('stage-caption');
+    if (caption) caption.textContent = 'Yours now. Nothing here is saved.';
+  }
+
+  var SCENES = [
+    { accent: '#ff5721', bg: 'plain',    cards: 'solid',   shape: 'round',   episodes: 'row',      radius: 18, word: 'already built.' },
+    { accent: '#2563eb', bg: 'tint',     cards: 'outline', shape: 'rounded', episodes: 'stacked',  radius: 6,  word: 'your colour.' },
+    { accent: '#16a34a', bg: 'gradient', cards: 'glass',   shape: 'round',   episodes: 'compact',  radius: 30, word: 'your shape.' },
+    { accent: '#8b5cf6', bg: 'night',    cards: 'solid',   shape: 'square',  episodes: 'row',      radius: 2,  word: 'light or dark.' },
+    { accent: '#d97706', bg: 'plain',    cards: 'outline', shape: 'rounded', episodes: 'stacked',  radius: 22, word: 'your call.' }
+  ];
+
+  function apply(scene) {
+    accent(scene.accent);
+    site.dataset.bg = scene.bg;
+    site.dataset.cards = scene.cards;
+    site.dataset.shape = scene.shape;
+    site.dataset.episodes = scene.episodes;
+    site.style.setProperty('--demo-radius', scene.radius + 'px');
+    var swap = document.getElementById('swap');
+    if (swap) swap.textContent = scene.word;
+    // keep the controls honest about what is on screen
+    if (root) {
+      root.querySelectorAll('.demo-swatch').forEach(function (s) {
+        s.classList.toggle('current', s.dataset.accent === scene.accent);
+      });
+      ['bg', 'cards', 'shape', 'episodes'].forEach(function (group) {
+        root.querySelectorAll('[data-set="' + group + '"] .demo-chip').forEach(function (c) {
+          c.classList.toggle('current', c.dataset[group] === scene[group]);
+        });
+      });
+      var radius = document.getElementById('demo-radius');
+      var radiusValue = document.getElementById('demo-radius-value');
+      if (radius) radius.value = scene.radius;
+      if (radiusValue) radiusValue.textContent = scene.radius + 'px';
+    }
+  }
+
+  var at = 0;
+  function next() {
+    if (stopped) return;
+    at = (at + 1) % SCENES.length;
+    apply(SCENES[at]);
+    timer = setTimeout(next, 3200);
+  }
+  if (!stopped) timer = setTimeout(next, 2200);
+
+  // Touching the controls at all ends the loop, whatever the input.
+  ['pointerdown', 'keydown'].forEach(function (kind) {
+    if (root) root.addEventListener(kind, stop, { once: true });
+  });
+})();
+
+// ---------------------------------------------------------------------
+// The waveform under the headline. Drawn once, animated by CSS, and
+// left perfectly still for anyone who has asked for that.
+// ---------------------------------------------------------------------
+(function waveform() {
+  var group = document.getElementById('wave-bars');
+  if (!group) return;
+  var quiet = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var bars = 48, gap = 12.5, seed = 7;
+  var svgns = 'http://www.w3.org/2000/svg';
+  for (var i = 0; i < bars; i++) {
+    // A fixed pseudo-random shape: the same wave on every visit, which
+    // is what a recording would look like.
+    seed = (seed * 1103515245 + 12345) % 2147483648;
+    var h = 6 + (seed % 1000) / 1000 * 26;
+    var rect = document.createElementNS(svgns, 'rect');
+    rect.setAttribute('x', String(i * gap));
+    rect.setAttribute('width', '5');
+    rect.setAttribute('y', String((40 - h) / 2));
+    rect.setAttribute('height', String(h));
+    rect.setAttribute('rx', '2.5');
+    if (!quiet) {
+      rect.style.animation = 'wave-bob 1.6s ease-in-out infinite';
+      rect.style.animationDelay = (i * 0.035) + 's';
+    }
+    group.appendChild(rect);
+  }
+})();
+
+// ---------------------------------------------------------------------
+// Things that animate as they arrive. One observer, no library.
+// ---------------------------------------------------------------------
+(function onArrival() {
+  var targets = [].slice.call(document.querySelectorAll('.step, .chart-bars'));
+  if (!targets.length) return;
+  if (!('IntersectionObserver' in window)) {
+    targets.forEach(function (t) { t.classList.add('in'); });
+    return;
+  }
+  var watcher = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      if (!entry.isIntersecting) return;
+      entry.target.classList.add('in');
+      watcher.unobserve(entry.target);
+    });
+  }, { threshold: 0.25 });
+  targets.forEach(function (t, i) {
+    t.style.transitionDelay = (i % 4) * 0.09 + 's';
+    watcher.observe(t);
+  });
+})();
+
+// ---------------------------------------------------------------------
+// A week of downloads, drawn the way the real dashboard draws it: bars
+// from a total, no library, nothing about any person.
+// ---------------------------------------------------------------------
+(function chart() {
+  var box = document.getElementById('chart-bars');
+  if (!box) return;
+  var days = [46, 72, 58, 91, 64, 38, 55];
+  days.forEach(function (value) {
+    var bar = document.createElement('i');
+    bar.dataset.h = value + '%';
+    box.appendChild(bar);
+  });
+  var draw = function () {
+    [].slice.call(box.children).forEach(function (bar, i) {
+      bar.style.transitionDelay = (i * 0.06) + 's';
+      bar.style.height = bar.dataset.h;
+    });
+  };
+  if (!('IntersectionObserver' in window)) return draw();
+  var watcher = new IntersectionObserver(function (entries) {
+    if (!entries[0].isIntersecting) return;
+    draw();
+    watcher.disconnect();
+  }, { threshold: 0.4 });
+  watcher.observe(box);
+})();
+
+// ---------------------------------------------------------------------
+// The copy button. It confirms in place and rebuilds the file's line
+// breaks, which the markup does not carry.
+// ---------------------------------------------------------------------
+(function copyFile() {
+  var button = document.getElementById('copy-compose');
+  var code = document.getElementById('compose');
+  if (!button || !code || !navigator.clipboard) return;
+  button.addEventListener('click', function () {
+    var text = Array.prototype.map.call(code.querySelectorAll('.l'), function (l) {
+      return l.textContent;
+    }).join('\n') + '\n';
+    navigator.clipboard.writeText(text).then(function () {
+      var was = button.textContent;
+      button.textContent = button.dataset.copied;
+      button.classList.add('done');
+      setTimeout(function () { button.textContent = was; button.classList.remove('done'); }, 1800);
+    });
+  });
+})();
+</script>
+
+</body>
+</html>

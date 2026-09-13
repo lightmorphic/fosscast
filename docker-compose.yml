@@ -1,0 +1,74 @@
+services:
+  app:
+    image: ghcr.io/lightmorphic/fosscast:latest
+    # Building from a checkout is for working on FOSSCast; installing it
+    # needs no build at all (see docker-compose.pull.yml).
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    # Optional: a first run has no .env yet, and compose must not refuse
+    # to start over a file the app creates itself.
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      # Inside the container the app always listens on 3100; HTTP_PORT
+      # in .env only changes the host port it is published on.
+      HTTP_PORT: 3100
+      DATA_DIR: /data
+      WEB_DIR: /app/web
+    ports:
+      - "${BIND_HOST:-127.0.0.1}:${HTTP_PORT:-3100}:3100"
+    volumes:
+      - ${DATA_PATH:-./data}:/data
+      - ./web:/app/web:ro
+    # The app only ever writes under /data.
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3100/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: &log
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
+
+  # Bundled reverse proxy with automatic HTTPS certificates. A plain
+  # `docker compose up -d` gives a complete public site; hosts whose
+  # machine already runs its own proxy on 80/443 use
+  # docker-compose.byo-proxy.yml instead.
+  caddy:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    # Optional: a first run has no .env yet, and compose must not refuse
+    # to start over a file the app creates itself.
+    env_file:
+      - path: .env
+        required: false
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    cap_drop: [ALL]
+    cap_add: [NET_BIND_SERVICE]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    logging: *log
+
+volumes:
+  caddy_data:
+  caddy_config:

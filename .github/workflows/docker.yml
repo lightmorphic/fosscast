@@ -1,0 +1,62 @@
+name: Build and publish Docker image
+
+on:
+  push:
+    branches: [ main ]
+    # A release tag builds an image people can pin to. Without this the
+    # version number means something only in the changelog.
+    tags: [ 'v[0-9]+.[0-9]+.[0-9]+' ]
+  workflow_dispatch:
+  schedule:
+    # Weekly rebuild so OS-level patches keep landing without a code change.
+    - cron: '0 6 * * 1'
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set lowercase repo owner
+        run: echo "OWNER_LC=${GITHUB_REPOSITORY_OWNER,,}" >> "$GITHUB_ENV"
+
+      - name: Log in to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      # A push to main moves :latest. A release tag publishes :0.2.0 and
+      # :0.2 as well, so a self-hoster can follow a line rather than
+      # whatever landed this morning.
+      - name: Work out the image tags
+        run: |
+          IMAGE="ghcr.io/${OWNER_LC}/fosscast"
+          {
+            echo 'TAGS<<EOF'
+            echo "${IMAGE}:${GITHUB_SHA}"
+            if [ "${GITHUB_REF_TYPE}" = "tag" ]; then
+              VERSION="${GITHUB_REF_NAME#v}"
+              echo "${IMAGE}:${VERSION}"
+              echo "${IMAGE}:${VERSION%.*}"
+            else
+              echo "${IMAGE}:latest"
+            fi
+            echo EOF
+          } >> "$GITHUB_ENV"
+
+      - name: Build and push
+        uses: docker/build-push-action@v6
+        with:
+          # The whole repository: the image carries the web assets as
+          # well as the server, so a pulled image needs no local files.
+          context: .
+          file: ./server/Dockerfile
+          push: true
+          tags: ${{ env.TAGS }}

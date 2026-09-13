@@ -1,0 +1,47 @@
+# FOSSCast without the bundled Caddy, for hosts that already terminate
+# TLS themselves: nginx, Apache, a Cloudflare Tunnel, Tailscale Serve.
+# Identical to docker-compose.yml minus the caddy service, so keep the
+# two in step when either changes.
+#
+#   docker compose -f docker-compose.byo-proxy.yml up -d --build
+#
+# Your proxy points at ${BIND_HOST}:${HTTP_PORT} (127.0.0.1:3100 by
+# default). See the README for what a non-Caddy front must handle:
+# forwarded client IPs, upload size, and TLS.
+services:
+  app:
+    image: ghcr.io/lightmorphic/fosscast:latest
+    # Building from a checkout is for working on FOSSCast; installing it
+    # needs no build at all (see docker-compose.pull.yml).
+    build:
+      context: .
+      dockerfile: server/Dockerfile
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      HTTP_PORT: 3100
+      DATA_DIR: /data
+      WEB_DIR: /app/web
+    ports:
+      - "${BIND_HOST:-127.0.0.1}:${HTTP_PORT:-3100}:3100"
+    volumes:
+      - ${DATA_PATH:-./data}:/data
+      - ./web:/app/web:ro
+    read_only: true
+    tmpfs:
+      - /tmp
+    cap_drop: [ALL]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3100/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging:
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
+
