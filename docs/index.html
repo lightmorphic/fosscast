@@ -425,51 +425,39 @@
 
   <section class="asked" aria-labelledby="asked-h">
     <h2 id="asked-h">Questions people actually ask</h2>
-    <div class="asked-list">
-      <details>
-        <summary>What does it cost to run?</summary>
-        <p>Nothing beyond the machine. FOSSCast is AGPL v3 and always
-        will be. A small VPS handles a podcast comfortably; bandwidth is
-        the only thing that scales with your audience.</p>
-      </details>
-      <details>
-        <summary>Can I leave?</summary>
-        <p>Yes, and it is deliberately easy. Your episodes are files on
-        your disk and your data is plain JSON beside them. Your feed is a
-        standard RSS feed with a stable GUID, so moving elsewhere is a
-        DNS change and a redirect.</p>
-      </details>
-      <details>
-        <summary>Do my listeners get tracked?</summary>
-        <p>No. There is no analytics service, no third-party font, no
-        script from anyone else, and no cookie for a listener. Download
-        counts come from your own server logs, by episode, not by
-        person.</p>
-      </details>
-      <details>
-        <summary>Do I need to know Docker?</summary>
-        <p>You need to be able to paste a file and run one command. If
-        that already sounds like a bad evening, the hosted option exists
-        precisely for you.</p>
-      </details>
-      <details>
-        <summary>Is video supported?</summary>
-        <p>Yes. Episodes can be audio or video, hosted here or anywhere
-        reachable by URL, and the page picks the right player.</p>
-      </details>
-      <details>
-        <summary>Where does live streaming fit?</summary>
-        <p>It does not, and that is deliberate. FOSSCast is the published
-        show. Recording and going live are a different job for a
-        different tool, so your public site stays small, fast and hard to
-        break.</p>
-      </details>
-      <details>
-        <summary>How do I update it?</summary>
-        <p>Two commands, and your data is in a named volume that is left
-        alone: <code>docker compose pull</code> then
-        <code>docker compose up -d</code>.</p>
-      </details>
+    <div class="asked-grid">
+      <article class="asked-card asked-card--wide">
+        <h3>What does it cost to run?</h3>
+        <p>Nothing beyond the machine. FOSSCast is AGPL v3 and always will be. A small VPS handles a podcast comfortably; bandwidth is the only thing that scales with your audience.</p>
+      </article>
+      <article class="asked-card">
+        <h3>Can I leave?</h3>
+        <p>Yes, and it is deliberately easy. Your episodes are files on your disk and your data is plain JSON beside them. Your feed is a standard RSS feed with a stable GUID, so moving elsewhere is a DNS change and a redirect.</p>
+      </article>
+      <article class="asked-card">
+        <h3>Do my listeners get tracked?</h3>
+        <p>No. There is no analytics service, no third-party font, no script from anyone else, and no cookie for a listener. Download counts come from your own server logs, by episode, not by person.</p>
+      </article>
+      <article class="asked-card">
+        <h3>Which browser should I use?</h3>
+        <p>For listening and reading, any of them. For the admin side, a Chromium-based browser such as Chrome, Brave or Edge is the one to reach for: artwork is resized in the browser before it is uploaded, and those handle it best. Firefox and Safari work; they are simply the ones tested least.</p>
+      </article>
+      <article class="asked-card">
+        <h3>Do I need to know Docker?</h3>
+        <p>You need to be able to paste a file and run one command. If that already sounds like a bad evening, the hosted option exists precisely for you.</p>
+      </article>
+      <article class="asked-card">
+        <h3>Is video supported?</h3>
+        <p>Yes. Episodes can be audio or video, hosted here or anywhere reachable by URL, and the page picks the right player.</p>
+      </article>
+      <article class="asked-card asked-card--wide">
+        <h3>Does it record or edit?</h3>
+        <p>No, and that is deliberate. FOSSCast is the published show: the feed, the website and the numbers. Making the episode is a different job for a different tool, so your public site stays small, fast and hard to break.</p>
+      </article>
+      <article class="asked-card asked-card--wide">
+        <h3>How do I update it?</h3>
+        <p>Two commands, and your data is in a named volume that is left alone: <code>docker compose pull</code> then <code>docker compose up -d</code>.</p>
+      </article>
     </div>
   </section>
 
@@ -484,9 +472,10 @@
       certificate arrives on its own and you log in at
       <code>/admin</code>.</p>
       <p class="install-notes">No checkout, no build step, no
-      <code>.env</code>, no Caddyfile. The bundled Caddy is optional:
-      delete it and point nginx, Apache, a Cloudflare Tunnel or Tailscale
-      at the app instead.</p>
+      <code>.env</code>, no Caddyfile. The bundled Caddy is commented
+      out: take the hashes off it for a certificate of your own, or leave
+      them and point nginx, Apache, a Cloudflare Tunnel or Tailscale at
+      the app instead.</p>
       <p class="install-notes" id="hosted">If you would rather not run a
       server, the people who write FOSSCast will host it for you:
       <a href="https://castmorphic.com">Castmorphic</a> runs this same

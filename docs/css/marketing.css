@@ -308,19 +308,43 @@ main > section:last-child { border-bottom: 0; }
 
 /* ------------------------------------------------------- questions */
 
-.asked-list { margin-top: 1.75rem; max-width: var(--measure); }
-.asked details { border-bottom: 1px solid var(--rule); }
-.asked details:first-child { border-top: 1px solid var(--rule); }
-.asked summary {
-  cursor: pointer; list-style: none;
-  padding: 0.95rem 2rem 0.95rem 0;
-  font-weight: 600; position: relative;
-  min-height: 44px; display: flex; align-items: center;
+/* The questions are cards, not a concertina. A visitor scanning for the
+   one that applies to them should see every question at once rather than
+   opening eight of them in turn; the answers are short enough to stand
+   in the open. Two of them run the full width because their answer is
+   the one most people arrive with. */
+.asked-grid {
+  margin-top: 1.75rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(17rem, 1fr));
+  gap: 1rem;
+  /* Each card is as tall as its own answer. Stretching them to match the
+     tallest in the row leaves a card with two lines of text and six
+     inches of nothing under it. */
+  align-items: start;
 }
-.asked summary::-webkit-details-marker { display: none; }
-.asked summary::after { content: "+"; position: absolute; right: 0.25rem; font-family: var(--mono); color: var(--accent-text); font-weight: 700; }
-.asked details[open] summary::after { content: "\2212"; }
-.asked p { margin: 0 0 1.1rem; color: var(--muted-fg); font-size: 0.9375rem; }
+.asked-card {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--panel-radius);
+  padding: 1.35rem 1.5rem;
+  min-width: 0;
+}
+.asked-card--wide { grid-column: span 2; }
+/* Below two columns a span of 2 would overflow its own grid. */
+@media (max-width: 42rem) {
+  .asked-card--wide { grid-column: auto; }
+}
+.asked-card h3 {
+  margin: 0 0 0.55rem;
+  font-size: 1rem;
+  letter-spacing: -0.01em;
+}
+.asked p { margin: 0; color: var(--muted-fg); font-size: 0.9375rem; line-height: 1.6; }
+/* A command is one word to the reader: breaking "docker compose pull"
+   across three lines makes it unreadable and uncopyable. */
+.asked-card code { white-space: nowrap; }
+
 .asked code, .install code, .thing code {
   font-family: var(--mono); font-size: 0.9em; color: var(--fg);
   background: var(--muted); padding: 0.1rem 0.35rem; border-radius: 0.25rem;
