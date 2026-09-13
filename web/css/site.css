@@ -180,6 +180,12 @@ p { max-width: 65ch; }
 }
 .top-link:hover, .admin-link:hover { color: var(--fg); background: var(--muted); }
 .admin-link.current { color: var(--on-accent-container); background: var(--accent-container); }
+/* A menu item that cannot work yet. It stays in place so the shape of
+   the product is visible from the first minute, but it is plainly not a
+   link, does not light up under the pointer, and says why when you rest
+   on it. */
+.admin-link.waiting { color: var(--muted-fg); opacity: 0.55; cursor: default; }
+.admin-link.waiting:hover { color: var(--muted-fg); background: none; }
 .logout-form { margin-left: 0.5rem; display: flex; }
 .admin-tag {
   font-size: 0.6875rem;

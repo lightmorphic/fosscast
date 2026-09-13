@@ -606,11 +606,24 @@ document.addEventListener('click', (e) => {
 // dropped is decoration; what carries information - page titles, the
 // in-page section rails, the demo notice - stays. Signing out belongs
 // to the shell as well: it owns the session the visitor thinks in.
-function adminPage({ title, body, active = '', authed = true, embedded = isEmbedded() }) {
+// Hosts, Episodes, Look and Stats all need a podcast to exist, and
+// before one does they redirect to the Podcast page. A menu item that
+// silently returns you to where you were reads as a menu that does
+// nothing, which is how Charlie found it. So until the podcast is made
+// they are drawn as plain text, out of the tab order, saying why when
+// you point at them.
+const NEEDS_PODCAST = new Set(['hosts', 'episodes', 'look', 'stats']);
+
+function adminPage({ title, body, active = '', authed = true, embedded = isEmbedded(), hasPodcast = true }) {
   const nav = authed && !embedded
     ? `<nav class="admin-nav">
         ${[['', 'Dashboard'], ['podcast', 'Podcast'], ['hosts', 'Hosts'], ['episodes', 'Episodes'], ['look', 'Look'], ['stats', 'Stats'], ['account', 'Account']]
-          .map(([slug, label]) => `<a class="admin-link${active === (slug || 'dashboard') || (active === '' && slug === '') ? ' current' : ''}" href="/admin${slug ? '/' + slug : ''}">${label}</a>`)
+          .map(([slug, label]) => {
+            if (!hasPodcast && NEEDS_PODCAST.has(slug)) {
+              return `<span class="admin-link waiting" aria-disabled="true" title="Create your podcast first">${label}</span>`;
+            }
+            return `<a class="admin-link${active === (slug || 'dashboard') || (active === '' && slug === '') ? ' current' : ''}" href="/admin${slug ? '/' + slug : ''}">${label}</a>`;
+          })
           .join('')}
         <button class="btn-icon theme-toggle" type="button" id="theme-toggle" title="Light or dark" aria-label="Switch between light and dark">
       <span class="icon-light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg></span>

@@ -30,6 +30,7 @@ module.exports = function create({ settings, shows, episodes, stats }) {
     return adminPage({
       title: 'Dashboard',
       active: 'dashboard',
+      hasPodcast: Boolean(show),
       body: `${hero}
       <section class="grid">
         <a class="panel stat" href="/admin/episodes"><span class="stat-n">${episodeList.length - drafts}</span><span>published episode${episodeList.length - drafts === 1 ? '' : 's'}</span></a>

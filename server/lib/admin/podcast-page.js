@@ -253,6 +253,7 @@ module.exports = function create({ episodes, settings }) {
     return adminPage({
       title: 'Create your podcast',
       active: 'podcast',
+      hasPodcast: false,
       body: `<section class="panel hero">
         <h1>Create your podcast</h1>
         <p class="lede">Give it a name and a description to begin. You can
