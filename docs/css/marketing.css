@@ -659,6 +659,13 @@ main:focus { outline: none; }
   display: flex; flex-wrap: wrap; gap: 0.75rem 2rem; align-items: baseline;
   justify-content: space-between; width: 100%; }
 .sub-foot p { margin: 0; font-size: 0.8125rem; color: var(--muted-fg); max-width: 62ch; }
+/* One quiet line saying who keeps this going. It is the same size and
+   colour as the legal text beside it on purpose: a fact in the footer,
+   not an advert. */
+.made-by { margin: 0; font-size: 0.8125rem; color: var(--muted-fg); }
+.made-by a { color: var(--muted-fg); text-decoration: underline; text-underline-offset: 2px; }
+.made-by a:hover { color: var(--fg); }
+
 .sub-foot-links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem; }
 .sub-foot-links a { font-size: 0.8125rem; color: var(--muted-fg); text-decoration: none; }
 .sub-foot-links a:hover { color: var(--fg); text-decoration: underline; }

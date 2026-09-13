@@ -1,8 +1,14 @@
 # FOSSCast
 
-Self-hosted podcast hosting. Free software under the GNU GPL v3, written
+Self-hosted podcast hosting. Free software under the GNU AGPL v3, written
 by Lightmorphic Ltd (company number 17423646, England and Wales).
 Source: https://github.com/lightmorphic/fosscast
+
+## Where it stands
+
+Version 0.1.0, a public beta. It is not ready to be relied on: data loss
+and breaking changes are possible, and nobody should put a real show on
+it yet. Releases are marked as pre-release on GitHub.
 
 ## What it is
 

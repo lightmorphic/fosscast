@@ -1,0 +1,1585 @@
+/* A copy of web/css/site.css, kept here because GitHub Pages serves this
+   folder and cannot reach into web/. The app ships the original; this one
+   dresses fosscast.org. Change both, or the site and the product drift
+   apart. */
+/* FOSSCast site styles. Lightmorphic house style, deep orange accent. */
+
+@font-face {
+  font-family: 'Manrope';
+  src: url('/fonts/Manrope.woff2') format('woff2');
+  font-weight: 200 800;
+  font-display: swap;
+}
+
+/* ---------- Core tokens ---------- */
+:root {
+  color-scheme: light dark;
+  --bg: #ffffff;  --fg: #09090b;
+  --panel: #ffffff;  --panel-border: rgba(24, 24, 40, 0.10);
+  --border: #e4e4e7;  --muted: #f4f4f5;  --muted-fg: #6f6f78;
+  --shadow-panel: 0 1px 2px rgba(24,24,40,.05), 0 8px 24px -16px rgba(24,24,40,.18);
+
+  --brand-navy: #111827;
+  --danger: #cc372d;   --danger-bg: #fef2f1;
+  --success: #38813a;  --success-bg: #f2f9f3;
+  --warning: #8f6c03;  --warning-bg: #fffbee;
+  --info: #1b74bc;     --info-bg: #f0f8fe;
+
+  --radius: 0.875rem;
+  --panel-radius: 1.375rem;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #09090b;  --fg: #fafafa;
+    --panel: #1b1d29;  --panel-border: rgba(255,255,255,.09);
+    --border: #27272a;  --muted: #1c1c1f;  --muted-fg: #a1a1aa;
+    --shadow-panel: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px -16px rgba(0,0,0,.6);
+    --danger: #f34236;   --danger-bg: #350f0c;
+    --success: #4bae4f;  --success-bg: #102611;
+    --warning: #ffc006;  --warning-bg: #382a01;
+    --info: #2295f1;     --info-bg: #072135;
+  }
+}
+
+:root[data-theme="light"] {
+  --bg: #ffffff;  --fg: #09090b;
+  --panel: #ffffff;  --panel-border: rgba(24, 24, 40, 0.10);
+  --border: #e4e4e7;  --muted: #f4f4f5;  --muted-fg: #6f6f78;
+  --shadow-panel: 0 1px 2px rgba(24,24,40,.05), 0 8px 24px -16px rgba(24,24,40,.18);
+  --danger: #cc372d;   --danger-bg: #fef2f1;
+  --success: #38813a;  --success-bg: #f2f9f3;
+  --warning: #8f6c03;  --warning-bg: #fffbee;
+  --info: #1b74bc;     --info-bg: #f0f8fe;
+}
+
+:root[data-theme="dark"] {
+  --bg: #09090b;  --fg: #fafafa;
+  --panel: #1b1d29;  --panel-border: rgba(255,255,255,.09);
+  --border: #27272a;  --muted: #1c1c1f;  --muted-fg: #a1a1aa;
+  --shadow-panel: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px -16px rgba(0,0,0,.6);
+  --danger: #f34236;   --danger-bg: #350f0c;
+  --success: #4bae4f;  --success-bg: #102611;
+  --warning: #ffc006;  --warning-bg: #382a01;
+  --info: #2295f1;     --info-bg: #072135;
+}
+
+/* ---------- Accent: deep orange, both themes ---------- */
+:root[data-accent="deep_orange"] {
+  /* Link text needs 4.5:1 against the page, which the accent itself does
+     not reach on white, so links get their own shade of it. */
+  --link-light: #c4400f; --link-dark: #ff8f68;
+  --accent-light: #ff5721; --accent-hover-light: #e04d1d;
+  --accent-container-light: #ffebe4; --on-accent-container-light: #61210d;
+  --accent-dark: #ff5721; --accent-hover-dark: #ff6b3c;
+  --accent-container-dark: #4d1a0a; --on-accent-container-dark: #ffb39b;
+  --on-accent: #471809;
+}
+:root[data-accent] {
+  --link: var(--link-light);
+  --accent: var(--accent-light);
+  --accent-hover: var(--accent-hover-light);
+  --accent-container: var(--accent-container-light);
+  --on-accent-container: var(--on-accent-container-light);
+}
+@media (prefers-color-scheme: dark) {
+  :root[data-accent] {
+    --link: var(--link-dark);
+    --accent: var(--accent-dark);
+    --accent-hover: var(--accent-hover-dark);
+    --accent-container: var(--accent-container-dark);
+    --on-accent-container: var(--on-accent-container-dark);
+  }
+}
+:root[data-theme="light"][data-accent] {
+  --link: var(--link-light);
+  --accent: var(--accent-light);
+  --accent-hover: var(--accent-hover-light);
+  --accent-container: var(--accent-container-light);
+  --on-accent-container: var(--on-accent-container-light);
+}
+:root[data-theme="dark"][data-accent] {
+  --link: var(--link-dark);
+  --accent: var(--accent-dark);
+  --accent-hover: var(--accent-hover-dark);
+  --accent-container: var(--accent-container-dark);
+  --on-accent-container: var(--on-accent-container-dark);
+}
+
+/* ---------- Base ---------- */
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--fg);
+  font-family: 'Manrope', system-ui, sans-serif;
+  line-height: 1.6;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Links take the show's own colour, not the browser's blue, and wear a
+   quiet underline set away from the text that fills in on hover. The
+   old default - blue with a hard underline through the descenders -
+   belonged to a different decade. */
+a {
+  color: var(--link);
+  text-decoration: underline;
+  text-decoration-thickness: 1px;
+  text-underline-offset: 0.22em;
+  text-decoration-color: color-mix(in srgb, currentColor 32%, transparent);
+  border-radius: 0.2rem;
+  transition: color 0.15s ease, text-decoration-color 0.15s ease;
+}
+/* Hover fills the underline in rather than changing the colour: the
+   text stays at its readable shade the whole time. */
+a:hover { text-decoration-color: currentColor; }
+/* Links that are already a control - buttons, cards, nav, anything with
+   its own box - say so by their shape and take no underline. */
+.btn-primary, .btn-secondary, .btn-icon, .sub-btn, .site-link, .admin-link,
+.host-card, .show-card, .episode-art-link, .powered-by, .swatch, .wordmark {
+  text-decoration: none;
+}
+a:focus-visible, button:focus-visible, input:focus-visible,
+textarea:focus-visible, select:focus-visible, [tabindex]:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+p { max-width: 65ch; }
+
+/* ---------- Header ---------- */
+.top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  max-width: 64rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem 1.5rem 0.5rem;
+}
+.wordmark {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  color: var(--fg);
+  text-decoration: none;
+}
+.wordmark .mark { width: 1.5rem; height: 1.5rem; color: var(--accent); }
+.top-nav, .admin-nav { display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap; }
+.top-link, .admin-link {
+  color: var(--muted-fg);
+  text-decoration: none;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  padding: 0.375rem 0.75rem;
+  border-radius: var(--radius);
+}
+.top-link:hover, .admin-link:hover { color: var(--fg); background: var(--muted); }
+.admin-link.current { color: var(--on-accent-container); background: var(--accent-container); }
+.logout-form { margin-left: 0.5rem; display: flex; }
+.admin-tag {
+  font-size: 0.6875rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--on-accent-container);
+  background: var(--accent-container);
+  border-radius: 999px;
+  padding: 0.125rem 0.5rem;
+  vertical-align: middle;
+}
+
+/* ---------- Layout rhythm: air between everything ---------- */
+.wrap {
+  max-width: 64rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1rem 1.5rem 3.5rem;
+  flex: 1;
+}
+.wrap > * + * { margin-top: 1.5rem; }
+
+.page-title {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  margin: 0.5rem 0 0;
+}
+.page-title + * { margin-top: 1rem; }
+
+/* Uneven two-column working layout: content leads, tools sit beside */
+.cols {
+  display: grid;
+  grid-template-columns: 3fr 2fr;
+  gap: 1.5rem;
+  align-items: start;
+}
+.cols > div > * + * { margin-top: 1.5rem; }
+@media (max-width: 56rem) {
+  .cols { grid-template-columns: 1fr; }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  gap: 1.5rem;
+}
+.grid .wide { grid-column: 1 / -1; }
+
+/* ---------- Panels ---------- */
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--shadow-panel);
+  padding: 1.5rem;
+}
+.panel h2 { margin: 0 0 0.75rem; font-size: 1.0625rem; font-weight: 600; }
+.panel > :last-child { margin-bottom: 0; }
+
+/* Cards never touch. Stacked panels keep the same standard gap as
+   everything else on the page, including inside a form: a form groups
+   fields for submitting, it is not a layout container, so without this
+   its panels would sit edge to edge. Grid containers space their own
+   children, so there the gap alone stands. */
+.panel + .panel { margin-top: 1.5rem; }
+.grid > .panel, .episodes > .panel, .host-grid > .panel, .host-rows > .panel { margin-top: 0; }
+
+.hero { padding: 2.5rem 2rem; }
+.hero h1 {
+  margin: 0.75rem 0 0.5rem;
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+}
+.lede { margin: 0; max-width: 42rem; color: var(--muted-fg); }
+
+.hint { color: var(--muted-fg); font-size: 0.8125rem; }
+code {
+  background: var(--muted);
+  border-radius: 0.375rem;
+  padding: 0.125rem 0.375rem;
+  font-size: 0.875em;
+  word-break: break-all;
+}
+.sr-only {
+  position: absolute;
+  width: 1px; height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Status pill (public hero) */
+.status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  background: var(--accent-container);
+  color: var(--on-accent-container);
+  font-size: 0.8125rem;
+  font-weight: 600;
+  padding: 0.25rem 0.75rem;
+  border-radius: 999px;
+}
+.status span { font-size: 0.5625rem; }
+
+.tag {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-fg);
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 0.0625rem 0.5rem;
+}
+
+/* ---------- Buttons ---------- */
+.btn-primary {
+  display: inline-block;
+  margin-top: 1.25rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--on-accent);
+  background: var(--accent);
+  border: none;
+  border-radius: var(--radius);
+  padding: 0.625rem 1.25rem;
+  cursor: pointer;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+
+/* The quieter half of the same button: same shape, same size, the
+   accent as an outline instead of a fill. There is one button shape on
+   the site and one colour behind it, whatever the Look page sets. */
+.btn-secondary {
+  display: inline-block;
+  margin-top: 1.25rem;
+  font: inherit;
+  font-weight: 600;
+  color: var(--accent);
+  background: none;
+  border: 1.5px solid var(--accent);
+  border-radius: var(--radius);
+  padding: 0.5625rem 1.1875rem;
+  cursor: pointer;
+}
+.btn-secondary:hover { background: var(--accent-container); color: var(--on-accent-container); }
+.btn-small { margin-top: 0; padding: 0.375rem 0.75rem; font-size: 0.875rem; }
+.btn-secondary.btn-small { padding: 0.3125rem 0.6875rem; }
+
+.btn-icon {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 2.25rem;
+  flex: none;
+  color: var(--muted-fg);
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  padding: 0;
+}
+.btn-icon:hover { color: var(--fg); }
+.btn-icon svg { width: 1.125rem; height: 1.125rem; }
+.btn-icon .icon-a, .btn-icon .icon-b { display: none; line-height: 0; }
+.btn-icon .icon-a { display: block; }
+.btn-icon.armed .icon-a, .btn-icon.copied .icon-a, .btn-icon.revealed .icon-a { display: none; }
+.btn-icon.armed .icon-b, .btn-icon.copied .icon-b, .btn-icon.revealed .icon-b { display: block; }
+.btn-icon.danger.armed {
+  color: #ffffff;
+  background: var(--danger);
+  border-color: var(--danger);
+}
+.btn-icon.copied { color: var(--success); }
+
+/* ---------- Forms ---------- */
+label {
+  display: block;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  margin: 1rem 0 0.375rem;
+}
+input, textarea, select {
+  display: block;
+  width: 100%;
+  box-sizing: border-box;
+  font: inherit;
+  color: var(--fg);
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.625rem 0.75rem;
+}
+textarea { min-height: 6rem; resize: vertical; }
+input[type="file"] { padding: 0.5rem; }
+.field-row { display: flex; gap: 1rem; flex-wrap: wrap; }
+.field-row > div { flex: 1; min-width: 8rem; }
+/* A setting that is on or off is drawn as a switch, whatever markup it
+   arrives in. The tick box is still the control underneath - it posts,
+   it autosaves, it works from a keyboard, a screen reader calls it a
+   checkbox - only the drawing changes. Done here as well as in the
+   markup so a checkbox added later cannot quietly look like the old
+   ones again. */
+.check-label {
+  display: flex; align-items: flex-start; gap: 0.65rem;
+  font-weight: 400; cursor: pointer;
+}
+.check-label > input[type="checkbox"] {
+  appearance: none; -webkit-appearance: none;
+  flex: none; position: relative; margin: 0.1rem 0 0; cursor: pointer;
+  width: 2.5rem; height: 1.375rem; border-radius: 999px;
+  background: color-mix(in srgb, var(--fg) 14%, transparent);
+  border: 1px solid var(--border);
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+.check-label > input[type="checkbox"]::after {
+  content: ""; position: absolute; top: 50%; left: 2px;
+  transform: translateY(-50%);
+  width: 1rem; height: 1rem; border-radius: 50%;
+  background: #fff; box-shadow: 0 1px 2px rgba(0, 0, 0, .3);
+  transition: left 0.15s ease;
+}
+.check-label > input[type="checkbox"]:checked {
+  background: var(--accent); border-color: var(--accent);
+}
+.check-label > input[type="checkbox"]:checked::after { left: calc(100% - 1rem - 2px); }
+.check-label > input[type="checkbox"]:focus-visible {
+  outline: 2px solid var(--accent); outline-offset: 2px;
+}
+.check { display: inline; width: auto; }
+.form-error {
+  color: var(--danger);
+  background: var(--danger-bg);
+  border-radius: var(--radius);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9375rem;
+}
+.form-error::before { content: "! "; font-weight: 700; }
+.form-ok {
+  color: var(--success);
+  background: var(--success-bg);
+  border-radius: var(--radius);
+  padding: 0.625rem 0.875rem;
+  font-size: 0.9375rem;
+}
+.form-ok::before { content: "\2713 "; font-weight: 700; }
+
+/* ---------- Tables ---------- */
+table { width: 100%; border-collapse: collapse; }
+th {
+  text-align: left;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-fg);
+  padding: 0.5rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+td { padding: 0.625rem 0.75rem; border-bottom: 1px solid var(--border); }
+tr:last-child td { border-bottom: none; }
+td.actions { text-align: right; width: 3rem; }
+td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+/* ---------- Stat tiles ---------- */
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  text-decoration: none;
+  color: var(--muted-fg);
+}
+.stat:hover { border-color: var(--accent); }
+.stat-n { font-size: 2rem; font-weight: 700; letter-spacing: -0.02em; color: var(--fg); }
+
+/* ---------- Public show pages ---------- */
+.show-card { display: block; text-decoration: none; color: var(--fg); }
+.show-card:hover { border-color: var(--accent); }
+.show-card h2 { margin: 0 0 0.5rem; font-size: 1.0625rem; font-weight: 600; }
+.show-card p { margin: 0 0 0.5rem; color: var(--muted-fg); font-size: 0.9375rem; }
+.episodes { display: grid; gap: 1.5rem; }
+/* Each episode: the square cover on the left, everything else on the right. */
+.episode { display: flex; gap: 1.5rem; align-items: flex-start; }
+.episode-art-link { flex: none; line-height: 0; }
+.episode-art {
+  width: 200px;
+  height: 200px;
+  display: block;
+  border-radius: var(--radius);
+  object-fit: cover;
+  border: 1px solid var(--panel-border);
+}
+.episode-body { flex: 1; min-width: 0; }
+.episode-body h2 { margin: 0 0 0.125rem; }
+.episode h2 { font-size: 1.0625rem; font-weight: 600; }
+.episode h2 a { color: inherit; text-decoration: none; }
+.episode h2 a:hover { color: var(--accent); }
+.episode video, .episode audio { width: 100%; margin-top: 0.75rem; border-radius: var(--radius); }
+.episode video { max-height: 26rem; background: #000; }
+@media (max-width: 40rem) {
+  .episode { flex-direction: column; }
+  .episode-art-link { width: 100%; }
+  .episode-art { width: 100%; height: auto; aspect-ratio: 1 / 1; }
+}
+.feed-line { font-size: 0.875rem; color: var(--muted-fg); }
+
+/* ---------- Key field ---------- */
+.key-field { display: flex; gap: 0.5rem; align-items: center; }
+.key-field input { flex: 1; font-family: ui-monospace, monospace; font-size: 0.875rem; }
+.inline-form { display: flex; margin: 0; }
+
+/* ---------- Stats chart ---------- */
+.stats-chart { width: 100%; height: auto; max-width: 30rem; display: block; }
+.stats-chart rect { fill: var(--accent); }
+
+/* ---------- Embeddable episode player ---------- */
+.embed-player { display: flex; gap: 1rem; align-items: center; padding: 1rem; }
+.embed-art { width: 5rem; height: 5rem; border-radius: var(--radius); object-fit: cover; flex: none; }
+.embed-meta { flex: 1; display: flex; flex-direction: column; gap: 0.25rem; min-width: 0; }
+.embed-meta audio, .embed-meta video { width: 100%; margin-top: 0.5rem; }
+
+/* ---------- Footer ---------- */
+.foot {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 2rem 1.5rem 2.5rem;
+  border-top: 1px solid var(--border);
+}
+.foot-line { font-size: 0.8125rem; color: var(--muted-fg); }
+
+.lightmorphic-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: fit-content;
+  background: #111827;
+  border: 1px solid rgba(255,255,255,.12);
+  border-radius: 999px;
+  padding: 8px 16px 8px 10px;
+  box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 4px 12px rgba(0,0,0,0.25);
+  text-decoration: none;
+  font-size: 0.82rem;
+  color: #9ca3af;
+  transition: background 150ms ease, border-color 150ms ease;
+}
+.lightmorphic-badge:hover { background: #1f2937; border-color: #9ca3af; }
+.lightmorphic-badge img { display: block; height: 25px; width: auto; }
+.lightmorphic-badge .external-link-icon { display: block; width: 12px; height: 12px; opacity: 0.6; color: #9ca3af; }
+.lightmorphic-badge .external-link-icon svg { width: 100%; height: 100%; }
+
+/* ---------- Demo instance banner ---------- */
+.demo-bar {
+  background: var(--accent-container);
+  color: var(--on-accent-container);
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-align: center;
+  padding: 0.5rem 1rem;
+}
+.demo-creds {
+  background: var(--muted);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+  font-size: 0.875rem;
+  margin: 0 0 1rem;
+}
+.demo-creds code { background: var(--panel); }
+
+/* ---------- Embedded: another shell owns the chrome ---------- */
+/* An embedding application draws its own navigation around the frame,
+   so the page starts closer to its content and keeps a quiet way out
+   of the session at the foot. */
+body.embedded .wrap { padding-top: 0.5rem; }
+.embedded-out { margin-top: 3rem; text-align: right; }
+.link-button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--muted-fg);
+  font: inherit;
+  font-size: 0.875rem;
+  text-decoration: underline;
+  cursor: pointer;
+}
+.link-button:hover { color: var(--fg); }
+
+
+/* ---------- Theme toggle ---------- */
+.theme-toggle .icon-dark { display: none; }
+.theme-toggle .icon-light { display: block; line-height: 0; }
+@media (prefers-color-scheme: dark) {
+  .theme-toggle .icon-light { display: none; }
+  .theme-toggle .icon-dark { display: block; line-height: 0; }
+}
+:root[data-theme="dark"] .theme-toggle .icon-light { display: none; }
+:root[data-theme="dark"] .theme-toggle .icon-dark { display: block; line-height: 0; }
+:root[data-theme="light"] .theme-toggle .icon-light { display: block; line-height: 0; }
+:root[data-theme="light"] .theme-toggle .icon-dark { display: none; }
+
+/* ---------- Show banner and artwork ---------- */
+/* The banner is one of the blocks in the column, so it takes the
+   column's width like every card: its own padding on top of the page's
+   made it 48px narrower than the cards under it. */
+.show-banner { margin: 0; }
+.show-banner video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 1;
+  object-fit: cover;
+  border-radius: var(--panel-radius);
+}
+/* Reduced motion is handled in script: pausing a video is not something
+   CSS can do, and animation-play-state here only ever looked like it
+   did. See stillBanner() in html.js. */
+.limits { margin: 0.5rem 0 0.75rem; }
+.limits li > span:first-child { color: var(--accent); }
+.show-banner img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 1;
+  object-fit: cover;
+  border-radius: var(--panel-radius);
+  border: 1px solid var(--panel-border);
+}
+@media (max-width: 40rem) {
+  .show-banner img { aspect-ratio: 3 / 1; }
+}
+
+.show-hero { display: flex; gap: 1.5rem; align-items: flex-start; }
+.show-hero-text { flex: 1; min-width: 0; }
+.show-art {
+  width: 10rem;
+  height: 10rem;
+  flex: none;
+  border-radius: var(--radius);
+  object-fit: cover;
+  border: 1px solid var(--panel-border);
+}
+@media (max-width: 40rem) {
+  .show-hero { flex-direction: column; gap: 1rem; }
+  .show-art { width: 7rem; height: 7rem; }
+}
+
+/* ---------- Single episode page (uses episode-head / episode-meta) ---------- */
+.episode-head { display: flex; gap: 1rem; align-items: center; margin-bottom: 0.75rem; }
+.episode-meta { flex: 1; min-width: 0; }
+.episode-meta h2 { margin: 0 0 0.125rem; }
+
+.art-preview {
+  display: block;
+  margin-top: 0.75rem;
+  width: 9rem;
+  height: 9rem;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+.banner-preview {
+  display: block;
+  margin-top: 0.75rem;
+  width: 100%;
+  aspect-ratio: 4 / 1;
+  object-fit: cover;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+/* ---------- Episode page ---------- */
+.episode-page h1 { margin: 0.25rem 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+.episode-art.large { width: 10rem; height: 10rem; }
+@media (max-width: 40rem) {
+  .episode-page .episode-head { flex-direction: column; align-items: flex-start; }
+  .episode-art.large { width: 7rem; height: 7rem; }
+}
+.chapters { margin: 0; padding-left: 1.25rem; display: grid; gap: 0.375rem; font-size: 0.9375rem; }
+.chapter-time { color: var(--muted-fg); font-variant-numeric: tabular-nums; margin-right: 0.5rem; }
+
+/* ---------- Subscribe buttons ---------- */
+.subscribe {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-top: 1.25rem;
+}
+.sub-label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted-fg);
+  margin-right: 0.25rem;
+}
+.sub-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font: inherit;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--fg);
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.375rem 0.875rem;
+  text-decoration: none;
+  cursor: pointer;
+}
+.sub-btn:hover { border-color: var(--accent); color: var(--accent); }
+.sub-btn svg { width: 1.05rem; height: 1.05rem; flex: none; }
+
+/* An offer standing beside the form rather than inside it: a podcaster
+   who keeps their audio anywhere else should be able to see at a glance
+   that this is not a step they have to take. */
+.aside-offer {
+  margin: 1.25rem 0 0.5rem;
+  padding: 0.85rem 1rem;
+  border: 1px dashed var(--border);
+  border-radius: var(--radius);
+  background: none;
+}
+.aside-offer p { margin: 0; max-width: none; }
+.aside-offer p:first-child { font-weight: 600; display: flex; align-items: center; gap: 0.75rem; flex-wrap: wrap; }
+.aside-offer .btn-secondary { margin-top: 0; }
+.aside-offer .hint { margin-top: 0.4rem; }
+
+/* A pop-up: the page keeps its place underneath, and what was asked for
+   sits in the middle of the screen with a way out at the top right. */
+.ia-back {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: grid;
+  place-items: center;
+  padding: 1.5rem;
+  background: rgba(9, 9, 11, 0.45);
+  backdrop-filter: blur(3px);
+}
+.ia-back[hidden] { display: none; }
+.ia-modal {
+  position: relative;
+  width: min(34rem, 100%);
+  max-height: 82vh;
+  overflow-y: auto;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: calc(var(--radius) * 2);
+  box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.35);
+  padding: 1.5rem 1.6rem 1.75rem;
+}
+.ia-modal h2 { margin: 0 2rem 0.35rem 0; font-size: 1.2rem; }
+.ia-x {
+  position: absolute;
+  top: 0.6rem;
+  right: 0.75rem;
+  font-size: 1.5rem;
+  line-height: 1;
+  color: var(--muted-fg);
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 0.25rem 0.4rem;
+}
+.ia-x:hover { color: var(--fg); }
+
+/* One recording to choose: its file name, and the address underneath so
+   nobody has to guess which one it is. The whole row is the button. */
+.ia-choice {
+  display: block;
+  width: 100%;
+  text-align: left;
+  font: inherit;
+  background: none;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.7rem 0.85rem;
+  margin-top: 0.6rem;
+  cursor: pointer;
+}
+.ia-choice:hover { border-color: var(--accent); }
+.ia-choice strong { display: block; font-size: 0.9375rem; }
+.ia-choice span {
+  display: block;
+  color: var(--muted-fg);
+  font-size: 0.78rem;
+  margin-top: 0.2rem;
+  word-break: break-all;
+}
+
+/* The embed snippet, with its copy button in the corner. */
+.embed-code { position: relative; margin: 0.75rem 0; }
+.embed-code pre {
+  margin: 0;
+  padding: 0.9rem 1rem;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  white-space: pre-wrap;
+  word-break: break-all;
+}
+.embed-copy { position: absolute; top: 0.5rem; right: 0.5rem; margin-top: 0; }
+
+/* A button that reads as a link, for a row of small actions. */
+.linkish {
+  font: inherit;
+  color: var(--accent);
+  background: none;
+  border: none;
+  padding: 0;
+  cursor: pointer;
+}
+.linkish:hover { text-decoration: underline; }
+
+/* A row in an archive.org list: what it is, when, and the button that
+   takes it. Same shape whether it is an item or a file inside one. */
+.ia-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.6rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.ia-item:last-child { border-bottom: none; }
+.ia-item strong { flex: 1; min-width: 0; font-size: 0.9375rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.ia-item .hint { flex: none; font-size: 0.8125rem; }
+.ia-item .btn-secondary { flex: none; margin-top: 0; }
+
+/* ---------- Feed check ---------- */
+/* Ten short ticks down the left of a full-width card left the right
+   two thirds empty. They flow into columns instead, as many as fit. */
+.checks {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.375rem 1.5rem;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+}
+/* A check that failed carries its remedy, so it wants a line to itself. */
+.checks li.check-bad { grid-column: 1 / -1; }
+/* The upload limits use the same marks but are sentences, not labels. */
+.limits { grid-template-columns: 1fr; }
+.checks li { display: flex; gap: 0.625rem; align-items: flex-start; font-size: 0.9375rem; }
+.checks li > span:first-child { font-weight: 700; flex: none; width: 1rem; text-align: center; }
+.check-ok > span:first-child { color: var(--success); }
+.check-bad > span:first-child { color: var(--warning); }
+.check-bad { color: var(--muted-fg); }
+
+/* ---------- Public pages: minimal, unbranded chrome ---------- */
+/* The show's site is theirs. Just a theme toggle up top, and a small
+   FOSSCast mark bottom-right linking home. */
+.top-minimal { justify-content: flex-end; }
+/* The footer every public page carries: whose software this is on the
+   left, who made it on the right, and the show's own line between them
+   when it has one. */
+.site-foot {
+  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  max-width: 64rem;
+  width: 100%;
+  margin: 0 auto;
+  padding: 1.5rem;
+}
+.foot-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--muted-fg);
+  text-decoration: none;
+}
+.foot-brand .mark { width: 1.25rem; height: 1.25rem; color: var(--accent); }
+.foot-brand:hover { color: var(--fg); }
+.site-foot .foot-own { flex: 1; text-align: left; min-width: 10rem; }
+.foot-lm { display: inline-flex; line-height: 0; opacity: 0.85; }
+.foot-lm:hover { opacity: 1; }
+/* Shown at the size it was drawn, 32px, so the animation stays crisp.
+   No rounding: the artwork has a transparent background, so there are
+   no corners to hide. */
+.foot-lm img { display: block; width: 2rem; height: 2rem; }
+@media (max-width: 34rem) {
+  .site-foot { justify-content: center; }
+  .site-foot .foot-own { order: 3; flex-basis: 100%; }
+}
+
+.foot-minimal {
+  flex-direction: row;
+  justify-content: flex-end;
+  align-items: center;
+  gap: 0;
+  padding: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.powered-by { display: inline-flex; line-height: 0; color: var(--muted-fg); }
+.powered-by:hover { color: var(--accent); }
+.powered-by svg { width: 1.4rem; height: 1.4rem; }
+
+/* ---------- Site menu ---------- */
+/* The show's own pages: home, hosts, and whatever comes next. */
+.top-nav { justify-content: space-between; }
+.site-nav { display: flex; gap: 0.25rem; flex-wrap: wrap; }
+.site-link {
+  padding: 0.4rem 0.75rem;
+  border-radius: 999px;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  color: var(--muted-fg);
+  text-decoration: none;
+}
+.site-link:hover { color: var(--fg); background: var(--muted); }
+.site-link.current { color: var(--accent); background: var(--muted); }
+
+/* ---------- Hosts (public) ---------- */
+.hosts-hero h1 { margin: 0 0 0.25rem; }
+.host-grid {
+  display: grid;
+  gap: 1.5rem;
+  /* auto-fit rather than auto-fill: two hosts share the row between
+     them instead of sitting in a third of it with an empty track
+     alongside. (The cap has to live on the card, not the track: a
+     minmax with a fixed maximum is measured at its maximum, which
+     collapses the whole grid to one column.) */
+  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+}
+.host-grid > .host-card { max-width: 34rem; }
+/* A single host, centred, rather than one card and a large hole. */
+.host-grid > .host-card:only-child { justify-self: center; }
+/* Every card lays out the same whatever the length of the write-up: the
+   photo and the name start at the top, so a two-line bio and a
+   six-line one still line up across a row. */
+.host-card {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-start;
+  text-decoration: none;
+  color: inherit;
+}
+.host-card:hover { border-color: var(--accent); }
+.host-photo {
+  width: 5.25rem;
+  height: 5.25rem;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--muted);
+}
+.host-photo-blank {
+  display: grid;
+  place-items: center;
+  font-weight: 700;
+  font-size: 1.25rem;
+  color: var(--muted-fg);
+}
+.host-photo.large { width: 8.5rem; height: 8.5rem; font-size: 2rem; }
+.host-card-text { display: grid; gap: 0.125rem; min-width: 0; }
+.host-name { font-weight: 600; }
+.host-role { color: var(--accent); font-size: 0.875rem; }
+/* Exactly four lines: a long write-up is trimmed to them and a short
+   one still reserves them, so a row of cards lines up whatever their
+   hosts had to say for themselves. */
+.host-snip {
+  color: var(--muted-fg);
+  font-size: 0.875rem;
+  display: -webkit-box;
+  -webkit-line-clamp: 4;
+  line-clamp: 4;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: calc(4 * 1.6em);
+}
+/* Who they are down one side, what they have to say filling the rest:
+   a column of text half the width of its own card looked like a
+   mistake, and the space beside it was doing nothing. */
+.host-page { display: grid; gap: 2rem; grid-template-columns: 15rem minmax(0, 1fr); align-items: start; }
+.host-side { display: grid; gap: 1rem; justify-items: start; position: sticky; top: 1.5rem; }
+.host-side-text { min-width: 0; }
+.host-side h1 { margin: 0.125rem 0; font-size: 1.5rem; font-weight: 700; letter-spacing: -0.02em; }
+.host-page .host-bio p { max-width: none; }
+@media (max-width: 52rem) {
+  .host-page { grid-template-columns: 1fr; gap: 1.25rem; }
+  .host-side { position: static; }
+}
+.host-bio p { margin: 0 0 0.875rem; }
+.host-bio > :last-child { margin-bottom: 0; }
+.host-more { margin-top: 2rem; display: grid; gap: 1rem; }
+.section-title { margin: 0; font-size: 1.0625rem; font-weight: 600; }
+
+
+/* ---------- Hosts (admin) ---------- */
+.host-rows { display: grid; gap: 1.5rem; }
+.host-row { display: flex; gap: 1rem; align-items: center; }
+.host-row-text { flex: 1; min-width: 0; }
+.host-row-text h2 { margin: 0 0 0.125rem; font-size: 1.0625rem; font-weight: 600; }
+.host-row-text h2 a { color: inherit; text-decoration: none; }
+.host-row-text h2 a:hover { color: var(--accent); }
+.host-row-snip { margin: 0.25rem 0 0; color: var(--muted-fg); font-size: 0.875rem; }
+.host-row-actions { display: flex; gap: 0.375rem; align-items: center; flex: none; }
+.host-thumb {
+  width: 3.5rem;
+  height: 3.5rem;
+  flex: none;
+  border-radius: 50%;
+  object-fit: cover;
+  background: var(--muted);
+}
+.host-thumb-blank { display: grid; place-items: center; font-weight: 700; color: var(--muted-fg); }
+.host-preview {
+  display: block;
+  width: 8rem;
+  height: 8rem;
+  border-radius: 50%;
+  object-fit: cover;
+  margin: 0.75rem 0;
+  background: var(--muted);
+}
+@media (max-width: 40rem) {
+  .host-row { flex-wrap: wrap; }
+  .host-row-actions { width: 100%; justify-content: flex-end; }
+}
+
+/* ---------- Funding services ---------- */
+/* The sign-up nudge beside a service's field, and the support row on
+   the show page: same buttons as "Listen on", one row down. */
+.hint-link {
+  margin-left: 0.5rem;
+  font-size: 0.8125rem;
+  font-weight: 400;
+  color: var(--muted-fg);
+}
+.hint-link:hover { color: var(--accent); }
+.support { margin-top: 0.75rem; }
+
+/* A page's own destructive action: small, out of the way, bottom right,
+   and it still takes the second click every delete here takes. */
+.page-actions { display: flex; justify-content: flex-end; }
+
+/* ---------- Look (admin) ---------- */
+/* Controls on the left, the real page previewed beside them. */
+.look-layout { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1fr); gap: 1.5rem; align-items: start; }
+.look-layout > form > .panel + .panel { margin-top: 1.5rem; }
+.look-preview { position: sticky; top: 1rem; }
+.preview-frame-wrap {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: var(--muted);
+  aspect-ratio: 4 / 5;
+}
+.preview-frame-wrap iframe { width: 100%; height: 100%; border: 0; display: block; }
+@media (max-width: 64rem) {
+  .look-layout { grid-template-columns: 1fr; }
+  .look-preview { position: static; }
+  .preview-frame-wrap { aspect-ratio: 4 / 3; }
+}
+
+.swatches { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-bottom: 1rem; }
+.swatch {
+  width: 2.25rem;
+  height: 2.25rem;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: var(--sw);
+  cursor: pointer;
+  padding: 0;
+  box-shadow: 0 0 0 1px var(--panel-border) inset;
+}
+.swatch:hover { transform: scale(1.06); }
+.swatch.current { border-color: var(--fg); box-shadow: 0 0 0 2px var(--panel); }
+input[type="color"] { width: 100%; height: 2.5rem; padding: 0.25rem; cursor: pointer; }
+input[type="range"] { width: 100%; accent-color: var(--accent); }
+
+/* A choice is a chip in a row, not a full-width slab. The radio itself
+   is taken out of the flow - the global `input { width: 100% }` would
+   otherwise stretch it across the card and shove the label sideways -
+   but it stays focusable, and the chip shows the focus ring. */
+.picks { display: flex; flex-wrap: wrap; gap: 0.375rem; }
+.pick {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.4rem 0.75rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  margin: 0;
+  position: relative;
+}
+.pick input[type="radio"] {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+  margin: 0;
+  padding: 0;
+}
+.pick:hover { border-color: var(--accent); }
+.pick.current { background: var(--accent-container); color: var(--on-accent-container); border-color: transparent; }
+.pick:focus-within { outline: 2px solid var(--accent); outline-offset: 2px; }
+.pick-hint { margin: 0.375rem 0 0; min-height: 1.1em; }
+.pick-hint:empty { display: none; }
+.group-label { margin: 1rem 0 0.375rem; font-size: 0.8125rem; font-weight: 600; color: var(--muted-fg); }
+.panel > .picks:first-of-type { margin-top: 0.25rem; }
+
+/* Small controls that belong on one line with their label. */
+.inline-fields { display: flex; align-items: center; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.75rem; }
+.inline-label { display: inline; margin: 0; font-size: 0.8125rem; font-weight: 600; color: var(--muted-fg); white-space: nowrap; }
+.inline-label b { font-variant-numeric: tabular-nums; color: var(--fg); }
+.hex-field { width: 7rem; font-family: ui-monospace, monospace; }
+.color-chip { width: 2.75rem; height: 2.25rem; padding: 0.2rem; border-radius: var(--radius); }
+.inline-range { width: auto; flex: 1; min-width: 6rem; }
+.slider-row { display: flex; align-items: center; gap: 0.75rem; margin-top: 0.75rem; }
+.slider-row .inline-label { width: 7.5rem; }
+
+/* The custom CSS box folds away until it is wanted. */
+details.panel > summary { cursor: pointer; list-style: none; }
+details.panel > summary::-webkit-details-marker { display: none; }
+details.panel > summary h2 { display: inline; }
+details.panel > summary::after { content: ' +'; color: var(--muted-fg); font-weight: 600; }
+details.panel[open] > summary::after { content: ' -'; }
+details.panel[open] > summary { margin-bottom: 0.75rem; }
+
+/* Nothing to save - the look saves itself - so this bar only says how
+   that is going, and offers the one button worth keeping: back to the
+   default. It sits at the bottom right, in reach however far the
+   column runs. */
+.save-bar {
+  position: sticky;
+  bottom: 0;
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  justify-content: flex-end;
+  padding: 0.625rem 0.75rem;
+  margin-top: 1.5rem;
+  background: color-mix(in srgb, var(--bg) 88%, transparent);
+  backdrop-filter: blur(8px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--panel-radius);
+}
+/* A bar that says nothing and holds nothing is a leftover box at the
+   foot of the page. It appears when there is something to report, or
+   when it carries a control of its own. */
+.save-bar:not(:has(button)):not(:has(.save-state:not(:empty))) {
+  display: none;
+}
+.save-state {
+  font-size: 0.8125rem;
+  color: var(--muted-fg);
+  transition: opacity 150ms ease;
+}
+.save-state.saved { color: var(--success); }
+.save-state.saved::before { content: '\2713\00a0'; }
+.save-state.failed { color: var(--danger); }
+
+.bg-preview { display: block; width: 100%; max-height: 9rem; object-fit: cover; border-radius: var(--radius); margin: 0.75rem 0; }
+#custom-css { font-family: ui-monospace, monospace; font-size: 0.8125rem; }
+
+/* ---------- Themed extras (public) ---------- */
+.tagline { margin: 0 0 0.5rem; font-size: 1.0625rem; font-weight: 500; color: var(--accent); }
+.foot-own { margin: 0; font-size: 0.8125rem; color: var(--muted-fg); }
+
+/* ---------- Listen, follow, support ---------- */
+/* One card, a column per thing a listener might do, and the feed
+   address along the bottom. Columns of equal width whatever their
+   contents, so the card reads as deliberate rather than as three rows
+   that happened to end where they ended. */
+.listen-card { padding: 1.5rem 1.75rem 1.25rem; }
+.listen-groups {
+  display: grid;
+  gap: 1.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(15rem, 1fr));
+}
+.listen-groups[data-groups="1"] { grid-template-columns: 1fr; }
+.listen-group + .listen-group { position: relative; }
+/* A hairline in the gap between columns - never a border, which would
+   shift the buttons. It appears only once the card is wide enough for
+   every group to share one row: with the columns wrapped, a divider
+   ends up floating at the left of whichever group starts the next one. */
+.listen-group + .listen-group::before {
+  content: '';
+  position: absolute;
+  left: -0.875rem;
+  top: 0.125rem;
+  bottom: 0.125rem;
+  width: 1px;
+  background: var(--border);
+  display: none;
+}
+@media (min-width: 60rem) {
+  .listen-groups[data-groups="3"] .listen-group + .listen-group::before { display: block; }
+}
+@media (min-width: 44rem) {
+  .listen-groups[data-groups="2"] .listen-group + .listen-group::before { display: block; }
+}
+.listen-title {
+  margin: 0 0 0.75rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+}
+.sub-btns { display: flex; flex-wrap: wrap; gap: 0.5rem; }
+
+.feed-row {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-top: 1.5rem;
+  padding-top: 1.125rem;
+  border-top: 1px solid var(--border);
+}
+.feed-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+}
+.feed-label svg { width: 0.875rem; height: 0.875rem; }
+.feed-url {
+  flex: 1;
+  min-width: 12rem;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 0.45rem 0.7rem;
+  font-size: 0.8125rem;
+  color: var(--muted-fg);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.feed-row .btn-small { flex: none; }
+.btn-small { font-size: 0.8125rem; padding: 0.4rem 0.9rem; }
+@media (max-width: 40rem) {
+  .listen-card { padding: 1.25rem; }
+  .feed-url { width: 100%; }
+}
+
+/* ---------- Section rail ---------- */
+/* The long admin pages - the podcast details, the look - carry a rail
+   of their own sections. It sits just off the right edge of the content
+   column rather than out at the window edge, so it reads as belonging
+   to the cards beside it; the script places it and hides it when the
+   window is too narrow to hold it there. */
+.section-rail {
+  display: none;
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 30;
+  gap: 0.125rem;
+  max-height: 80vh;
+  overflow-y: auto;
+  padding: 0.5rem;
+  background: color-mix(in srgb, var(--panel) 88%, transparent);
+  backdrop-filter: blur(10px);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--shadow-panel);
+}
+.section-rail.shown { display: grid; }
+.section-rail a {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.3rem 0.6rem;
+  border-radius: 999px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--muted-fg);
+  text-decoration: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.section-rail a span {
+  width: 0.375rem;
+  height: 0.375rem;
+  border-radius: 50%;
+  background: currentColor;
+  opacity: 0.35;
+  flex: none;
+}
+.section-rail a:hover { color: var(--fg); background: var(--muted); }
+.section-rail a.current { color: var(--on-accent-container); background: var(--accent-container); }
+.section-rail a.current span { opacity: 1; background: var(--accent); }
+
+/* A jump lands with the heading clear of the top of the window. */
+.panel[id] { scroll-margin-top: 1.5rem; }
+
+/* ---------- Stats ---------- */
+/* A categorical palette that holds up on both backgrounds: charts are
+   drawn as SVG on the server and take their colours from here, so they
+   follow the theme like everything else. */
+:root {
+  --c1: #ff7a45; --c2: #3b82f6; --c3: #10b981; --c4: #a855f7;
+  --c5: #f59e0b; --c6: #06b6d4; --c7: #ec4899; --c8: #84cc16;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --c1: #ff9066; --c2: #60a5fa; --c3: #34d399; --c4: #c084fc;
+    --c5: #fbbf24; --c6: #22d3ee; --c7: #f472b6; --c8: #a3e635;
+  }
+}
+:root[data-theme="dark"] {
+  --c1: #ff9066; --c2: #60a5fa; --c3: #34d399; --c4: #c084fc;
+  --c5: #fbbf24; --c6: #22d3ee; --c7: #f472b6; --c8: #a3e635;
+}
+
+.tiles {
+  display: grid;
+  gap: 0.75rem;
+  grid-template-columns: repeat(auto-fit, minmax(9.5rem, 1fr));
+}
+.tile {
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--shadow-panel);
+  padding: 1rem 1.125rem;
+  display: grid;
+  gap: 0.125rem;
+}
+.tile-n { font-size: 1.75rem; font-weight: 700; letter-spacing: -0.02em; line-height: 1.1; }
+.tile-label { font-size: 0.8125rem; color: var(--muted-fg); }
+.tile-note { font-size: 0.75rem; color: var(--muted-fg); }
+.tile-note.up { color: var(--success); }
+.tile-note.down { color: var(--danger); }
+
+.cols-2 { display: grid; gap: 1.5rem; grid-template-columns: repeat(auto-fit, minmax(20rem, 1fr)); }
+.cols-2 > .panel { margin-top: 0; }
+
+.chart { width: 100%; display: block; overflow: visible; }
+.chart-base { stroke: var(--border); stroke-width: 0.4; vector-effect: non-scaling-stroke; }
+.chart-tick { font-size: 3px; fill: var(--muted-fg); text-anchor: middle; }
+.chart-value { font-size: 3.2px; fill: var(--fg); font-weight: 600; text-anchor: middle; }
+/* These charts stretch to whatever width they are given, which is what
+   makes the bars fill the card - and what flattened every label and
+   figure on them, worse the wider the card got. The stretch is undone
+   for the text alone, by the factor the script measures. */
+.chart text { transform-box: fill-box; transform-origin: center; transform: scaleX(var(--tx, 1)); }
+/* The same stretch turns a 1-unit corner radius into a lozenge. Narrow
+   the horizontal radius by the same factor so a corner is a corner. */
+.chart rect { rx: calc(1px * var(--tx, 1)); ry: 1px; }
+.heatmap { height: 150px; }
+
+.donut-wrap { display: flex; gap: 1.25rem; align-items: center; flex-wrap: wrap; }
+.donut { width: 8.5rem; height: 8.5rem; flex: none; transform: rotate(-90deg); }
+.donut-seg { transition: stroke-width 120ms ease; }
+.donut-seg:hover { stroke-width: 8.5; }
+.donut-total {
+  font-size: 6px; font-weight: 700; fill: var(--fg);
+  text-anchor: middle; transform: rotate(90deg); transform-origin: 21px 21px;
+}
+.chart-legend { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.3rem; flex: 1; min-width: 11rem; }
+.chart-legend li { display: flex; align-items: center; gap: 0.5rem; font-size: 0.8125rem; }
+.chart-legend .key { width: 0.625rem; height: 0.625rem; border-radius: 0.2rem; flex: none; }
+.chart-legend .key-label { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.chart-legend b { font-variant-numeric: tabular-nums; }
+.chart-legend .key-count { color: var(--muted-fg); font-variant-numeric: tabular-nums; min-width: 2.5rem; text-align: right; }
+
+.hbars { list-style: none; margin: 0; padding: 0; display: grid; gap: 0.5rem; }
+.hbars li { display: grid; grid-template-columns: 8rem 1fr 3rem; gap: 0.75rem; align-items: center; font-size: 0.875rem; }
+.hbar-label { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--muted-fg); }
+.hbar-track { background: var(--muted); border-radius: 999px; height: 0.75rem; overflow: hidden; }
+.hbar-fill { display: block; height: 100%; border-radius: 999px; }
+.hbars b { text-align: right; font-variant-numeric: tabular-nums; }
+@media (max-width: 34rem) {
+  .hbars li { grid-template-columns: 6rem 1fr 2.5rem; gap: 0.5rem; font-size: 0.8125rem; }
+}
+
+.table-scroll { overflow-x: auto; }
+td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+
+/* A card can hold more than one thing - artwork, then a banner, then a
+   banner video - and a rule between them says where one ends and the
+   next begins without needing another card. */
+.subsection + .subsection {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+}
+.subsection > label:first-child,
+.subsection > .group-label:first-child { margin-top: 0; }
+
+/* A recipe folded into a card: shown when wanted, out of the way when
+   not, and numbered because it is a sequence. */
+/* Clear of the limits list above it: the summary is a heading for the
+   thing you open, not the last line of the list. */
+.recipe { margin: 1.5rem 0 1rem; }
+.recipe > summary {
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--link);
+  list-style: none;
+}
+.recipe > summary::-webkit-details-marker { display: none; }
+.recipe > summary::before { content: '+ '; font-weight: 700; }
+.recipe[open] > summary::before { content: '\2212 '; }
+.steps {
+  margin: 0.75rem 0 0.5rem;
+  padding-left: 1.25rem;
+  display: grid;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: var(--muted-fg);
+}
+.steps b { color: var(--fg); font-weight: 600; }
+.recipe code { display: inline-block; margin-top: 0.25rem; white-space: pre-wrap; }
+
+/* ---------- Choosing what the banner looks at ---------- */
+/* The clip as it is, with the banner's own shape drawn over it in red.
+   Whatever is inside the box is what the strip will show. */
+/* The same width as the strip underneath it: judging a crop against a
+   preview of a different size is guesswork, and the two sitting flush
+   makes the red box read as what it is - a window onto the picture. */
+.focus-picker {
+  position: relative;
+  display: block;
+  width: 100%;
+  margin: 0.75rem 0;
+  line-height: 0;
+  border-radius: var(--radius);
+  overflow: hidden;
+  background: #000;
+}
+.focus-picker video { display: block; width: 100%; height: auto; }
+.focus-box {
+  position: absolute;
+  top: 0;
+  left: 0;
+  box-sizing: border-box;
+  border: 2px solid #ff3b30;
+  border-radius: 2px;
+  cursor: grab;
+  touch-action: none;
+  /* Everything outside the box is dimmed by an enormous shadow, so the
+     framing reads at a glance rather than needing to be worked out. */
+  box-shadow: 0 0 0 9999px rgba(0, 0, 0, 0.55);
+}
+.focus-box::after {
+  content: 'Banner';
+  position: absolute;
+  top: 0.25rem;
+  left: 0.4rem;
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #fff;
+  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+  line-height: 1.2;
+}
+.focus-box:focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
+.dragging .focus-box { cursor: grabbing; }
+.locked-x.locked-y .focus-box { cursor: default; }
+
+.focus-result {
+  border-radius: var(--radius);
+  overflow: hidden;
+  margin: 0.5rem 0 0.75rem;
+  background: var(--muted);
+}
+.focus-result video {
+  display: block;
+  width: 100%;
+  aspect-ratio: 4 / 1;
+  object-fit: cover;
+}
+
+/* A refused upload says what to change about the file. That is worth
+   reading, so it does not get the same grey as a progress line. */
+.upload-failed {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.625rem;
+  margin: 0.625rem 0;
+  padding: 0.75rem 0.875rem;
+  font-size: 0.875rem;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--danger);
+  background: var(--danger-bg);
+  border: 1px solid color-mix(in srgb, var(--danger) 40%, transparent);
+  border-radius: var(--radius);
+}
+.upload-failed-icon { flex: none; line-height: 0; margin-top: 0.05rem; }
+.upload-failed-icon svg { width: 1.125rem; height: 1.125rem; }
+
+/* ---------- A switch ---------- */
+/* A checkbox underneath, so it submits, autosaves and reaches the
+   keyboard exactly as a checkbox does. The difference is that a switch
+   reads as a setting that is on or off right now, which is what this
+   kind of choice is - not a box you tick on the way to pressing Save. */
+.switch-label {
+  position: relative;
+  display: flex; align-items: center; gap: 0.7rem;
+  font-weight: 500; margin: 1rem 0 0.25rem; cursor: pointer;
+}
+.switch-input {
+  position: absolute; left: 0; top: 50%; transform: translateY(-50%);
+  width: 2.6rem; height: 1.5rem; margin: 0; opacity: 0; z-index: 1; cursor: pointer;
+}
+.switch {
+  flex: none; width: 2.6rem; height: 1.5rem; border-radius: 999px;
+  background: var(--border); position: relative;
+  transition: background .15s ease;
+}
+.switch::after {
+  content: ''; position: absolute; top: 0.1875rem; left: 0.1875rem;
+  width: 1.125rem; height: 1.125rem; border-radius: 50%;
+  background: var(--bg); transition: transform .15s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,.25);
+}
+.switch-input:checked + .switch { background: var(--accent); }
+.switch-input:checked + .switch::after { transform: translateX(1.1rem); }
+.switch-input:focus-visible + .switch { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* ---------- The transcript panel ---------- */
+#transcriptText { min-height: 18rem; resize: vertical; line-height: 1.7; }
+.transcript-save { min-height: 1.4rem; font-size: 0.875rem; margin: 0.5rem 0 0; }
+#transcribe-frame:empty { display: none; }
+.transcribe-frame {
+  display: block; width: 100%; height: 30rem; margin-top: 1rem;
+  border: 1px solid var(--border); border-radius: var(--radius);
+}
+
+/* ---------- A transcript on the episode's own page ---------- */
+.transcript-body { max-height: 40rem; overflow-y: auto; }
+.transcript-body p { margin: 0 0 0.6rem; }
+.transcript-time {
+  color: var(--muted-fg); font-variant-numeric: tabular-nums;
+  font-size: 0.8125rem; margin-right: 0.4rem;
+}
+
+/* ---------- Settings tabs: one page, one decision at a time ---------- */
+.tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.25rem;
+  margin: 1.25rem 0 0;
+  border-bottom: 1px solid var(--border);
+  padding-bottom: 0.5rem;
+}
+.tab {
+  padding: 0.45rem 0.85rem;
+  border-radius: var(--radius);
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--muted-fg);
+  text-decoration: none;
+}
+.tab:hover { color: var(--fg); background: var(--muted); }
+.tab.current { color: var(--on-accent-container); background: var(--accent-container); }
+
+/* A form wide enough to use the room it is given: what the episode is
+   on one side, where its audio and artwork come from on the other. */
+.form-cols {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0 1.75rem;
+  align-items: start;
+}
+@media (max-width: 56rem) {
+  .form-cols { grid-template-columns: minmax(0, 1fr); }
+}
+
+/* The episode list is read by its pictures as much as its titles. */
+td.art-cell { width: 1%; padding-right: 0.25rem; }
+.row-art {
+  display: block; width: 3rem; height: 3rem;
+  border-radius: 0.5rem; object-fit: cover;
+}
+.row-art-none { background: var(--muted); }

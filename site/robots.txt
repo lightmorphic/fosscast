@@ -1,5 +1,0 @@
-# Everything here is meant to be read, by people and by machines alike.
-User-agent: *
-Allow: /
-
-Sitemap: https://fosscast.org/sitemap.xml

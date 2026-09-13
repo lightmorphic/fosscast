@@ -1,0 +1,12 @@
+# Everything here is meant to be read, by people and by machines alike.
+# The markdown files beside the site are notes for people working on
+# FOSSCast, not pages, so they are kept out of search results.
+User-agent: *
+Allow: /
+Disallow: /ARCHITECTURE.md
+Disallow: /ROADMAP.md
+Disallow: /archive-org.md
+Disallow: /live-handover.md
+Disallow: /studio-integration.md
+
+Sitemap: https://fosscast.org/sitemap.xml
