@@ -8,10 +8,10 @@ pages, its stylesheet and its icons is Lightmorphic's own work, written
 for this project. No code has been merged from anyone outside the
 company, and `CONTRIBUTING.md` explains why that is deliberate.
 
-The project is released to the public under the GNU General Public
-Licence v3 (`LICENSE`). Because Lightmorphic owns the copyright in the
-whole of it, Lightmorphic can also release the same code under other
-terms, and does: the hosted service at
+The project is released to the public under the GNU Affero General
+Public Licence v3 (`LICENSE`). Because Lightmorphic owns the copyright
+in the whole of it, Lightmorphic can also release the same code under
+other terms, and does: the hosted service at
 [castmorphic.com](https://castmorphic.com) runs it. That is the owner's
 right over its own work. It takes nothing away from the AGPL grant you
 have here, which is permanent and cannot be withdrawn.

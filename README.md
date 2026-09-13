@@ -11,7 +11,7 @@
 > upload.
 >
 > Releases are marked as pre-release on GitHub. The current version is
-> `1.0.0-beta.1`.
+> `0.1.0`.
 
 # FOSSCast
 
