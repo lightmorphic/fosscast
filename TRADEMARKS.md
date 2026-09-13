@@ -12,5 +12,5 @@ Plainly: fork it, change it, host it, sell support for it, all under the
 licence. Call your version something else. Saying "based on FOSSCast" is
 fine and true; calling it FOSSCast is not.
 
-Other names in this repository (Manrope, Node.js, Alpine, ffmpeg, Caddy
-and the rest listed in NOTICE.md) belong to their own owners.
+Other names in this repository (Manrope, Node.js, Alpine, Caddy and the
+rest listed in NOTICE.md) belong to their own owners.

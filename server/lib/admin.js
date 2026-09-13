@@ -30,7 +30,7 @@ const MEDIA_UPLOADS = !/^(0|off|false|no)$/i.test((process.env.MEDIA_UPLOADS || 
 const ARCHIVE_HELP = (process.env.HELP_ARCHIVE_URL || '').trim()
   || 'https://github.com/lightmorphic/fosscast/blob/main/docs/archive-org.md';
 const feedAliases = require('./feedaliases');
-const { probeDuration, ensureWebImage, typeFor } = require('./media');
+const { readDuration, fetchDuration, typeFor } = require('./media');
 const importer = require('./import');
 const { sendMail, configured: mailConfigured } = require('./mailer');
 const { APPS, SUPPORT, SOCIAL, showPage, prefixed } = require('./public');
@@ -44,7 +44,8 @@ const MAX_SHOWS = 1;
 
 // Host photos are shown at 140px on the cards and 200px on a host's own
 // page, so a 640px web copy covers retina screens and keeps the hosts
-// page light even with twenty faces on it.
+// page light even with twenty faces on it. The browser makes the copy
+// while the picture is being chosen, so the box does no image work.
 const HOST_PHOTO_SIZE = 640;
 const MAX_HOSTS = 40;
 
@@ -53,6 +54,23 @@ const MAX_HOSTS = 40;
 // or published, and there is nothing for anyone to spoil for the next
 // visitor.
 const DEMO = process.env.DEMO_MODE === '1';
+
+// A length on screen is minutes and seconds; stored, it is seconds.
+// Empty either way means nobody knows yet.
+function formatDuration(seconds) {
+  const n = Number(seconds);
+  if (!Number.isFinite(n) || n <= 0) return '';
+  const parts = [Math.floor(n / 3600), Math.floor((n % 3600) / 60), Math.round(n % 60)];
+  if (!parts[0]) parts.shift();
+  return parts.map((v, i) => (i ? String(v).padStart(2, '0') : String(v))).join(':');
+}
+
+function parseDuration(text) {
+  const parts = String(text || '').trim().split(':').map((v) => Number(v));
+  if (!parts.length || parts.some((v) => !Number.isFinite(v) || v < 0)) return null;
+  const seconds = parts.reduce((total, v) => total * 60 + v, 0);
+  return seconds > 0 ? Math.round(seconds) : null;
+}
 
 // "HH:MM:SS Title" or "MM:SS Title", one per line -> chapter objects.
 function parseChapters(text) {
@@ -474,6 +492,8 @@ function createAdminRouter(ctx) {
 
   // Fill in an episode's file size and duration, in the background:
   // the feed wants both and neither is worth making a save wait for.
+  // An MP3 says how long it is in its own frames, so only the head of
+  // the file is ever read. A length typed in by hand is left alone.
   async function measure(episodeId) {
     const list = episodes();
     const episode = list.find((e) => e.id === episodeId);
@@ -482,60 +502,17 @@ function createAdminRouter(ctx) {
       if (episode.mediaUrl.startsWith('/media/')) {
         const file = path.join(dataDir, decodeURIComponent(episode.mediaUrl.slice(1)));
         episode.bytes = fs.statSync(file).size;
-        episode.duration = await probeDuration(file);
+        if (!episode.duration) episode.duration = await readDuration(file);
       } else {
         if (!episode.bytes) {
           const res = await fetch(episode.mediaUrl, { method: 'HEAD', signal: AbortSignal.timeout(10000) });
           episode.bytes = Number(res.headers.get('content-length')) || 0;
         }
-        // Directories want a duration, and ffprobe reads a remote file
-        // without downloading all of it.
-        if (!episode.duration) episode.duration = await probeDuration(episode.mediaUrl);
+        if (!episode.duration) episode.duration = await fetchDuration(episode.mediaUrl);
       }
       store.save('episodes', list);
     } catch { /* sizes stay unknown */ }
   }
-  // Make sure every uploaded image has a small, fast web copy, and record
-  // its path on the show/episode. Runs at startup (to catch images that
-  // were uploaded before this existed) and after any image is saved.
-  async function refreshWebImages() {
-    const showList = shows();
-    let showsChanged = false;
-    for (const show of showList) {
-      // Artwork is shown at 160px and lands in directories at full size,
-      // so 1024 is a sensible copy. The banner is drawn 976 wide and is
-      // decoration: a copy at exactly that size is all it can ever show.
-      for (const [field, cap, suffix] of [['artwork', 1024, 'web'], ['banner', 976, 'strip']]) {
-        if (!show[field]) { if (show[`${field}Web`]) { delete show[`${field}Web`]; showsChanged = true; } continue; }
-        const web = await ensureWebImage(dataDir, show[field], cap, suffix);
-        if (web && show[`${field}Web`] !== web) { show[`${field}Web`] = web; showsChanged = true; }
-      }
-      // A background image covers the whole screen, so its web copy is
-      // the largest of the lot.
-      if (show.theme && show.theme.bgImage) {
-        const web = await ensureWebImage(dataDir, show.theme.bgImage, 1920);
-        if (web && show.theme.bgImageWeb !== web) { show.theme.bgImageWeb = web; showsChanged = true; }
-      }
-      // A host photo is shown at a few hundred pixels at most, so its
-      // web copy is capped smaller than cover art.
-      for (const host of show.hosts || []) {
-        if (!host.photo) { if (host.photoWeb) { delete host.photoWeb; showsChanged = true; } continue; }
-        const web = await ensureWebImage(dataDir, host.photo, HOST_PHOTO_SIZE);
-        if (web && host.photoWeb !== web) { host.photoWeb = web; showsChanged = true; }
-      }
-    }
-    if (showsChanged) store.save('shows', showList);
-
-    const episodeList = episodes();
-    let epChanged = false;
-    for (const ep of episodeList) {
-      if (!ep.artwork) { if (ep.artworkWeb) { delete ep.artworkWeb; epChanged = true; } continue; }
-      const web = await ensureWebImage(dataDir, ep.artwork);
-      if (web && ep.artworkWeb !== web) { ep.artworkWeb = web; epChanged = true; }
-    }
-    if (epChanged) store.save('episodes', episodeList);
-  }
-
   const limiter = new auth.RateLimiter();
 
   function settings() {
@@ -915,9 +892,10 @@ function createAdminRouter(ctx) {
       <p class="hint">A square photo works best. Anything from 400x400 up is
       plenty: it is shrunk to a fast ${HOST_PHOTO_SIZE}px copy for the site,
       and the file you upload is kept as it is.</p>
-      <input id="${prefix}photo" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="${prefix}photo-url" data-status="${prefix}photo-status" data-preview="${prefix}photo-img">
+      <input id="${prefix}photo" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="${prefix}photo-url" data-status="${prefix}photo-status" data-preview="${prefix}photo-img" data-web="${HOST_PHOTO_SIZE}" data-web-target="${prefix}photo-web">
       <p class="hint" id="${prefix}photo-status">${photo ? 'Uploaded.' : 'None yet, so the card shows their initials.'}</p>
       <input type="hidden" id="${prefix}photo-url" name="photo" value="${esc(host.photo || '')}">
+      <input type="hidden" id="${prefix}photo-web" name="photoWeb" value="${esc(host.photoWeb || '')}">
       <img class="host-preview" id="${prefix}photo-img" alt="" src="${esc(photo)}"${photo ? '' : ' style="display:none"'}>
       <label for="${prefix}bio">About them</label>
       <p class="hint">This is the write-up on their page. A blank line
@@ -937,6 +915,9 @@ function createAdminRouter(ctx) {
     const photo = String(form.get('photo') || '').trim();
     if (/^\/media\/[^/]+\/[^/]+$/.test(photo)) host.photo = photo;
     else if (!photo) { host.photo = ''; delete host.photoWeb; }
+    const photoWeb = String(form.get('photoWeb') || '').trim();
+    if (host.photo && /^\/media\/[^/]+\/[^/]+$/.test(photoWeb)) host.photoWeb = photoWeb;
+    else if (!host.photo) delete host.photoWeb;
     host.slug = uniqueHostSlug(host.name, show, host.id);
     return host;
   }
@@ -1150,11 +1131,13 @@ function createAdminRouter(ctx) {
           <div class="subsection">
           <label for="sart">Podcast artwork</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels (Apple
-          accepts 1400 x 1400 upwards). JPG or PNG. The server makes a small
-          fast copy for the website by itself.</p>
-          <input id="sart" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="artwork" data-status="art-status" data-preview="art-preview-img">
+          accepts 1400 x 1400 upwards). JPG or PNG. Your browser makes the
+          small fast copy the website uses; the file you choose is kept as
+          it is for the directories.</p>
+          <input id="sart" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="artwork" data-status="art-status" data-preview="art-preview-img" data-web="1024" data-web-target="artworkWeb">
           <p class="hint" id="art-status">${show.artwork ? 'Uploaded.' : 'None yet. Directories will not list a show without it.'}</p>
           <input type="hidden" id="artwork" name="artwork" value="${esc(show.artwork || '')}">
+          <input type="hidden" id="artworkWeb" name="artworkWeb" value="${esc(show.artworkWeb || '')}">
           <img class="art-preview" id="art-preview-img" alt="" src="${show.artwork ? esc(show.artworkWeb || show.artwork) : ''}"${show.artwork ? '' : ' style="display:none"'}>
           </div>
 
@@ -1162,13 +1145,14 @@ function createAdminRouter(ctx) {
           <label for="sbanner">Website banner</label>
           <p class="hint">The strip across the top of your site, drawn
           <strong>976 x 244</strong> (4:1) &mdash; make it that and it is
-          exactly right. Anything bigger is fine too: the server shrinks
-          it to 976 for the website and keeps your original for the
-          directories. On a phone the strip goes 3:1 and takes the sides
-          off, so keep anything that matters near the middle.</p>
-          <input id="sbanner" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="banner" data-status="banner-status" data-preview="banner-preview-img">
+          exactly right. Anything bigger is fine too: your browser shrinks
+          a copy to 976 for the website and the file you chose is kept as
+          it is. On a phone the strip goes 3:1 and takes the sides off, so
+          keep anything that matters near the middle.</p>
+          <input id="sbanner" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="banner" data-status="banner-status" data-preview="banner-preview-img" data-web="976" data-web-target="bannerWeb">
           <p class="hint" id="banner-status">${show.banner ? 'Uploaded.' : 'None yet, so the page starts at the title.'}</p>
           <input type="hidden" id="banner" name="banner" value="${esc(show.banner || '')}">
+          <input type="hidden" id="bannerWeb" name="bannerWeb" value="${esc(show.bannerWeb || '')}">
           <img class="banner-preview" id="banner-preview-img" alt="" src="${show.banner ? esc(show.bannerWeb || show.banner) : ''}"${show.banner ? '' : ' style="display:none"'}>
 
           </div>
@@ -1427,6 +1411,10 @@ function createAdminRouter(ctx) {
           </div>
           <label for="mediaUrl">Media URL</label>
           <input id="mediaUrl" name="mediaUrl" maxlength="1000" value="${esc(episode.mediaUrl)}">
+          <label for="epDuration">Length (minutes:seconds)</label>
+          <p class="hint">Read from an MP3 by itself. Fill it in for any
+          other kind of file: the directories want a length.</p>
+          <input id="epDuration" name="duration" maxlength="9" value="${esc(formatDuration(episode.duration))}" placeholder="42:30">
           ${archiveReady() ? `<aside class="aside-offer">
             <p>Are you using archive.org?
             <button class="btn-secondary btn-small" type="button" id="ia-pick">Show my last five</button></p>
@@ -1438,9 +1426,10 @@ function createAdminRouter(ctx) {
           <label for="epArt">Episode cover art (optional)</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels. Empty
           means the podcast's artwork is used.</p>
-          <input id="epArt" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="epArtwork" data-status="epart-status">
+          <input id="epArt" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="epArtwork" data-status="epart-status" data-web="1024" data-web-target="epArtworkWeb">
           <p class="hint" id="epart-status">${episode.artwork ? `Current: ${esc(episode.artwork)}` : "Using the podcast's artwork."}</p>
           <input type="hidden" id="epArtwork" name="artwork" value="${esc(episode.artwork || '')}">
+          <input type="hidden" id="epArtworkWeb" name="artworkWeb" value="${esc(episode.artworkWeb || '')}">
           ${episode.artwork ? `<img class="art-preview" src="${esc(episode.artwork)}" alt="Episode artwork" width="120" height="120">` : ''}
           <label for="chapters">Chapters (one per line: HH:MM:SS Title)</label>
           <textarea id="chapters" name="chapters" rows="5" placeholder="00:00 Intro&#10;05:30 The main topic">${esc(formatChapters(episode.chapters))}</textarea>
@@ -1924,8 +1913,7 @@ function createAdminRouter(ctx) {
         applyHostForm(host, form, entry);
         entry.hosts.push(host);
         store.save('shows', list);
-        refreshWebImages().catch(() => {});
-      }
+        }
       redirect(res, '/admin/hosts');
       return true;
     }
@@ -1963,8 +1951,7 @@ function createAdminRouter(ctx) {
         if (name) host.name = name;
         applyHostForm(host, form, entry);
         store.save('shows', list);
-        refreshWebImages().catch(() => {});
-        if (form.get('live')) { noContent(res); return true; }
+          if (form.get('live')) { noContent(res); return true; }
         redirect(res, '/admin/hosts');
         return true;
       }
@@ -2152,8 +2139,7 @@ function createAdminRouter(ctx) {
           list.push(episode);
           store.save('episodes', list);
           measure(episode.id);
-          refreshWebImages().catch(() => {});
-          // Asked for at the same time as the episode: the upload runs in
+              // Asked for at the same time as the episode: the upload runs in
           // the background and the episode page shows how it is going.
           if (form.get('archive') === '1') startArchiveUpload(episode, show);
         }
@@ -2192,6 +2178,13 @@ function createAdminRouter(ctx) {
         if (/^\/media\/[^/]+\/[^/]+$/.test(artwork)) entry.artwork = artwork;
         const banner = String(form.get('banner') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(banner)) entry.banner = banner;
+        // The small copy the website uses, made in the browser beside the
+        // original. Only kept while there is an original to be a copy of.
+        for (const [field, web] of [['artwork', 'artworkWeb'], ['banner', 'bannerWeb']]) {
+          const value = String(form.get(web) || '').trim();
+          if (entry[field] && /^\/media\/[^/]+\/[^/]+$/.test(value)) entry[web] = value;
+          else if (!entry[field]) delete entry[web];
+        }
         // web copies of the new artwork/banner are made just after save
         entry.social = {};
         for (const [key] of SOCIAL) {
@@ -2211,8 +2204,7 @@ function createAdminRouter(ctx) {
           if (/^https?:\/\//.test(url)) entry.links[key] = url;
         }
         store.save('shows', list);
-        refreshWebImages().catch(() => {});
-        // Saved from the page as it was typed: nothing to redirect to,
+          // Saved from the page as it was typed: nothing to redirect to,
         // the page is already showing what was stored.
         if (form.get('live')) { noContent(res); return true; }
         redirect(res, '/admin/podcast');
@@ -2357,6 +2349,12 @@ function createAdminRouter(ctx) {
         if (/^\d{4}-\d{2}-\d{2}$/.test(date)) entry.date = date;
         if (/^https?:\/\//.test(mediaUrl) || /^\/media\/[^/]+\/[^/]+$/.test(mediaUrl)) {
           if (mediaUrl !== entry.mediaUrl) { entry.mediaUrl = mediaUrl; entry.bytes = 0; entry.duration = null; }
+          // A length typed in by hand wins: the file may be one this
+          // cannot read, and an emptied box asks for it to be read again.
+          if (form.has('duration')) entry.duration = parseDuration(form.get('duration'));
+          const epArtWeb = String(form.get('artworkWeb') || '').trim();
+          if (entry.artwork && /^\/media\/[^/]+\/[^/]+$/.test(epArtWeb)) entry.artworkWeb = epArtWeb;
+          else if (!entry.artwork) delete entry.artworkWeb;
         }
         entry.description = String(form.get('description') || '').trim().slice(0, 4000);
         entry.episode = Number(form.get('episode')) || null;
@@ -2369,8 +2367,7 @@ function createAdminRouter(ctx) {
         entry.chapters = parseChapters(form.get('chapters') || '');
         store.save('episodes', list);
         measure(entry.id);
-        refreshWebImages().catch(() => {});
-        if (form.get('live')) { noContent(res); return true; }
+          if (form.get('live')) { noContent(res); return true; }
         redirect(res, '/admin/episodes');
         return true;
       }
@@ -2382,7 +2379,6 @@ function createAdminRouter(ctx) {
 
   bootstrap();
   migrateHosts();
-  refreshWebImages().catch(() => {});
   return { handle, settings, currentUser, measureEpisode: measure };
 }
 

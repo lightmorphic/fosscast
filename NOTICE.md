@@ -51,7 +51,6 @@ combined with them.
 |---|---|---|
 | Node.js (`node:22-alpine` base image) | OpenJS Foundation | MIT |
 | Alpine Linux (base image) | Alpine Linux | mixed, mostly MIT/BSD |
-| ffmpeg and ffprobe (episode durations, image copies) | FFmpeg project | LGPL-2.1-or-later as packaged by Alpine |
 | Caddy (the reverse proxy in the example compose file) | Light Code Labs | Apache-2.0 |
 
 ## Icons and artwork

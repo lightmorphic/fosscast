@@ -4,7 +4,6 @@
 
 const fs = require('fs');
 const path = require('path');
-const { spawn } = require('child_process');
 
 const MAX_UPLOAD = 4 * 1024 * 1024 * 1024; // 4 GB
 
@@ -102,56 +101,121 @@ function serveMedia(req, res, mediaDir, urlPath) {
   });
 }
 
-// Duration in whole seconds via ffprobe; null when unavailable.
-function probeDuration(file) {
+// ---------- how long an episode runs ----------
+//
+// An MP3 says how long it is in its own frames, so the answer is in the
+// first few kilobytes of the file and no other program is needed to
+// read it. A constant-rate file is its size divided by its bitrate; a
+// variable-rate one carries a Xing or Info header naming the number of
+// frames, which is exact. Anything that is not an MP3 returns null and
+// the podcaster types the length in themselves.
+
+const BITRATES_V1_L3 = [0, 32, 40, 48, 56, 64, 80, 96, 112, 128, 160, 192, 224, 256, 320, 0];
+const BITRATES_V2_L3 = [0, 8, 16, 24, 32, 40, 48, 56, 64, 80, 96, 112, 128, 144, 160, 0];
+const RATES = { 3: [44100, 48000, 32000], 2: [22050, 24000, 16000], 0: [11025, 12000, 8000] };
+
+// ID3v2 sits in front of the audio and its length is four seven-bit
+// bytes, so it has to be stepped over before any frame will be found.
+function audioStart(buf) {
+  if (buf.length > 10 && buf.toString('latin1', 0, 3) === 'ID3') {
+    const size = ((buf[6] & 0x7f) << 21) | ((buf[7] & 0x7f) << 14) | ((buf[8] & 0x7f) << 7) | (buf[9] & 0x7f);
+    return 10 + size;
+  }
+  return 0;
+}
+
+function frameHeader(buf, at) {
+  if (at + 4 > buf.length) return null;
+  if (buf[at] !== 0xff || (buf[at + 1] & 0xe0) !== 0xe0) return null;
+  const version = (buf[at + 1] >> 3) & 3;      // 3 = MPEG1, 2 = MPEG2, 0 = MPEG2.5
+  const layer = (buf[at + 1] >> 1) & 3;        // 1 = Layer III
+  const bitrateIndex = (buf[at + 2] >> 4) & 15;
+  const rateIndex = (buf[at + 2] >> 2) & 3;
+  if (version === 1 || layer !== 1 || rateIndex === 3) return null;
+  const bitrate = (version === 3 ? BITRATES_V1_L3 : BITRATES_V2_L3)[bitrateIndex] * 1000;
+  const sampleRate = RATES[version][rateIndex];
+  if (!bitrate || !sampleRate) return null;
+  return {
+    at,
+    bitrate,
+    sampleRate,
+    channels: ((buf[at + 3] >> 6) & 3) === 3 ? 1 : 2,
+    // MPEG1 Layer III carries 1152 samples a frame, MPEG2 and 2.5 half that.
+    samplesPerFrame: version === 3 ? 1152 : 576,
+  };
+}
+
+// Duration in whole seconds from the head of an MP3, given the file's
+// full length. Null when the bytes are not an MP3 at all.
+function mp3Duration(buf, totalBytes) {
+  const begin = audioStart(buf);
+  let header = null;
+  // A frame may not start exactly where the tag ends: a few files pad.
+  for (let at = begin; at < Math.min(buf.length - 4, begin + 8192); at++) {
+    header = frameHeader(buf, at);
+    if (header) break;
+  }
+  if (!header) return null;
+  // The Xing or Info block lives after the frame's side information,
+  // whose length depends on the version and whether it is mono.
+  const sideInfo = header.samplesPerFrame === 1152
+    ? (header.channels === 1 ? 17 : 32)
+    : (header.channels === 1 ? 9 : 17);
+  const tagAt = header.at + 4 + sideInfo;
+  const tag = buf.length >= tagAt + 4 ? buf.toString('latin1', tagAt, tagAt + 4) : '';
+  if (tag === 'Xing' || tag === 'Info') {
+    const flags = buf.readUInt32BE(tagAt + 4);
+    if (flags & 1) {
+      const frames = buf.readUInt32BE(tagAt + 8);
+      if (frames > 0) return Math.round((frames * header.samplesPerFrame) / header.sampleRate);
+    }
+  }
+  // Otherwise the file is a constant rate, and its length is its size.
+  const audioBytes = Math.max(0, totalBytes - header.at);
+  return Math.round((audioBytes * 8) / header.bitrate);
+}
+
+const DURATION_HEAD = 128 * 1024;
+
+// How long a file on this box runs.
+function readDuration(file) {
   return new Promise((resolve) => {
-    const p = spawn('ffprobe', ['-v', 'error', '-show_entries', 'format=duration', '-of', 'csv=p=0', file]);
-    let out = '';
-    p.stdout.on('data', (d) => { out += d; });
-    p.on('error', () => resolve(null));
-    p.on('close', (code) => {
-      const n = parseFloat(out);
-      resolve(code === 0 && Number.isFinite(n) ? Math.round(n) : null);
+    fs.stat(file, (err, stat) => {
+      if (err || !stat.isFile()) return resolve(null);
+      const head = Buffer.alloc(Math.min(DURATION_HEAD, stat.size));
+      fs.open(file, 'r', (openErr, fd) => {
+        if (openErr) return resolve(null);
+        fs.read(fd, head, 0, head.length, 0, (readErr) => {
+          fs.close(fd, () => {});
+          if (readErr) return resolve(null);
+          try { resolve(mp3Duration(head, stat.size)); } catch { resolve(null); }
+        });
+      });
     });
   });
 }
 
-const IMAGE_EXTS = new Set(['.jpg', '.jpeg', '.png', '.webp']);
-
-// The web copy of an uploaded image: a small, fast version for pages.
-// Lives next to the original as "<name>.web.jpg". The original (which
-// may be 3000x3000 for the directories) is kept for the RSS feed.
-function webPathFor(urlPath, suffix = 'web') {
-  return `${urlPath}.${suffix}.jpg`;
-}
-
-// Make the small web copy if it does not exist yet. Longest side capped
-// so a huge upload becomes a light, quick-loading image. Returns the web
-// url path when one is available, else null. Never throws. maxSide moves
-// the cap down: a host photo is shown far smaller than cover art, so it
-// is made smaller still.
-function ensureWebImage(dataDir, urlPath, maxSide = 1024, suffix = 'web') {
-  return new Promise((resolve) => {
-    if (typeof urlPath !== 'string' || !urlPath.startsWith('/media/')) return resolve(null);
-    const ext = path.extname(urlPath).toLowerCase();
-    if (!IMAGE_EXTS.has(ext)) return resolve(null);
-    const file = path.join(dataDir, decodeURIComponent(urlPath.slice(1)));
-    const out = `${file}.${suffix}.jpg`;
-    if (fs.existsSync(out)) return resolve(webPathFor(urlPath, suffix));
-    if (!fs.existsSync(file)) return resolve(null);
-    // Fit within the cap, only shrinking (never enlarging a small one).
-    const cap = Math.max(64, Math.min(4096, Number(maxSide) || 1024));
-    const p = spawn('ffmpeg', [
-      '-y', '-i', file,
-      '-vf', `scale='min(${cap},iw)':'min(${cap},ih)':force_original_aspect_ratio=decrease`,
-      '-q:v', '4', out,
-    ], { stdio: 'ignore' });
-    p.on('error', () => resolve(null));
-    p.on('close', (code) => resolve(code === 0 && fs.existsSync(out) ? webPathFor(urlPath, suffix) : null));
-  });
+// How long a file somebody else is hosting runs: the same few kilobytes,
+// asked for by range, so nothing like the whole episode is downloaded.
+async function fetchDuration(url) {
+  try {
+    const res = await fetch(url, {
+      headers: { Range: `bytes=0-${DURATION_HEAD - 1}` },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return null;
+    // A 206 says how big the whole file is; a 200 means the server
+    // ignored the range and handed over the lot, which is its length.
+    const range = /\/(\d+)$/.exec(res.headers.get('content-range') || '');
+    const head = Buffer.from(await res.arrayBuffer());
+    const total = range ? Number(range[1]) : head.length;
+    return mp3Duration(head, total);
+  } catch {
+    return null;
+  }
 }
 
 module.exports = {
-  saveUpload, serveMedia, typeFor, safeName, probeDuration,
-  ensureWebImage, MEDIA_TYPES,
+  saveUpload, serveMedia, typeFor, safeName, MEDIA_TYPES,
+  readDuration, fetchDuration, mp3Duration,
 };

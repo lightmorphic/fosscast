@@ -11,10 +11,9 @@ FROM node:22.23.2-alpine
 
 WORKDIR /app
 
-# Patch OS packages at build time. ffmpeg: probing episode durations
-# for the feed, and making the small web copies of uploaded images
-# (ffprobe and ffmpeg; podcast media is never transcoded).
-RUN apk update && apk upgrade --no-cache && apk add --no-cache ffmpeg
+# Patch OS packages at build time. Nothing else is installed: the app
+# is plain Node and shells out to nothing.
+RUN apk update && apk upgrade --no-cache
 
 COPY server/package.json server/server.js server/reset-password.js server/admin-login-link.js ./
 COPY server/lib ./lib

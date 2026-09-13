@@ -219,25 +219,57 @@ document.addEventListener('change', (e) => {
     }
   };
 
+  var put = function (body, filename) {
+    return fetch('/admin/api/upload?show=' + encodeURIComponent(input.dataset.show) + '&filename=' + encodeURIComponent(filename), {
+      method: 'PUT', body: body,
+    }).then((r) => r.json());
+  };
+
   say('Uploading ' + file.name + ' (' + (file.size / 1048576).toFixed(1) + ' MB)...', false);
-  fetch('/admin/api/upload?show=' + encodeURIComponent(input.dataset.show) + '&filename=' + encodeURIComponent(file.name), {
-    method: 'PUT', body: file,
-  }).then((r) => r.json()).then((d) => {
-    if (d.urlPath) {
-      target.value = d.urlPath;
-      say('Uploaded: ' + d.name, false);
-      // The hidden field changing is what the form saves; setting it in
-      // script fires nothing, so the upload has to say so itself. The
-      // change event on the picker fired before the file had finished
-      // arriving, which saved the previous value over the new one.
-      target.dispatchEvent(new Event('input', { bubbles: true }));
-    }
-    else {
+  put(file, file.name).then((d) => {
+    if (!d.urlPath) {
       say(d.error || 'That upload did not work, and the server did not say why.', true);
       input.value = '';   // so the same file can be picked again after fixing it
+      return;
     }
+    target.value = d.urlPath;
+    say('Uploaded: ' + d.name, false);
+    // The hidden field changing is what the form saves; setting it in
+    // script fires nothing, so the upload has to say so itself. The
+    // change event on the picker fired before the file had finished
+    // arriving, which saved the previous value over the new one.
+    target.dispatchEvent(new Event('input', { bubbles: true }));
+    return webCopy(file, Number(input.dataset.web)).then((copy) => {
+      const webField = input.dataset.webTarget && document.getElementById(input.dataset.webTarget);
+      if (!webField) return;
+      if (!copy) { webField.value = ''; webField.dispatchEvent(new Event('input', { bubbles: true })); return; }
+      return put(copy, file.name + '.web.jpg').then((w) => {
+        webField.value = w.urlPath || '';
+        webField.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    });
   }).catch(() => say('That upload did not finish - check your connection and try again.', true));
 });
+
+// The small copy the website shows. Cover art goes to the directories at
+// 3000 x 3000 and nothing on a web page needs that, so a shrunk copy is
+// made here, on the machine that already has the picture open, and sent
+// up beside the original. The box never opens an image.
+function webCopy(file, maxSide) {
+  if (!maxSide || file.type.indexOf('image/') !== 0) return Promise.resolve(null);
+  return createImageBitmap(file).then((bitmap) => {
+    const scale = Math.min(1, maxSide / Math.max(bitmap.width, bitmap.height));
+    // Already small enough: the original is the web copy, and making a
+    // second one would only cost a re-encode.
+    if (scale === 1) { bitmap.close(); return null; }
+    const canvas = document.createElement('canvas');
+    canvas.width = Math.round(bitmap.width * scale);
+    canvas.height = Math.round(bitmap.height * scale);
+    canvas.getContext('2d').drawImage(bitmap, 0, 0, canvas.width, canvas.height);
+    bitmap.close();
+    return new Promise((resolve) => canvas.toBlob(resolve, 'image/jpeg', 0.82));
+  }).catch(() => null);   // an image this browser cannot open is served whole
+}
 // A page with a lot of cards gets a rail down the right-hand side: one
 // link per section, the one you are looking at marked. Built from
 // whatever sections the page has rather than kept in step by hand, and
