@@ -48,8 +48,8 @@ function fakeArchive(handler) {
 
 test('an identifier is derived from the show, the date and the episode', () => {
   assert.equal(
-    archiveorg.identifierFor('FossNerds', 'The First One!', '2026-07-05'),
-    'fossnerds-20260705-the-first-one',
+    archiveorg.identifierFor('Cheese Weekly', 'The First One!', '2026-07-05'),
+    'cheese-weekly-20260705-the-first-one',
   );
 });
 
@@ -174,16 +174,16 @@ test('a missing file is refused before anything is sent', async () => {
 });
 
 test('an episode carries the podcast\'s own details to the Archive', () => {
-  const show = { title: 'FossNerds', author: 'Charlie', language: 'en', description: 'A show' };
+  const show = { title: 'Cheese Weekly', author: 'Bess Trelawny', language: 'en', description: 'A show' };
   const episode = { title: 'Episode one', date: '2026-07-05', description: 'The first', guid: 'abc' };
-  const meta = archiveorg.metadataFor(show, episode, { link: 'https://fossnerds.org/x/y' });
+  const meta = archiveorg.metadataFor(show, episode, { link: 'https://example.org/x/y' });
   assert.equal(meta.mediatype, 'audio');
   assert.equal(meta.collection, archiveorg.COLLECTION);
   assert.equal(meta.title, 'Episode one');
-  assert.equal(meta.creator, 'Charlie');
+  assert.equal(meta.creator, 'Bess Trelawny');
   assert.equal(meta.date, '2026-07-05');
-  assert.equal(meta.originalurl, 'https://fossnerds.org/x/y');
-  assert.deepEqual(meta.subject, ['podcast', 'FossNerds']);
+  assert.equal(meta.originalurl, 'https://example.org/x/y');
+  assert.deepEqual(meta.subject, ['podcast', 'Cheese Weekly']);
   // Nothing empty is sent: the Archive would store the emptiness.
   assert.ok(!Object.values(meta).some((v) => v === undefined || v === ''));
 });

@@ -1944,9 +1944,11 @@ function createAdminRouter(ctx) {
     if (!p.startsWith('/admin')) return false;
     const domain = siteDomain();
 
-    // One-time sign-in link (from the fleet panel's auto-login). The
-    // token is minted on the box and used once; consuming it burns the
-    // nonce so the link cannot be replayed.
+    // A one-time sign-in link. It can only be minted by something that
+    // can run a command inside the container (see admin-login-link.js),
+    // which is how an operator gets back in without a password and how
+    // an outer shell can hand somebody straight through. Consuming it
+    // burns the nonce, so the link cannot be replayed.
     if (p === '/admin/session' && req.method === 'GET') {
       const parsed = auth.verifyLoginLink(url.searchParams.get('token') || '', settings().secret);
       const used = store.load('login-nonces', []).filter((n) => n.exp > Date.now());

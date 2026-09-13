@@ -293,13 +293,13 @@ test('the look: colours, background, type and words of your own', async () => {
   // who says hello in their first paragraph should not get a one-line
   // card beside four-line ones.
   const greeter = (await (await fetch(`${BASE}/admin/hosts`, form({
-    name: 'Charlie', role: 'Host',
-    bio: "Hi there! I'm Charlie.\n\nMy tech journey started in the early eighties with a ZX81, an affordable alternative to everything else on the shelf, and it started something that has not stopped since.",
+    name: 'Bess Trelawny', role: 'Host',
+    bio: "Hello, and welcome.\n\nI have been taking wireless sets apart since I was nine, which is roughly when I learned that the interesting part of a radio is the bit nobody puts on the outside.",
   }))).status);
   assert.strictEqual(greeter, 303);
   const cards = await (await fetch(`${BASE}/hosts`)).text();
-  const snippet = (cards.match(/host-snip">([^<]*)/g) || []).find((t) => t.includes('Charlie'));
-  assert.ok(snippet.includes('ZX81'), 'the summary carries on past the greeting');
+  const snippet = (cards.match(/host-snip">([^<]*)/g) || []).find((t) => t.includes('Hello, and welcome'));
+  assert.ok(snippet.includes('wireless'), 'the summary carries on past the greeting');
   assert.ok(snippet.length > 100, 'and fills the card like everyone else');
 
   // Photos are circles by default; shape and size are their own controls

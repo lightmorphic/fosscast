@@ -18,7 +18,7 @@ server; the feed does not change, and downloads are still counted here.
    dashboard.
 
 The keys are stored on your own server, in `settings.json`, and are never
-shown again — the page only ever says which four characters a key ends
+shown again - the page only ever says which four characters a key ends
 with. Leave a box empty when saving to keep the key already held.
 
 ## Sending an episode
@@ -36,7 +36,7 @@ has got and survives a reload.
 
 One item per episode, in the Archive's Community Audio collection, under
 your own account. The identifier is built from the show slug, the date
-and the episode slug — `fossnerds-20260705-the-first-one` — and gets a
+and the episode slug (`a-show-20260705-the-first-one`) and gets a
 short random suffix if that name is already taken by somebody.
 
 The item carries what you already typed into FOSSCast: title, author,

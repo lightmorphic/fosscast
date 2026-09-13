@@ -51,7 +51,7 @@ function mediaPath(episode) {
 // point at them, with the real address appended raw and its scheme
 // dropped:
 //
-//   https://op3.dev/e/ + fossnerds.org/d/abc.mp3
+//   https://op3.dev/e/ + example.org/d/abc.mp3
 //
 // Not percent-encoded - encoding it would break every one of them - and
 // they chain, so a podcaster can paste several prefixes into the one
@@ -363,8 +363,8 @@ function initials(name) {
   return String(name).trim().split(/\s+/).slice(0, 2).map((w) => w[0]).join('').toUpperCase();
 }
 
-// The first line of a write-up is not a summary of it: "Hi there! I'm
-// Charlie." is a greeting, and a card showing only that next to cards
+// The first line of a write-up is not a summary of it: "Hello, and
+// welcome." is a greeting, and a card showing only that beside cards
 // showing four lines looks broken. So the card summarises the whole
 // piece - paragraphs run together, cut at a word - and every host gets
 // the same amount of it.
