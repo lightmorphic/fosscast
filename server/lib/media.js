@@ -265,7 +265,7 @@ function bannerVideoProblem(info) {
 
 module.exports = {
   saveUpload, serveMedia, typeFor, safeName, probeDuration,
-  ensureWebImage, webPathFor, MEDIA_TYPES,
+  ensureWebImage, MEDIA_TYPES,
   probeVideo, bannerVideoProblem, BANNER_VIDEO,
-  ensureVideoPoster, posterPathFor,
+  ensureVideoPoster,
 };

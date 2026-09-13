@@ -10,7 +10,10 @@ const fs = require('node:fs');
 const os = require('node:os');
 const path = require('node:path');
 
-const PORT = 4400 + Math.floor(Math.random() * 100);
+// Every test file takes a block of its own: two files sharing one
+// range collide about once in a hundred runs, which reads as a flaky
+// test rather than as the port clash it is.
+const PORT = 4500 + Math.floor(Math.random() * 100);
 const BASE = `http://127.0.0.1:${PORT}`;
 const DATA = fs.mkdtempSync(path.join(os.tmpdir(), 'fosscast-rename-'));
 const OLD_TOKEN = 'old-' + 'b'.repeat(58);

@@ -136,4 +136,4 @@ function tiles(items) {
   </div>`).join('')}</div>`;
 }
 
-module.exports = { barChart, areaChart, donut, barsAcross, heatmap, tiles, short, SERIES };
+module.exports = { barChart, areaChart, donut, barsAcross, heatmap, tiles, short };

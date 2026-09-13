@@ -182,5 +182,5 @@ function write(mediaDir, slug, base, value, title) {
 }
 
 module.exports = {
-  transcriber, parseCues, toLines, fromLines, toVtt, render, read, write, localFile, clock,
+  transcriber, parseCues, toLines, fromLines, render, read, write, clock,
 };

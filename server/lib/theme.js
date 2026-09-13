@@ -194,8 +194,7 @@ function linkShade(hex, against) {
 // holds up on white, a brighter one for dark mode, hover states, and
 // the soft "container" pair the nav pills and tags use.
 function accentPalette(hex) {
-  const [h, s] = toHsl(hex);
-  const [, , l] = toHsl(hex);
+  const [h, s, l] = toHsl(hex);
   const sat = Math.max(35, Math.min(95, s));
   const light = l > 62 ? fromHsl(h, sat, 52) : hex;
   const dark = l < 45 ? fromHsl(h, Math.min(90, sat + 8), 62) : hex;
@@ -436,6 +435,6 @@ ${bg}
 }
 
 module.exports = {
-  PRESETS, FONTS, PANELS, WIDTHS, EPISODE_LAYOUTS, IMAGE_SHAPES, IMAGE_SIZES, ART_SIZES, DEFAULTS,
-  normalise, isDefault, styleTag, accentPalette, parseHex, readableOn, safeCss,
+  PRESETS, FONTS, PANELS, WIDTHS, EPISODE_LAYOUTS, IMAGE_SHAPES, IMAGE_SIZES, ART_SIZES,
+  normalise, styleTag,
 };

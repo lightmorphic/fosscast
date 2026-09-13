@@ -330,6 +330,6 @@ async function recentEpisodes({ email, limit = 5, fetchImpl = fetch } = {}) {
 
 module.exports = {
   identifierFor, freeIdentifier, exists, metaHeaders, headerValue, errorFrom,
-  overLimit, put, metadataFor, filenameFor, COLLECTION, ENDPOINT,
-  whoami, itemsFor, audioFilesOf, recentEpisodes, SEARCH,
+  overLimit, put, metadataFor, filenameFor, COLLECTION,
+  whoami, itemsFor, audioFilesOf, recentEpisodes,
 };

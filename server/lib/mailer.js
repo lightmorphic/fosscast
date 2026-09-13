@@ -132,8 +132,7 @@ function sendMail({ to, subject, text, headers = {}, from: fromName }) {
       socket.on('error', fail);
     }
     attach();
-    if (port === 465) socket.on('secureConnect', () => {});
   });
 }
 
-module.exports = { sendMail, configured, encodeHeader };
+module.exports = { sendMail, configured };

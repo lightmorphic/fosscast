@@ -93,4 +93,4 @@ function match(shows, pathname) {
   return index(shows).get(p) || null;
 }
 
-module.exports = { tidy, parse, index, match, RESERVED };
+module.exports = { tidy, parse, index, match };

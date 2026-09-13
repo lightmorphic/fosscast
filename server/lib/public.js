@@ -377,7 +377,7 @@ function summarise(text, limit = 150) {
   return { text: trimmed, more: true };
 }
 
-function hostCard(host, domain) {
+function hostCard(host) {
   const photo = hostPhoto(host);
   return `
       <a class="panel host-card" href="${esc(hostUrl(host, ''))}">
@@ -399,7 +399,7 @@ function paragraphs(text) {
     .map((para) => `<p>${esc(para).replaceAll('\n', '<br>')}</p>`).join('');
 }
 
-function hostsPage(show, domain) {
+function hostsPage(show) {
   const list = hosts(show);
   return publicPage({
     title: `Hosts - ${show.name}`,
@@ -415,7 +415,7 @@ function hostsPage(show, domain) {
     <p class="lede">The people behind ${esc(show.name)}.</p>
   </section>
   ${list.length
-    ? `<section class="host-grid">${list.map((h) => hostCard(h, domain)).join('')}</section>`
+    ? `<section class="host-grid">${list.map((h) => hostCard(h)).join('')}</section>`
     : '<div class="panel"><p class="hint">No hosts listed yet.</p></div>'}`,
   });
 }
@@ -448,7 +448,7 @@ function hostPage(show, host, domain) {
   ${others.length
     ? `<section class="host-more">
         <h2 class="section-title">The rest of the team</h2>
-        <div class="host-grid">${others.map((h) => hostCard(h, domain)).join('')}</div>
+        <div class="host-grid">${others.map((h) => hostCard(h)).join('')}</div>
       </section>`
     : ''}`,
   });
@@ -742,4 +742,8 @@ function embedPage(show, episode, domain = '') {
 `;
 }
 
-module.exports = { prefixed, bannerKind, bannerMarkup, landing, showsIndex, showPage, episodePage, hostsPage, hostPage, hosts, hostSlug, feed, embedPage, chaptersJson, mediaType, visible, artFor, episodeSlug, episodeUrl, subscribeRow, listenCard, supportLinks, socialLinks, slugify, APPS, SUPPORT, SOCIAL };
+module.exports = {
+  prefixed, landing, showsIndex, showPage, episodePage, hostsPage, hostPage,
+  hosts, hostSlug, feed, embedPage, chaptersJson, visible, artFor,
+  episodeSlug, episodeUrl, subscribeRow, slugify, APPS, SUPPORT, SOCIAL,
+};

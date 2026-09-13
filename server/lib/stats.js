@@ -289,4 +289,4 @@ class Stats {
   }
 }
 
-module.exports = { Stats, isMachine, appFor, platformFor, languageFor, countryFor };
+module.exports = { Stats, appFor, platformFor, languageFor, countryFor };

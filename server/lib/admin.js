@@ -1,16 +1,12 @@
 'use strict';
-const { siteDomain } = require('./domain');
-// The admin area: login, dashboard, show and episode management,
-// account settings.
-//
-// Roles, from day one: 'admin' runs the instance and sees everything;
-// 'owner' (coming next) manages only their own podcasts. That is the
-// whole hosted-service layer: same code for everyone, the instance
-// admin can simply create podcasts and owner accounts for others.
+// The admin area: login, the dashboard, the podcast and its episodes,
+// the hosts, the look of the public site, the statistics and the
+// account page. One router, one signed-in user, no framework.
 
 const crypto = require('crypto');
 const path = require('path');
 const fs = require('fs');
+const { siteDomain } = require('./domain');
 const { esc, adminPage, ICONS, withEmbedded, isEmbedded, BRAND } = require('./html');
 const auth = require('./auth');
 const CATEGORIES = require('./categories');
@@ -381,7 +377,6 @@ function createAdminRouter(ctx) {
     });
   }
 
-  // Fill in size and duration for an episode's media, async.
   // Uploading an episode to the Internet Archive.
   //
   // An episode can be a hundred megabytes and the Archive is not always
@@ -442,7 +437,7 @@ function createAdminRouter(ctx) {
         file,
         metadata: {
           ...archiveorg.metadataFor(show, episode, {
-            link: domain ? `https://${domain}/${show.slug}/${episode.slug}` : undefined,
+            link: domain ? `https://${domain}/shows/${show.slug}/${episode.slug}` : undefined,
           }),
           contentType: typeFor(file),
         },
@@ -477,6 +472,8 @@ function createAdminRouter(ctx) {
     return job;
   }
 
+  // Fill in an episode's file size and duration, in the background:
+  // the feed wants both and neither is worth making a save wait for.
   async function measure(episodeId) {
     const list = episodes();
     const episode = list.find((e) => e.id === episodeId);
@@ -588,7 +585,6 @@ function createAdminRouter(ctx) {
         id: crypto.randomUUID(),
         email,
         hash: auth.hashPassword(password),
-        role: 'admin',
         createdAt: new Date().toISOString(),
       });
       store.save('users', list);
@@ -1463,15 +1459,6 @@ function createAdminRouter(ctx) {
           <input id="sup-${key}" name="support_${key}" type="url" maxlength="500" value="${esc((show.support || {})[key] || '')}" placeholder="${esc(placeholder)}">`).join('')}
         </section>
 
-        <section class="panel pane pane-none" id="sec-hosts">
-          <h2>Hosts</h2>
-          <p class="hint">${hostList(show).length
-            ? `${hostList(show).length} host${hostList(show).length === 1 ? '' : 's'}: ${esc(hostList(show).map((h) => h.name).join(', '))}.`
-            : 'Nobody listed yet.'} Each host has a photo and a write-up of
-          their own, and they get a page on the site.</p>
-          <p><a class="btn-secondary" href="/admin/hosts">${hostList(show).length ? 'Manage hosts' : 'Add the hosts'}</a></p>
-        </section>
-
         <section class="panel pane pane-listen" id="sec-listen">
           <h2>Listen on</h2>
           <p class="hint">Paste the address of your show on each platform
@@ -1910,7 +1897,7 @@ function createAdminRouter(ctx) {
               xhr.setRequestHeader('x-archive-auto-make-bucket', '1');
               xhr.setRequestHeader('x-archive-meta-collection', k.collection);
               xhr.setRequestHeader('x-archive-meta-mediatype', 'audio');
-              xhr.setRequestHeader('x-archive-meta-title', k.headerTitle || identifier);
+              xhr.setRequestHeader('x-archive-meta-title', title.value || identifier);
               xhr.upload.onprogress = function (e) {
                 if (!e.lengthComputable) return;
                 progress.textContent = 'Sending: ' + Math.round((e.loaded / e.total) * 100) + '% of ' + bytes(e.total);
@@ -2323,7 +2310,6 @@ function createAdminRouter(ctx) {
     }
 
     if (p === '/admin/account/archive-keys' && req.method === 'POST') {
-      if (DEMO) { redirect(res, '/admin/account'); return true; }
       const form = await formBody(req, readBody);
       const value = settings();
       if (url.searchParams.get('clear')) {
@@ -2439,12 +2425,10 @@ function createAdminRouter(ctx) {
         const guid = String(form.get('podcastGuid') || '').trim().slice(0, 60);
         entry.podcastGuid = /^[a-zA-Z0-9-]{8,}$/.test(guid) ? guid : undefined;
         entry.locked = form.get('locked') === '1';
-        entry.lockedOwner = user.email;
         const fundingUrl = String(form.get('fundingUrl') || '').trim().slice(0, 500);
         entry.funding = /^https?:\/\//.test(fundingUrl)
           ? { url: fundingUrl, label: String(form.get('fundingLabel') || '').trim().slice(0, 120) }
           : null;
-        // hosts have their own page and form now
         const artwork = String(form.get('artwork') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(artwork)) entry.artwork = artwork;
         const banner = String(form.get('banner') || '').trim();
@@ -2654,7 +2638,7 @@ function createAdminRouter(ctx) {
   bootstrap();
   migrateHosts();
   refreshWebImages().catch(() => {});
-  return { handle, settings, shows, users, currentUser, measureEpisode: measure };
+  return { handle, settings, currentUser, measureEpisode: measure };
 }
 
 module.exports = { createAdminRouter, slugify };

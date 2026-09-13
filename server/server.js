@@ -1,10 +1,12 @@
 'use strict';
-// FOSSCast server: the public site, the admin area, the publish API
-// and the MediaMTX auth hook. Zero runtime npm dependencies.
+// FOSSCast server: the public site, the media and feed routes, the
+// admin area and the publish API, in one process. Zero runtime npm
+// dependencies.
 
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 
 const { Store } = require('./lib/store');
 const { createAdminRouter } = require('./lib/admin');
@@ -87,7 +89,8 @@ function clientIp(req) {
 }
 
 // Demo instances are read-only everywhere, not just in the dashboard:
-// no uploads, no publishing, no chat for anyone to spoil.
+// no uploads and no publishing, so there is nothing for a visitor to
+// spoil for the next one.
 const DEMO = process.env.DEMO_MODE === '1';
 
 // Publishing from a studio can be turned off for an instance that does
@@ -97,16 +100,16 @@ const DEMO = process.env.DEMO_MODE === '1';
 const STUDIO_PUBLISHING = !/^(0|off|false|no)$/i.test((process.env.STUDIO_PUBLISHING || '').trim());
 
 // The studio's own key: FOSSStudio (or any other studio) sends it to
-// publish a finished recording. Nothing else uses it.
+// publish a finished recording. Nothing else uses it. Lengths are
+// compared first because timingSafeEqual throws on a mismatch, and the
+// length of a token is not the secret.
 function studioAuthed(req) {
   if (!STUDIO_PUBLISHING) return false;
   const token = (admin.settings().studioToken || '').trim();
   const given = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
   if (!token || !given || given.length !== token.length) return false;
-  return require('crypto').timingSafeEqual(Buffer.from(given), Buffer.from(token));
+  return crypto.timingSafeEqual(Buffer.from(given), Buffer.from(token));
 }
-const crypto = require('crypto');
-
 
 // decodeURIComponent throws on a malformed escape - "%" on its own is
 // enough - and an exception in a request handler takes the whole
@@ -135,12 +138,6 @@ function serveStatic(res, urlPath) {
 // One bad request should cost that request, not the site: without this,
 // anything thrown while routing ends the process and every listener
 // gets nothing until the container restarts.
-// Somebody typing addresses into the subscribe box over and over is
-// either a bot or a nuisance; either way the mail server should not wear
-// it. Sign-ups are rate-limited per address-source the same way logins
-// are.
-const subscribeLimiter = new (require('./lib/auth').RateLimiter)({ max: 5, windowMs: 10 * 60 * 1000 });
-
 const server = http.createServer((req, res) => {
   try {
     route(req, res);
@@ -369,7 +366,7 @@ function route(req, res) {
   if (hostsMatch) {
     const show = store.load('shows', [])[0];
     if (!show) return send(res, 404, 'not found');
-    if (!hostsMatch[1]) return sendHtml(res, publicSite.hostsPage(show, DOMAIN));
+    if (!hostsMatch[1]) return sendHtml(res, publicSite.hostsPage(show));
     const host = publicSite.hosts(show)
       .find((h) => publicSite.hostSlug(h) === hostsMatch[1] || h.id === hostsMatch[1]);
     if (!host) return send(res, 404, 'not found');
@@ -410,6 +407,9 @@ function route(req, res) {
     return sendHtml(res, publicSite.episodePage(show, episode, DOMAIN, said));
   }
 
+  // The four directories the image ships, plus /js/: FOSSCast puts no
+  // script there itself, and the door is left open on purpose so that
+  // an operator mounting their own web/ over the image's can serve one.
   if (p.startsWith('/css/') || p.startsWith('/fonts/') || p.startsWith('/img/') || p.startsWith('/js/') || p.startsWith('/presets/')) {
     return serveStatic(res, p);
   }
