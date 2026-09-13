@@ -15,20 +15,13 @@ const CATEGORIES = require('./categories');
 // card below is the only way to reach the key, so it goes with it.
 const STUDIO_PUBLISHING = !/^(0|off|false|no)$/i.test((process.env.STUDIO_PUBLISHING || '').trim());
 
-// Some instances hold no audio at all: the episodes live at archive.org
-// or on the podcaster's own storage, and the feed points there. Offering
-// an upload box on such an instance is offering something that cannot
-// work. MEDIA_UPLOADS=off takes it off the forms; the address box, which
+// Some instances hold no audio at all: the episodes live on the
+// podcaster's own storage and the feed points there. Offering an upload
+// box on such an instance is offering something that cannot work.
+// MEDIA_UPLOADS=off takes it off the forms; the address box, which
 // every instance has, becomes the way in.
 const MEDIA_UPLOADS = !/^(0|off|false|no)$/i.test((process.env.MEDIA_UPLOADS || '').trim());
 
-// Where "the notes on archiving" should send somebody. Unset, the
-// project's own documentation on GitHub, which is right for a person
-// who chose to self-host. An operator running this for customers points
-// it at their own help page instead: those customers did not choose
-// GitHub and have no reason to end up there.
-const ARCHIVE_HELP = (process.env.HELP_ARCHIVE_URL || '').trim()
-  || 'https://github.com/lightmorphic/fosscast/blob/main/docs/archive-org.md';
 const feedAliases = require('./feedaliases');
 const { readDuration, fetchDuration, typeFor } = require('./media');
 const importer = require('./import');
@@ -36,7 +29,6 @@ const { sendMail, configured: mailConfigured } = require('./mailer');
 const { APPS, SUPPORT, SOCIAL, showPage, prefixed } = require('./public');
 const themes = require('./theme');
 const charts = require('./charts');
-const archiveorg = require('./archiveorg');
 const transcripts = require('./transcripts');
 
 // This edition manages one podcast.
@@ -395,101 +387,6 @@ function createAdminRouter(ctx) {
     });
   }
 
-  // Uploading an episode to the Internet Archive.
-  //
-  // An episode can be a hundred megabytes and the Archive is not always
-  // quick, so the upload cannot happen inside the request that asks for
-  // it: a proxy in front of us would give up long before it finished.
-  // The request starts a job and returns; the page watches the job and
-  // says what is happening. The job lives in memory, because a restart
-  // partway through is an upload that has to be started again anyway.
-  const archiveJobs = new Map();
-
-  function archiveState(episode) {
-    const job = archiveJobs.get(episode.id);
-    if (job) return job;
-    if (episode.archive && episode.archive.url) return { state: 'done', ...episode.archive };
-    return { state: 'idle' };
-  }
-
-  function archiveKeys() {
-    const value = settings();
-    return {
-      accessKey: (value.archiveAccessKey || '').trim(),
-      secretKey: (value.archiveSecretKey || '').trim(),
-    };
-  }
-
-  function archiveReady() {
-    const { accessKey, secretKey } = archiveKeys();
-    return Boolean(accessKey && secretKey);
-  }
-
-  function startArchiveUpload(episode, show) {
-    const running = archiveJobs.get(episode.id);
-    if (running && running.state === 'running') return running;
-    const { accessKey, secretKey } = archiveKeys();
-    if (!accessKey || !secretKey) {
-      return { state: 'failed', error: 'Add your Internet Archive keys on the account page first.' };
-    }
-    if (!episode.mediaUrl || !episode.mediaUrl.startsWith('/media/')) {
-      return { state: 'failed', error: 'Only media held on this server can be sent to the Archive. This episode already points somewhere else.' };
-    }
-    const file = path.join(dataDir, decodeURIComponent(episode.mediaUrl.slice(1)));
-    const job = { state: 'running', sent: 0, total: 0, startedAt: Date.now() };
-    archiveJobs.set(episode.id, job);
-
-    (async () => {
-      const wanted = archiveorg.identifierFor(show.slug, episode.slug, episode.date);
-      const identifier = await archiveorg.freeIdentifier(wanted);
-      job.identifier = identifier;
-      if (await archiveorg.overLimit(accessKey, identifier)) {
-        throw new Error('archive.org is rationing uploads from this account just now. Try again in a few minutes.');
-      }
-      const domain = siteDomain('');
-      const result = await archiveorg.put({
-        accessKey,
-        secretKey,
-        identifier,
-        filename: archiveorg.filenameFor(identifier, file),
-        file,
-        metadata: {
-          ...archiveorg.metadataFor(show, episode, {
-            link: domain ? `https://${domain}/shows/${show.slug}/${episode.slug}` : undefined,
-          }),
-          contentType: typeFor(file),
-        },
-        onProgress: (sent, total) => { job.sent = sent; job.total = total; },
-      });
-      // The feed keeps pointing at this instance either way: mediaUrl
-      // becomes the Archive's address, and the counting redirect still
-      // records every download before sending the listener on to it.
-      const list = episodes();
-      const entry = list.find((e) => e.id === episode.id);
-      if (entry) {
-        entry.mediaUrl = result.url;
-        entry.archive = {
-          identifier: result.identifier,
-          filename: result.filename,
-          url: result.url,
-          details: result.details,
-          uploadedAt: new Date().toISOString(),
-        };
-        store.save('episodes', list);
-      }
-      return result;
-    })()
-      .then((result) => {
-        archiveJobs.set(episode.id, { state: 'done', ...result });
-      })
-      .catch((err) => {
-        console.error('archive.org upload failed:', err.message);
-        archiveJobs.set(episode.id, { state: 'failed', error: err.message });
-      });
-
-    return job;
-  }
-
   // Fill in an episode's file size and duration, in the background:
   // the feed wants both and neither is worth making a save wait for.
   // An MP3 says how long it is in its own frames, so only the head of
@@ -738,16 +635,10 @@ function createAdminRouter(ctx) {
           <input id="mediaFile" type="file" accept="audio/*,video/*" data-upload data-show="${esc(show.slug)}" data-target="mediaUrl" data-status="upload-status">
           <p class="hint" id="upload-status"></p>` : ''}
           <label for="mediaUrl">${MEDIA_UPLOADS ? 'Or the address of the audio' : 'The address of the audio'}</label>
-          <p class="hint">Where the file actually lives - archive.org, your
+          <p class="hint">Where the file actually lives - your
           own storage, anywhere a listener's app can reach. MP3 is the one
           every app plays.</p>
-          <input id="mediaUrl" name="mediaUrl" maxlength="1000" placeholder="https://archive.org/download/...">
-          ${archiveReady() ? `<aside class="aside-offer">
-            <p>Are you using archive.org?
-            <button class="btn-secondary btn-small" type="button" id="ia-pick">Show my last five</button></p>
-            <p class="hint">Only if you keep your audio there. Otherwise paste
-            the address above and ignore this.</p>
-          </aside>` : ''}
+          <input id="mediaUrl" name="mediaUrl" maxlength="1000" placeholder="https://files.example.com/ep12.mp3">
           <label for="epArt">Episode cover art (optional)</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels. Leave it
           empty and the show uses the podcast's artwork.</p>
@@ -760,12 +651,6 @@ function createAdminRouter(ctx) {
             <span class="switch" aria-hidden="true"></span>
             <span>Save as draft (hidden from the public site and feed)</span>
           </label>
-          ${archiveReady() ? `<label class="switch-label">
-            <input type="checkbox" name="archive" value="1" class="switch-input">
-            <span class="switch" aria-hidden="true"></span>
-            <span>Also send the audio to archive.org (it gets a permanent home there; downloads are still counted here)</span>
-          </label>`
-            : `<p class="hint">Add your keys on the <a href="/admin/account">Archive.org</a> page and episodes can be sent there for permanent keeping as you publish them.</p>`}
         </div>
         </div>
           <button class="btn-primary" type="submit">Publish episode</button>
@@ -1353,42 +1238,6 @@ function createAdminRouter(ctx) {
     </section>`;
   }
 
-  // The Internet Archive panel on an episode. It knows four situations:
-  // no keys yet, media that lives somewhere else already, ready to go,
-  // and already there.
-  function archivePanel(episode) {
-    const state = archiveState(episode);
-    const item = episode.archive && episode.archive.url ? episode.archive : (state.state === 'done' ? state : null);
-    let body;
-    if (item) {
-      body = `<p class="hint">This episode lives at the Internet Archive, in
-        <a href="${esc(item.details || `https://archive.org/details/${item.identifier}`)}" target="_blank" rel="noopener">${esc(item.identifier || 'its own item')}</a>.
-        The feed still points here, so downloads are counted exactly as
-        before; only the audio is fetched from there.</p>`;
-    } else if (!archiveReady()) {
-      body = `<p class="hint">Add your Internet Archive keys on
-        <a href="/admin/account">the account page</a>, and this episode can
-        be sent there in one click.</p>`;
-    } else if (!(episode.mediaUrl || '').startsWith('/media/')) {
-      body = `<p class="hint">This episode's media already lives somewhere
-        else, so there is nothing here to send. Upload the file to this
-        server first if you want it archived.</p>`;
-    } else {
-      body = `<p class="hint">Send the audio to archive.org, where it gets a
-        permanent home under your own account. The media address moves with
-        it; the feed does not change, and downloads are still counted.</p>
-        <p class="hint">An upload is public and meant to last: the Archive
-        keeps what it is given, and taking something down again means
-        asking them. Send an episode you are happy to publish for good.</p>
-        <button class="btn-secondary" type="button" data-archive="${esc(episode.id)}">Send to archive.org</button>`;
-    }
-    return `<section class="panel" data-archive-panel="${esc(episode.id)}">
-      <h2>Internet Archive</h2>
-      ${body}
-      <p class="hint archive-status" aria-live="polite">${state.state === 'failed' ? esc(state.error || 'That did not work.') : ''}</p>
-    </section>`;
-  }
-
   function episodeEditPage(episode, show) {
     return adminPage({
       title: episode.title,
@@ -1415,12 +1264,6 @@ function createAdminRouter(ctx) {
           <p class="hint">Read from an MP3 by itself. Fill it in for any
           other kind of file: the directories want a length.</p>
           <input id="epDuration" name="duration" maxlength="9" value="${esc(formatDuration(episode.duration))}" placeholder="42:30">
-          ${archiveReady() ? `<aside class="aside-offer">
-            <p>Are you using archive.org?
-            <button class="btn-secondary btn-small" type="button" id="ia-pick">Show my last five</button></p>
-            <p class="hint">Only if you keep your audio there. Otherwise paste
-            the address above and ignore this.</p>
-          </aside>` : ''}
           <label for="epDescription">Description</label>
           <textarea id="epDescription" name="description" rows="4" maxlength="4000">${esc(episode.description)}</textarea>
           <label for="epArt">Episode cover art (optional)</label>
@@ -1441,29 +1284,20 @@ function createAdminRouter(ctx) {
           <div class="save-bar"><span class="save-state" aria-live="polite"></span></div>
         </form>
       </section>
-      ${transcriptPanel(episode, show)}
-      ${archivePanel(episode)}`,
+      ${transcriptPanel(episode, show)}`,
     });
   }
 
   function accountPage(user, message = '', error = '') {
-    // Only ever the last four characters, so the page can say a key is
-    // held without handing it back to anyone who opens the dashboard.
-    const held = settings();
-    const tail = (key) => (key && key.length > 4 ? key.slice(-4) : '');
-    const archiveHeld = {
-      access: tail((held.archiveAccessKey || '').trim()),
-      secret: tail((held.archiveSecretKey || '').trim()),
-    };
     // Framed inside somebody else's dashboard, signing in is their job:
     // the person reading this got here through their sign-in, not this
     // one, and a second password box only invites them to change a
     // credential they never use. The page is then what is left of it.
     const embedded = isEmbedded();
     return adminPage({
-      title: embedded ? 'Archive.org' : 'Account',
+      title: 'Account',
       active: 'account',
-      body: `<h1 class="page-title">${embedded ? 'Archive.org' : 'Account'}</h1>
+      body: `<h1 class="page-title">Account</h1>
       ${embedded ? '' : `<section class="panel narrow">
         <h2>Change password</h2>
         <p class="hint">Signed in as ${esc(user.email)}.</p>
@@ -1504,176 +1338,7 @@ function createAdminRouter(ctx) {
         </form>
         <p class="hint">A new key stops the old one working at once, so
         any studio using it needs the new one.</p>
-      </section>` : ''}
-
-      <section class="panel narrow">
-        <h2>Your archive.org account</h2>
-        <p class="hint">The account is yours, not ours. It is free, it takes
-        a minute, and what you put there stays there: a permanent home for
-        your audio that outlives this server, under your own name.</p>
-        <p class="hint">
-          <a class="btn-secondary btn-small" href="https://archive.org/account/signup" target="_blank" rel="noopener">Create an account</a>
-          <a class="btn-secondary btn-small" href="https://archive.org/account/s3.php" target="_blank" rel="noopener">Get your keys</a>
-        </p>
-        <p class="hint">Signed in at archive.org, the second link shows an
-        access key and a secret key. Copy both into the boxes below. They
-        are stored on this server, never shown again, and nothing is sent
-        anywhere until you ask for it.</p>
-        <form method="post" action="/admin/account/archive-keys">
-          <label for="ia-access">Access key</label>
-          <input id="ia-access" name="accessKey" type="password" autocomplete="off"
-            placeholder="${archiveHeld.access ? `Held \u2013 ends ${esc(archiveHeld.access)}` : 'Not set'}">
-          <label for="ia-secret">Secret key</label>
-          <input id="ia-secret" name="secretKey" type="password" autocomplete="off"
-            placeholder="${archiveHeld.secret ? `Held \u2013 ends ${esc(archiveHeld.secret)}` : 'Not set'}">
-          <p class="hint">Leave a box empty to keep the key already held.
-          See <a href="${esc(ARCHIVE_HELP)}" target="_blank" rel="noopener">the notes on archiving</a>.</p>
-          <button class="btn-primary" type="submit">Save keys</button>
-        </form>
-        <p class="hint" id="ia-who" aria-live="polite"></p>
-        ${archiveHeld.access || archiveHeld.secret ? `<form method="post" action="/admin/account/archive-keys?clear=1">
-          <button class="btn-secondary btn-confirm" type="submit">Forget these keys</button>
-        </form>` : ''}
-      </section>
-
-      <section class="panel narrow" id="ia-upload-card" hidden>
-        <h2>Send a file straight there</h2>
-        <p class="hint">The file goes from this browser to archive.org
-        directly. It does not pass through this server and nothing is kept
-        here - which is the point, because this server holds no audio.</p>
-        <p class="hint">An upload is public and meant to last: the Archive
-        keeps what it is given, and taking something down again means
-        asking them. Send something you are happy to publish for good.</p>
-        <label for="ia-file">The file</label>
-        <input id="ia-file" type="file" accept="audio/*,video/*">
-        <label for="ia-title">What to call it</label>
-        <input id="ia-title" maxlength="200" placeholder="Episode 12 - the one about cheese">
-        <label for="ia-id">Its address at archive.org</label>
-        <input id="ia-id" maxlength="90" placeholder="filled in from the title">
-        <p class="hint">This becomes archive.org/details/&lt;address&gt;. It is
-        permanent and shared with everybody there, so it has to be free.</p>
-        <button class="btn-primary" type="button" id="ia-send">Send it</button>
-        <p class="hint" id="ia-progress" aria-live="polite"></p>
-      </section>
-
-      <section class="panel narrow" id="ia-items-card" hidden>
-        <h2>What you have there already</h2>
-        <p class="hint" id="ia-items-note">Looking\u2026</p>
-        <div id="ia-items"></div>
-      </section>
-
-      <script>
-      (function () {
-        var who = document.getElementById('ia-who');
-        var upload = document.getElementById('ia-upload-card');
-        var itemsCard = document.getElementById('ia-items-card');
-        var itemsNote = document.getElementById('ia-items-note');
-        var items = document.getElementById('ia-items');
-
-        function bytes(n) {
-          if (!n) return '';
-          var u = ['bytes', 'KB', 'MB', 'GB'];
-          var i = 0; while (n >= 1024 && i < u.length - 1) { n = n / 1024; i++; }
-          return (i ? n.toFixed(1) : n) + ' ' + u[i];
-        }
-
-        fetch('/admin/account/archive-whoami').then(function (r) { return r.json(); }).then(function (d) {
-          if (!d.authorized) {
-            who.textContent = d.error ? 'Those keys were refused: ' + d.error : '';
-            return;
-          }
-          who.textContent = 'Working. These keys belong to ' + (d.screenname || d.email) + '.';
-          upload.hidden = false;
-          itemsCard.hidden = false;
-          loadItems();
-        }).catch(function () {});
-
-        function loadItems() {
-          fetch('/admin/account/archive-items').then(function (r) { return r.json(); }).then(function (d) {
-            if (!d.items || !d.items.length) {
-              itemsNote.textContent = 'Nothing there yet. Anything you send appears here.';
-              return;
-            }
-            itemsNote.textContent = d.total + ' item' + (d.total === 1 ? '' : 's') + ' under your account, newest first.';
-            items.innerHTML = d.items.map(function (it) {
-              return '<div class="ia-item"><strong>' + esc(it.title) + '</strong>'
-                + '<span class="hint">' + esc(it.date) + ' \u00b7 ' + esc(it.identifier) + (it.size ? ' \u00b7 ' + bytes(it.size) : '') + '</span>'
-                + '<a class="btn-secondary btn-small" href="https://archive.org/details/' + encodeURIComponent(it.identifier) + '" target="_blank" rel="noopener">Open</a></div>';
-            }).join('');
-          }).catch(function () { itemsNote.textContent = 'archive.org did not answer just now.'; });
-        }
-
-        function esc(t) { var d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; }
-
-        var file = document.getElementById('ia-file');
-        var title = document.getElementById('ia-title');
-        var id = document.getElementById('ia-id');
-        var send = document.getElementById('ia-send');
-        var progress = document.getElementById('ia-progress');
-
-        function slug(t) {
-          return String(t || '').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '').slice(0, 90);
-        }
-        title.addEventListener('input', function () { if (!id.dataset.touched) id.value = slug(title.value); });
-        id.addEventListener('input', function () { id.dataset.touched = '1'; });
-        file.addEventListener('change', function () {
-          if (!title.value && file.files[0]) {
-            title.value = file.files[0].name.replace(/\.[a-z0-9]+$/i, '');
-            id.value = slug(title.value);
-          }
-        });
-
-        send.addEventListener('click', function () {
-          var f = file.files[0];
-          if (!f) { progress.textContent = 'Choose a file first.'; return; }
-          var identifier = slug(id.value || title.value);
-          if (!identifier) { progress.textContent = 'It needs an address at archive.org.'; return; }
-          send.disabled = true;
-          progress.textContent = 'Asking archive.org whether that address is free\u2026';
-
-          fetch('/admin/account/archive-upload-keys?identifier=' + encodeURIComponent(identifier))
-            .then(function (r) { return r.json(); })
-            .then(function (k) {
-              if (k.error) throw new Error(k.error);
-              id.value = k.identifier;
-              // Straight from here to archive.org. XHR rather than fetch
-              // because only XHR reports how far a request body has got.
-              var xhr = new XMLHttpRequest();
-              var name = f.name.replace(/[^A-Za-z0-9._-]+/g, '-');
-              xhr.open('PUT', 'https://s3.us.archive.org/' + encodeURIComponent(k.identifier) + '/' + encodeURIComponent(name));
-              xhr.setRequestHeader('authorization', 'LOW ' + k.accessKey + ':' + k.secretKey);
-              xhr.setRequestHeader('x-archive-auto-make-bucket', '1');
-              xhr.setRequestHeader('x-archive-meta-collection', k.collection);
-              xhr.setRequestHeader('x-archive-meta-mediatype', 'audio');
-              xhr.setRequestHeader('x-archive-meta-title', title.value || identifier);
-              xhr.upload.onprogress = function (e) {
-                if (!e.lengthComputable) return;
-                progress.textContent = 'Sending: ' + Math.round((e.loaded / e.total) * 100) + '% of ' + bytes(e.total);
-              };
-              xhr.onload = function () {
-                send.disabled = false;
-                if (xhr.status >= 200 && xhr.status < 300) {
-                  var url = 'https://archive.org/download/' + encodeURIComponent(k.identifier) + '/' + encodeURIComponent(name);
-                  progress.innerHTML = 'Sent. It is at <a href="' + url + '" target="_blank" rel="noopener">' + esc(url) + '</a>'
-                    + ' \u2014 archive.org takes a few minutes to finish processing it.';
-                  setTimeout(loadItems, 4000);
-                } else {
-                  // The Archive answers in S3's XML. The sentence inside
-                  // it is the only part worth showing anybody.
-                  var said = (/<Message>([^<]+)<\/Message>/.exec(xhr.responseText || '') || [])[1];
-                  progress.textContent = 'archive.org refused it: ' + (said || 'it answered ' + xhr.status + '.');
-                }
-              };
-              xhr.onerror = function () { send.disabled = false; progress.textContent = 'The connection to archive.org failed.'; };
-              var headerTitle = title.value || identifier;
-              xhr.setRequestHeader('x-archive-meta-description', headerTitle);
-              progress.textContent = 'Sending\u2026';
-              xhr.send(f);
-            })
-            .catch(function (err) { send.disabled = false; progress.textContent = err.message; });
-        });
-      })();
-      </script>`,
+      </section>` : ''}`,
     });
   }
 
@@ -1991,89 +1656,6 @@ function createAdminRouter(ctx) {
       return true;
     }
 
-    // Do the keys work, and whose are they? Asked from the page so it
-    // can show the upload and the library only when there is a point.
-    if (p === '/admin/account/archive-whoami' && req.method === 'GET') {
-      const who = await archiveorg.whoami(archiveKeys());
-      sendJson(res, 200, who);
-      return true;
-    }
-
-    // What the account already holds. The search is public, so this is
-    // only a proxy for tidiness - it keeps the account's email, which we
-    // learn from the keys, off the page.
-    if (p === '/admin/account/archive-items' && req.method === 'GET') {
-      const who = await archiveorg.whoami(archiveKeys());
-      if (!who.authorized) { sendJson(res, 200, { items: [], total: 0, error: who.error || 'no keys' }); return true; }
-      try {
-        const page = Number(url.searchParams.get('page') || 1);
-        sendJson(res, 200, await archiveorg.itemsFor({ email: who.email, page }));
-      } catch (err) { sendJson(res, 200, { items: [], total: 0, error: err.message }); }
-      return true;
-    }
-
-    // The playable files inside one item, for the episode form's picker.
-    if (p.startsWith('/admin/account/archive-item/') && req.method === 'GET') {
-      let identifier = '';
-      try { identifier = decodeURIComponent(p.slice('/admin/account/archive-item/'.length)); } catch { identifier = ''; }
-      if (!/^[a-z0-9][a-z0-9._-]{1,99}$/i.test(identifier)) { sendJson(res, 400, { files: [], error: 'no item named' }); return true; }
-      try { sendJson(res, 200, await archiveorg.audioFilesOf(identifier)); }
-      catch (err) { sendJson(res, 200, { files: [], error: err.message }); }
-      return true;
-    }
-
-    // The five most recent, each already reduced to a playable file, so
-    // the episode form asks once rather than twice.
-    if (p === '/admin/account/archive-recent' && req.method === 'GET') {
-      const who = await archiveorg.whoami(archiveKeys());
-      if (!who.authorized) { sendJson(res, 200, { episodes: [], total: 0, error: who.error || 'no keys' }); return true; }
-      try { sendJson(res, 200, await archiveorg.recentEpisodes({ email: who.email })); }
-      catch (err) { sendJson(res, 200, { episodes: [], total: 0, error: err.message }); }
-      return true;
-    }
-
-    // The keys themselves, so the browser can send a file straight to
-    // archive.org without it passing through this server. They are the
-    // operator's own keys, handed to the operator's own signed-in page,
-    // over the same connection that would have carried the file anyway -
-    // and never stored by the browser.
-    if (p === '/admin/account/archive-upload-keys' && req.method === 'GET') {
-      const keys = archiveKeys();
-      if (!keys.accessKey || !keys.secretKey) { sendJson(res, 200, { error: 'No archive.org keys are saved yet.' }); return true; }
-      const wanted = String(url.searchParams.get('identifier') || '').trim();
-      if (!/^[a-z0-9][a-z0-9._-]{1,89}$/i.test(wanted)) { sendJson(res, 200, { error: 'That address will not do: letters, numbers and dashes.' }); return true; }
-      let identifier;
-      try { identifier = await archiveorg.freeIdentifier(wanted); }
-      catch (err) { sendJson(res, 200, { error: err.message }); return true; }
-      res.setHeader('Cache-Control', 'no-store');
-      sendJson(res, 200, {
-        accessKey: keys.accessKey,
-        secretKey: keys.secretKey,
-        identifier,
-        collection: archiveorg.COLLECTION,
-      });
-      return true;
-    }
-
-    if (p === '/admin/account/archive-keys' && req.method === 'POST') {
-      const form = await formBody(req, readBody);
-      const value = settings();
-      if (url.searchParams.get('clear')) {
-        delete value.archiveAccessKey;
-        delete value.archiveSecretKey;
-      } else {
-        // An empty box means "keep what you have", so a podcaster can
-        // replace one key without retyping the other.
-        const access = String(form.get('accessKey') || '').trim().slice(0, 200);
-        const secret = String(form.get('secretKey') || '').trim().slice(0, 200);
-        if (access) value.archiveAccessKey = access;
-        if (secret) value.archiveSecretKey = secret;
-      }
-      store.save('settings', value);
-      redirect(res, '/admin/account');
-      return true;
-    }
-
     if (p === '/admin/account/password' && req.method === 'POST') {
       const form = await formBody(req, readBody);
       const current = String(form.get('current') || '');
@@ -2141,7 +1723,6 @@ function createAdminRouter(ctx) {
           measure(episode.id);
               // Asked for at the same time as the episode: the upload runs in
           // the background and the episode page shows how it is going.
-          if (form.get('archive') === '1') startArchiveUpload(episode, show);
         }
         redirect(res, '/admin/episodes');
         return true;
@@ -2271,7 +1852,7 @@ function createAdminRouter(ctx) {
       }
     }
 
-    const episodeMatch = p.match(/^\/admin\/episodes\/([a-f0-9-]+)(\/delete|\/archive|\/transcript)?$/);
+    const episodeMatch = p.match(/^\/admin\/episodes\/([a-f0-9-]+)(\/delete|\/transcript)?$/);
     if (episodeMatch) {
       const episode = episodes().find((e) => e.id === episodeMatch[1]);
       if (!episode) { redirect(res, '/admin/episodes'); return true; }
@@ -2324,16 +1905,6 @@ function createAdminRouter(ctx) {
         return true;
       }
 
-      // Start an upload to the Internet Archive, and answer with where it
-      // has got to. The page asks again every couple of seconds rather
-      // than holding a request open for the length of the transfer.
-      if (episodeMatch[2] === '/archive') {
-        if (req.method === 'POST') {
-          if (DEMO) return sendJson(res, 403, { error: 'demo instance is read-only' });
-          return sendJson(res, 200, startArchiveUpload(episode, show));
-        }
-        if (req.method === 'GET') return sendJson(res, 200, archiveState(episode));
-      }
       if (!episodeMatch[2] && req.method === 'POST') {
         const form = await formBody(req, readBody);
         const list = episodes();

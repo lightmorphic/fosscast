@@ -514,59 +514,6 @@ function webCopy(file, maxSide) {
   });
 })();
 
-// Choosing an episode's audio from what is already at archive.org. It
-// is an offer, not a step: the podcaster may keep their audio anywhere,
-// so this stays out of the way until asked and then covers the page
-// rather than growing inside the form.
-(() => {
-  const button = document.getElementById('ia-pick');
-  const field = document.getElementById('mediaUrl');
-  if (!button || !field) return;
-
-  const esc = (t) => { const d = document.createElement('div'); d.textContent = t == null ? '' : t; return d.innerHTML; };
-
-  const back = document.createElement('div');
-  back.className = 'ia-back';
-  back.hidden = true;
-  back.innerHTML = '<div class="ia-modal" role="dialog" aria-modal="true" aria-label="Your recordings at archive.org">'
-    + '<button class="ia-x" type="button" aria-label="Close">&times;</button>'
-    + '<h2>Your last five at archive.org</h2>'
-    + '<div class="ia-body"><p class="hint">Asking archive.org\u2026</p></div></div>';
-  document.body.appendChild(back);
-  const body = back.querySelector('.ia-body');
-
-  const close = () => { back.hidden = true; };
-  back.addEventListener('click', (ev) => { if (ev.target === back || ev.target.closest('.ia-x')) close(); });
-  document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !back.hidden) close(); });
-
-  button.addEventListener('click', async () => {
-    back.hidden = false;
-    body.innerHTML = '<p class="hint">Asking archive.org\u2026</p>';
-    let data;
-    try { data = await (await fetch('/admin/account/archive-recent')).json(); }
-    catch { body.innerHTML = '<p class="hint">archive.org did not answer just now.</p>'; return; }
-    if (!data.episodes || !data.episodes.length) {
-      body.innerHTML = '<p class="hint">' + esc(data.error || 'Nothing playable is there under your account yet.') + '</p>';
-      return;
-    }
-    const more = data.total > data.episodes.length
-      ? '<p class="hint">The five most recent. You have ' + data.total + ' items there in all - for an older one, copy its address from archive.org and paste it in.</p>'
-      : '<p class="hint">Everything playable under your account. Click one.</p>';
-    body.innerHTML = more + data.episodes.map((e, i) =>
-      '<button class="ia-choice" type="button" data-i="' + i + '">'
-      + '<strong>' + esc(e.name) + '</strong>'
-      + '<span>' + esc(e.url) + '</span></button>').join('');
-    body.querySelectorAll('.ia-choice').forEach((choice) => {
-      choice.addEventListener('click', () => {
-        field.value = data.episodes[Number(choice.dataset.i)].url;
-        field.dispatchEvent(new Event('change', { bubbles: true }));
-        close();
-        field.focus();
-      });
-    });
-  });
-})();
-
 // The embed code, where somebody who wants it is standing: the row in
 // the episode list. Clicking used to open the player itself, which is
 // the one thing nobody needs at that moment - they need the line of
@@ -576,10 +523,10 @@ function webCopy(file, maxSide) {
   if (!table || !table.querySelector('[data-embed]')) return;
 
   const back = document.createElement('div');
-  back.className = 'ia-back';
+  back.className = 'modal-back';
   back.hidden = true;
-  back.innerHTML = '<div class="ia-modal" role="dialog" aria-modal="true" aria-label="Embed code">'
-    + '<button class="ia-x" type="button" aria-label="Close">&times;</button>'
+  back.innerHTML = '<div class="modal-card" role="dialog" aria-modal="true" aria-label="Embed code">'
+    + '<button class="modal-x" type="button" aria-label="Close">&times;</button>'
     + '<h2>Put this episode on a page</h2>'
     + '<p class="hint" id="embed-for"></p>'
     + '<div class="embed-code"><button class="btn-secondary btn-small embed-copy" type="button">Copy</button>'
@@ -592,7 +539,7 @@ function webCopy(file, maxSide) {
   const forWho = back.querySelector('#embed-for');
   const copy = back.querySelector('.embed-copy');
   const close = () => { back.hidden = true; };
-  back.addEventListener('click', (ev) => { if (ev.target === back || ev.target.closest('.ia-x')) close(); });
+  back.addEventListener('click', (ev) => { if (ev.target === back || ev.target.closest('.modal-x')) close(); });
   document.addEventListener('keydown', (ev) => { if (ev.key === 'Escape' && !back.hidden) close(); });
 
   copy.addEventListener('click', async () => {
@@ -620,83 +567,6 @@ function webCopy(file, maxSide) {
   });
 })();
 
-// Sending an episode to the Internet Archive. The upload runs on the
-// server and can take a while, so the button starts it and the page asks
-// every couple of seconds how far it has got.
-(() => {
-  const panel = document.querySelector('[data-archive-panel]');
-  if (!panel) return;
-  const id = panel.dataset.archivePanel;
-  const status = panel.querySelector('.archive-status');
-  const button = panel.querySelector('[data-archive]');
-  let polling = null;
-
-  const size = (n) => (n > 1048576 ? (n / 1048576).toFixed(1) + ' MB' : Math.round(n / 1024) + ' KB');
-
-  function show(job) {
-    if (job.state === 'running') {
-      status.className = 'hint archive-status';
-      status.textContent = job.total
-        ? 'Uploading \u2013 ' + size(job.sent) + ' of ' + size(job.total)
-          + ' (' + Math.round((job.sent / job.total) * 100) + '%)'
-        : 'Starting the upload\u2026';
-      return true;
-    }
-    if (job.state === 'done') {
-      status.className = 'hint archive-status';
-      status.textContent = 'Done. Reloading\u2026';
-      setTimeout(() => window.location.reload(), 800);
-      return false;
-    }
-    if (job.state === 'failed') {
-      status.className = 'hint archive-status form-error';
-      status.textContent = job.error || 'That did not work.';
-      if (button) { button.disabled = false; button.textContent = 'Try again'; }
-      return false;
-    }
-    return false;
-  }
-
-  function poll() {
-    polling = setInterval(() => {
-      fetch('/admin/episodes/' + id + '/archive')
-        .then((r) => r.json())
-        .then((job) => { if (!show(job)) clearInterval(polling); })
-        .catch(() => {});
-    }, 2000);
-  }
-
-  if (button) {
-    button.addEventListener('click', () => {
-      button.disabled = true;
-      button.textContent = 'Sending\u2026';
-      status.className = 'hint archive-status';
-      status.textContent = 'Starting the upload\u2026';
-      fetch('/admin/episodes/' + id + '/archive', { method: 'POST' })
-        .then((r) => r.json())
-        .then((job) => { if (show(job)) poll(); })
-        .catch(() => {
-          status.className = 'hint archive-status form-error';
-          status.textContent = 'Could not reach this server to start the upload.';
-          button.disabled = false;
-          button.textContent = 'Try again';
-        });
-    });
-  }
-
-  // An upload already running when the page was opened (a reload, or a
-  // second tab) is picked up rather than started again.
-  fetch('/admin/episodes/' + id + '/archive')
-    .then((r) => r.json())
-    .then((job) => {
-      if (job.state === 'running') {
-        if (button) { button.disabled = true; button.textContent = 'Sending\u2026'; }
-        show(job);
-        poll();
-      }
-    })
-    .catch(() => {});
-})();
 
 document.addEventListener('click', (e) => {
   const confirmBtn = e.target.closest('.btn-confirm');

@@ -707,7 +707,7 @@ body.embedded .wrap { padding-top: 0.5rem; }
 
 /* A pop-up: the page keeps its place underneath, and what was asked for
    sits in the middle of the screen with a way out at the top right. */
-.ia-back {
+.modal-back {
   position: fixed;
   inset: 0;
   z-index: 40;
@@ -717,8 +717,8 @@ body.embedded .wrap { padding-top: 0.5rem; }
   background: rgba(9, 9, 11, 0.45);
   backdrop-filter: blur(3px);
 }
-.ia-back[hidden] { display: none; }
-.ia-modal {
+.modal-back[hidden] { display: none; }
+.modal-card {
   position: relative;
   width: min(34rem, 100%);
   max-height: 82vh;
@@ -729,8 +729,8 @@ body.embedded .wrap { padding-top: 0.5rem; }
   box-shadow: 0 2rem 4rem rgba(0, 0, 0, 0.35);
   padding: 1.5rem 1.6rem 1.75rem;
 }
-.ia-modal h2 { margin: 0 2rem 0.35rem 0; font-size: 1.2rem; }
-.ia-x {
+.modal-card h2 { margin: 0 2rem 0.35rem 0; font-size: 1.2rem; }
+.modal-x {
   position: absolute;
   top: 0.6rem;
   right: 0.75rem;
@@ -742,31 +742,7 @@ body.embedded .wrap { padding-top: 0.5rem; }
   cursor: pointer;
   padding: 0.25rem 0.4rem;
 }
-.ia-x:hover { color: var(--fg); }
-
-/* One recording to choose: its file name, and the address underneath so
-   nobody has to guess which one it is. The whole row is the button. */
-.ia-choice {
-  display: block;
-  width: 100%;
-  text-align: left;
-  font: inherit;
-  background: none;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 0.7rem 0.85rem;
-  margin-top: 0.6rem;
-  cursor: pointer;
-}
-.ia-choice:hover { border-color: var(--accent); }
-.ia-choice strong { display: block; font-size: 0.9375rem; }
-.ia-choice span {
-  display: block;
-  color: var(--muted-fg);
-  font-size: 0.78rem;
-  margin-top: 0.2rem;
-  word-break: break-all;
-}
+.modal-x:hover { color: var(--fg); }
 
 /* The embed snippet, with its copy button in the corner. */
 .embed-code { position: relative; margin: 0.75rem 0; }
@@ -793,20 +769,6 @@ body.embedded .wrap { padding-top: 0.5rem; }
   cursor: pointer;
 }
 .linkish:hover { text-decoration: underline; }
-
-/* A row in an archive.org list: what it is, when, and the button that
-   takes it. Same shape whether it is an item or a file inside one. */
-.ia-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.6rem 0;
-  border-bottom: 1px solid var(--border);
-}
-.ia-item:last-child { border-bottom: none; }
-.ia-item strong { flex: 1; min-width: 0; font-size: 0.9375rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ia-item .hint { flex: none; font-size: 0.8125rem; }
-.ia-item .btn-secondary { flex: none; margin-top: 0; }
 
 /* ---------- Feed check ---------- */
 /* Ten short ticks down the left of a full-width card left the right

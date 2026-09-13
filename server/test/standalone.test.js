@@ -75,10 +75,6 @@ test('every hook is inert until somebody configures it', () => {
   assert.equal(publicSite.prefixed(url, ''), url);
   assert.equal(publicSite.prefixed(url, 'not a url'), url);
 
-  // The Archive connector exists but reaches for nothing until an
-  // instance has been given keys of its own.
-  const archiveorg = require('../lib/archiveorg');
-  assert.equal(typeof archiveorg.put, 'function');
 });
 
 test('the feed and the site stand up with no configuration at all', () => {

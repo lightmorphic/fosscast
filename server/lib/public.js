@@ -25,7 +25,7 @@ function mediaType(url) {
 //
 // Media this server holds is linked straight at: the media route counts
 // the download as it goes past. Media that lives somewhere else - the
-// show's own host, an archive.org item - would never touch this server,
+// show's own bucket, say - would never touch this server,
 // so nothing could be counted and the statistics page would sit empty
 // however many people listened. Those are published as a link back
 // here, and /d hands the listener onward.
@@ -287,8 +287,8 @@ function landing() {
     </div>
     <div class="panel">
       <h2>Episodes</h2>
-      <p>Video and audio, hosted here or anywhere else, archive.org
-      included.</p>
+      <p>Video and audio, held on this server or anywhere else that
+      serves a file.</p>
     </div>
     <div class="panel">
       <h2>Subscribe anywhere</h2>

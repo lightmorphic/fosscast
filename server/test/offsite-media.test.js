@@ -16,11 +16,11 @@ const PORT = 3800 + Math.floor(Math.random() * 100);
 const BASE = `http://127.0.0.1:${PORT}`;
 const DATA = fs.mkdtempSync(path.join(os.tmpdir(), 'fosscast-offsite-'));
 
-const OFFSITE = 'https://archive.org/download/a-show/episode-one.mp3';
+const OFFSITE = 'https://files.example.com/a-show/episode-one.mp3';
 const AWAY = { id: 'aaaaaaaa-0000-4000-8000-000000000001', mediaUrl: OFFSITE };
 const HERE = { id: 'bbbbbbbb-0000-4000-8000-000000000002', mediaUrl: '/media/episode-two.mp3' };
-const DRAFT = { id: 'cccccccc-0000-4000-8000-000000000003', mediaUrl: 'https://archive.org/download/a-show/unfinished.mp3', draft: true };
-const FUTURE = { id: 'dddddddd-0000-4000-8000-000000000004', mediaUrl: 'https://archive.org/download/a-show/embargoed.mp3', date: '2099-01-01' };
+const DRAFT = { id: 'cccccccc-0000-4000-8000-000000000003', mediaUrl: 'https://files.example.com/a-show/unfinished.mp3', draft: true };
+const FUTURE = { id: 'dddddddd-0000-4000-8000-000000000004', mediaUrl: 'https://files.example.com/a-show/embargoed.mp3', date: '2099-01-01' };
 
 let child;
 
