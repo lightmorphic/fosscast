@@ -2,13 +2,12 @@
 
 > **This project is in public beta.** It is not ready to be relied on;
 > data loss and breaking changes are possible. Please do not put a real
-> show on it yet. This document describes the beta as it stands and will
-> change with it.
+> podcast on it yet. This document describes the beta as it stands and
+> will change with it.
 
 How a recording studio publishes finished episodes to a FOSSCast
-instance. Live streaming and chat are FOSSStudio's own territory (see
-live-handover.md for what moved there); FOSSCast's side of the
-relationship is this one API.
+instance. This one API is the whole of FOSSCast's side of the
+relationship.
 
 ## Publishing episodes (the publish API)
 

@@ -62,13 +62,13 @@ module.exports = function create({ episodes, settings }) {
             placeholder="/@${esc(show.slug)}/feed.xml"
             value="${esc((show.feedAliases || []).join(', '))}">
           <p class="hint">More than one? Separate them with commas. A whole web
-          address is fine &mdash; only the part after the domain is used.</p>
+          address is fine - only the part after the domain is used.</p>
           <p class="save-state" aria-live="polite"></p>
         </form>
         ${(show.feedAliases || []).length ? `<p class="hint">Answering now:
         ${(show.feedAliases || []).map((a) => `<code>${esc(a)}</code>`).join(' &middot; ')}</p>` : ''}
         <p class="hint">This only works for an address on a domain that points
-        here. One on your old host's own domain belongs to them &mdash; ask them
+        here. One on your old host's own domain belongs to them - ask them
         to forward it before you leave, which most hosts offer, and the
         directories follow that instead.</p>
       </section>
@@ -80,7 +80,7 @@ module.exports = function create({ episodes, settings }) {
         <ul class="checks">
           ${checks.map(([label, ok, fix]) => `<li class="${ok ? 'check-ok' : 'check-bad'}">
             <span aria-hidden="true">${ok ? '&#10003;' : '!'}</span>
-            <span>${esc(label)}${ok ? '' : ` &mdash; ${esc(fix)}`}</span>
+            <span>${esc(label)}${ok ? '' : ` - ${esc(fix)}`}</span>
           </li>`).join('')}
         </ul>
       </section>
@@ -155,7 +155,7 @@ module.exports = function create({ episodes, settings }) {
           <div class="subsection">
           <label for="sbanner">Website banner</label>
           <p class="hint">The strip across the top of your site, drawn
-          <strong>976 x 244</strong> (4:1) &mdash; make it that and it is
+          <strong>976 x 244</strong> (4:1) - make it that and it is
           exactly right. Anything bigger is fine too: your browser shrinks
           a copy to 976 for the website and the file you chose is kept as
           it is. On a phone the strip goes 3:1 and takes the sides off, so

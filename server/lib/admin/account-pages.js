@@ -68,7 +68,7 @@ module.exports = function create({ settings, shows, episodes, stats }) {
 
       ${STUDIO_PUBLISHING ? `<section class="panel narrow">
         <h2>Studio publishing</h2>
-        <p class="hint">The key FOSSStudio &mdash; or any other studio &mdash;
+        <p class="hint">The key FOSSStudio, or any other studio,
         uses to publish a finished recording straight into this instance.
         It was generated when the instance started; copy it into the
         studio's settings. Anyone holding it can publish here, so treat it

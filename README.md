@@ -21,10 +21,11 @@ app.
 
 FOSSCast is the audience-facing companion to
 [FOSSStudio](https://github.com/lightmorphic/fossstudio), the
-self-hosted studio shows are recorded in. The two are separate apps
-that talk through one small, stable interface (the publish API);
-neither needs the other to run. Live streaming and audience chat are
-FOSSStudio's territory, not this app's.
+self-hosted studio episodes are recorded in: guests join by a link with
+no account and no download, each is recorded on their own track, and one
+click publishes the finished recording straight in here. The two are
+separate apps that talk through one small, stable interface (the publish
+API), and neither needs the other to run.
 
 ## Free, and staying free
 
@@ -46,15 +47,14 @@ software, and you never will.
      one that isn't, that is a bug report we want. -->
 
 
-- **Episode website**: the show gets clean pages for its episodes,
-  video and audio players, artwork and banners, and an RSS feed
-  podcast apps can subscribe to. Media files can live on FOSSCast's
-  own storage or anywhere else reachable by URL, including
-  archive.org.
-- **Their site, their look**: a Look tab sets the colour (presets or any
-  hex), background (colour, gradient or image), card style, corners,
-  type, width, episode layout, light/dark, tagline, footer and custom
-  CSS, with a live preview of the real page.
+- **Episode website**: the podcast gets clean pages for its episodes,
+  audio and video players, artwork and a banner, and an RSS feed any
+  podcast app can subscribe to. Media files can live on FOSSCast's own
+  storage or anywhere else that serves a file over HTTP.
+- **Their site, their colour**: a Look tab sets the accent colour, a
+  tagline and a footer line, with a live preview of the real page. Every
+  other shade the site needs is worked out from the one colour, and link
+  text is walked darker or lighter until it clears 4.5:1.
 - **Statistics without surveillance**: a page of charts -- months, days,
   apps, countries, platforms, languages, when people listen, how long an
   episode keeps earning -- all drawn on your own server from counters
@@ -62,6 +62,9 @@ software, and you never will.
 - **Where to find you**: Matrix first, then Mastodon, PeerTube, Lemmy,
   Bluesky and the big platforms -- eighteen in all, as buttons on your
   page.
+- **Where to listen**: Apple Podcasts, Spotify, YouTube Music, Amazon
+  Music, Pocket Casts, Overcast and Podcast Index, as buttons on the
+  page once you have pasted each address in.
 - **Getting paid**: Patreon, Buy Me a Coffee, Ko-fi, Liberapay, GitHub
   Sponsors, Open Collective and PayPal links become buttons on the show
   page and `podcast:funding` tags in the feed.
@@ -76,9 +79,10 @@ software, and you never will.
 ## What it does not do
 
 FOSSCast's scope is settled, not merely unfinished. One instance is one
-podcast: its feed, its site, its download counting, its media on your
-own storage or at archive.org, an import from whatever host you are
-leaving, and the details the directories ask for when you submit it.
+podcast: its feed, its site, its download counting, its media on the
+machine it runs on or on storage of your own, an import from whatever
+host you are leaving, and the details the directories ask for when you
+submit it.
 
 These are not on the list and are not coming:
 
@@ -108,6 +112,24 @@ is typed once. Point your domain's DNS at the machine, paste this into
 `docker-compose.yml`, edit those lines, and run `docker compose up -d`:
 
 ```yaml
+# FOSSCast, the whole thing, from a single file.
+#
+# Everything you need to change is in the block at the top. Paste this
+# into docker-compose.yml, edit those three lines, and run:
+#
+#   docker compose up -d
+#
+# That is the install. No checkout, no build, no .env file, no
+# Caddyfile: the published image carries the app and its web assets.
+#
+# The bundled Caddy at the foot of this file is commented out. Take the
+# hashes off and it gets you an HTTPS certificate on its own; leave them
+# and point your existing proxy at 127.0.0.1:3100. Point your domain's
+# DNS at the machine before either.
+#
+# It runs the same image as the maintainer's own instances, built from
+# the main branch of github.com/lightmorphic/fosscast.
+
 x-config: &config
   DOMAIN: podcast.example.com          # your public address
   ADMIN_EMAIL: you@example.com         # the first admin account
@@ -118,35 +140,73 @@ services:
     image: ghcr.io/lightmorphic/fosscast:latest
     restart: unless-stopped
     environment: *config
+    # Your own proxy dials this. Behind the bundled Caddy below it is
+    # simply unused, so it is right either way.
+    ports:
+      - "127.0.0.1:3100:3100"
     volumes:
       - fosscast_data:/data
     read_only: true
-    tmpfs: [/tmp]
+    tmpfs:
+      - /tmp
     cap_drop: [ALL]
-    security_opt: [no-new-privileges:true]
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 256
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://127.0.0.1:3100/healthz"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+    logging: &log
+      driver: json-file
+      options:
+        max-size: "10m"
+        max-file: "3"
 
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    environment: *config
-    command: sh -c 'caddy reverse-proxy --from "$$DOMAIN" --to app:3100'
-    ports: ["80:80", "443:443"]
-    volumes:
-      - caddy_data:/data
-      - caddy_config:/config
-    cap_add: [NET_BIND_SERVICE]
+  # HTTPS, and the certificate, done for you. Already running nginx,
+  # Apache, a tunnel or any other proxy on this machine? Leave this
+  # commented out and point yours at 127.0.0.1:3100. Otherwise take the
+  # "# " off every line from here to the bottom of the file, change
+  # nothing else, and Caddy will fetch and renew the certificate on its
+  # own within a minute of the first request.
+#   caddy:
+#     image: caddy:2-alpine
+#     restart: unless-stopped
+#     environment: *config
+#     command: sh -c 'caddy reverse-proxy --from "$$DOMAIN" --to app:3100'
+#     ports:
+#       - "80:80"
+#       - "443:443"
+#     volumes:
+#       - caddy_data:/data
+#       - caddy_config:/config
+#     cap_drop: [ALL]
+#     cap_add: [NET_BIND_SERVICE]
+#     security_opt:
+#       - no-new-privileges:true
+#     pids_limit: 256
+#     logging: *log
 
 volumes:
   fosscast_data:
-  caddy_data:
-  caddy_config:
+#   caddy_data:
+#   caddy_config:
 ```
 
 That is the whole installation. The image carries the app and its web
-assets, Caddy is configured by that one command line, and the HTTPS
-certificate arrives on its own within a minute of the first request.
-Log in at `https://your-domain/admin` with the email and password you
-put in the file, and change the password from the Account page.
+assets, and nothing else is installed on the machine.
+
+The bundled Caddy at the foot of that file is commented out, because a
+machine that already runs nginx or Apache must not have ports 80 and
+443 taken out from under it. Nothing is fronting this box yet? Take the
+`# ` off every line from the Caddy note to the bottom of the file and
+the HTTPS certificate arrives on its own within a minute of the first
+request. Something already is? Leave the hashes where they are and
+point it at `127.0.0.1:3100`, which the app publishes either way.
+
+Then log in at `https://your-domain/admin` with the email and password
+you put in the file, and change the password from the Account page.
 
 The same file lives in the repository as `docker-compose.pull.yml`, and
 it runs the same image as the maintainer's own instances: every push to
@@ -161,16 +221,10 @@ mounts `web/` so edits show up on reload.
 
 ### Bring your own reverse proxy (nginx, Apache, a tunnel)
 
-Already running nginx or another proxy? Use the byo-proxy stack, which
-is the same thing minus Caddy:
-
-```bash
-docker compose -f docker-compose.byo-proxy.yml up -d --build
-```
-
-The app stays bound to `127.0.0.1:3100` (change with `BIND_HOST` and
-`HTTP_PORT`), and your proxy points there. Three things Caddy does for
-us that another front must handle itself:
+Leave the Caddy service commented out and the app stays bound to
+`127.0.0.1:3100` (change it with `BIND_HOST` and `HTTP_PORT`), with your
+own proxy in front. Three things Caddy would have done that another
+front must handle itself:
 
 1. **Forwarded client IPs.** FOSSCast reads `X-Forwarded-For` for
    login rate limiting and download counting. Without it every
@@ -231,8 +285,8 @@ services:
       - fosscast_data:/data
 ```
 
-Delete the `caddy` service from the compose file; the other machine is
-your front now.
+Leave the Caddy service commented out; the other machine is your front
+now.
 
 - **Bind to one address, not all of them.** `10.0.0.5:3100` on a private
   network, or a Tailscale address (`100.x.y.z:3100`) if the two machines
@@ -279,9 +333,9 @@ internal, member-only or staging instances rather than a public show.
 The dashboard lives at `/admin`. The first admin account comes from
 `ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env` (created on first start;
 change the password from the Account page after logging in). From the
-dashboard you create your show and publish episodes (media by upload
-or URL: your own storage, archive.org, anywhere reachable). The show
-gets its public pages and RSS feed automatically.
+dashboard you create your podcast and publish episodes (media by upload
+or by address: this machine, your own storage, anywhere that serves a
+file). The podcast gets its public pages and RSS feed automatically.
 
 One instance hosts one podcast: your show, your site, your feed, on
 your own hardware.
@@ -311,33 +365,38 @@ tags above only cover apps that subscribe to the feed directly.
 |---|---|---|
 | Podcast artwork | **3000 x 3000** square | JPG or PNG, RGB. Apple accepts 1400 x 1400 upwards; 3000 is the safe maximum every directory takes. Keep it under about 500 KB. |
 | Episode cover art | **3000 x 3000** square | Optional per episode. Apps that support per-episode art show it; the rest fall back to the podcast artwork, and so does this site. |
-| Banner video | **shape unchanged, at least 976 x 244** | Optional, alongside the still banner: with both uploaded you choose the video, the still, or either at random on each visit. Do not crop it: shrink it keeping its own shape until the smaller side just clears 976 x 244 - the size the banner is drawn at - then choose which part shows by dragging a box over the playing video in the dashboard. Aim for under 1 MB, 5-8 seconds, about 1 Mbps, no audio; refused past 1920 x 1080, 2 MB, 15 seconds or 1.5 Mbps. Nothing is re-encoded on the server, so a video is served exactly as uploaded. |
-| Website banner | **976 x 244** (4:1) | JPG, PNG or WebP. That is the size it is drawn at; bigger is fine, since the server shrinks a copy to 976 for the site and keeps your original for the directories. Edges crop on narrow screens, so keep anything important central. |
+| Website banner | **976 x 244** (4:1) | JPG, PNG or WebP. That is the size it is drawn at; bigger is fine, since your browser shrinks a copy to 976 for the site and the file you chose is kept as it is. Edges crop on narrow screens, so keep anything important central. |
 
 The banner is drawn **976 x 244** points wide at the standard page width
 (784 x 196 narrow, 1168 x 292 wide), and squares up to 3:1 on a phone,
 cropping the sides. Twice the drawn size is what a sharp screen wants,
 which is where 1920 x 480 comes from.
-| Host photo | **800 x 800** square | Anything from 400 x 400 up. Shrunk to a 640px copy for the site; the file you upload is kept as it is. |
+| Host photo | **800 x 800** square | Anything from 400 x 400 up. Your browser makes a 640px copy for the site; the file you choose is kept as it is. |
 
 Every episode always displays artwork: its own if it has some, the
 show's otherwise, on the site, in the embedded player and in the feed.
 
 ### Forgotten passwords
 
-The login page offers a reset link, emailed to the account address, if
-SMTP is configured in `.env`. The link works once and expires in an
-hour, and the reply is the same whether or not the address has an
-account here.
-
-With no email configured, or nobody able to receive it, reset from the
-server instead:
+FOSSCast sends no email, so there is no reset link and nothing to
+configure. Anyone self-hosting this has a shell on the machine, and
+that is the way back in:
 
 ```bash
 docker compose exec -T app node reset-password.js
+docker compose restart app
 ```
 
-It prints the account and a new password, once.
+The first prints the account and a new password, once. The restart is
+not optional: the app holds its data in memory and would otherwise
+write the old password back over the new one.
+
+To be signed in without choosing a password at all, mint a link that
+works once and expires in ten minutes:
+
+```bash
+docker compose exec -T app node admin-login-link.js
+```
 
 ### Running a public demo
 

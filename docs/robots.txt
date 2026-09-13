@@ -4,9 +4,6 @@
 User-agent: *
 Allow: /
 Disallow: /ARCHITECTURE.md
-Disallow: /ROADMAP.md
-Disallow: /archive-org.md
-Disallow: /live-handover.md
 Disallow: /studio-integration.md
 
 Sitemap: https://fosscast.org/sitemap.xml

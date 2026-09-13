@@ -91,7 +91,7 @@ module.exports = function create({ stats, shows, episodes }) {
       <p class="hint">One download per listener per episode per day, no
       cookies, nothing stored about any individual: every number here is
       a counter, and none of them can be joined back to a person.
-      ${show ? `Episodes hosted elsewhere are not counted &mdash; only files served by this instance.` : ''}</p>
+      ${show ? `Episodes hosted elsewhere are not counted - only files served by this instance.` : ''}</p>
 
       ${nothingYet ? `<section class="panel"><p class="hint">Nothing to
       show yet. Numbers appear here as soon as somebody downloads an
@@ -150,7 +150,7 @@ module.exports = function create({ stats, shows, episodes }) {
           ${countries.length
             ? `<p class="hint">As reported by your proxy.</p>${charts.donut(countries, { label: 'Downloads by country' })}`
             : `<p class="hint">No country information. ${esc(BRAND)} never
-               looks an address up itself &mdash; that would mean shipping a
+               looks an address up itself - that would mean shipping a
                database or asking somebody else about your listeners. If
                your proxy knows, it can say so: Cloudflare sets
                <code>CF-IPCountry</code> for free, and nginx with the GeoIP
@@ -174,7 +174,7 @@ module.exports = function create({ stats, shows, episodes }) {
       <section class="panel" id="sec-when">
         <h2>When they listen</h2>
         <p class="hint">Day of the week against hour of the day, in UTC.
-        Darker is busier &mdash; useful for deciding when to publish.</p>
+        Darker is busier - useful for deciding when to publish.</p>
         ${charts.heatmap(matrix)}
       </section>
 
@@ -202,11 +202,11 @@ module.exports = function create({ stats, shows, episodes }) {
       <section class="panel" id="sec-about-stats">
         <h2>What is and is not counted</h2>
         <ul class="ticks">
-          <li>A download is one listener, one episode, one day &mdash; the same file fetched five times counts once</li>
+          <li>A download is one listener, one episode, one day - the same file fetched five times counts once</li>
           <li>Listeners are told apart by a salted hash of address and app that is never written down and changes every restart</li>
           <li>Day, month, app, platform, language and country are counters, not records: there is no row for anybody</li>
           <li>Daily figures are kept for 90 days, monthly ones for two years, and the rest are running totals</li>
-          <li>Episodes whose media lives elsewhere cannot be counted here &mdash; their host counts them instead</li>
+          <li>Episodes whose media lives elsewhere cannot be counted here - their host counts them instead</li>
         </ul>
       </section>`,
     });
