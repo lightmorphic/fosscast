@@ -454,32 +454,9 @@ function hostPage(show, host, domain) {
   });
 }
 
-// Which banner to draw. A show can have both a still and a video, and
-// the operator says which: the video, the still, or a toss-up on every
-// visit. With only one of the two uploaded there is nothing to choose,
-// so the choice is ignored rather than leaving the strip empty.
-function bannerKind(show, roll = Math.random) {
-  const hasVideo = !!show.bannerVideo;
-  const hasImage = !!show.banner;
-  if (!hasVideo && !hasImage) return 'none';
-  if (!hasVideo) return 'image';
-  if (!hasImage) return 'video';
-  const mode = show.bannerMode || 'video';
-  if (mode === 'image') return 'image';
-  if (mode === 'random') return roll() < 0.5 ? 'video' : 'image';
-  return 'video';
-}
-
 function bannerMarkup(show) {
-  const kind = bannerKind(show);
-  if (kind === 'none') return '';
-  if (kind === 'image') return `<div class="show-banner"><img src="${esc(showBannerWeb(show))}" alt=""></div>`;
-  // The poster is the video's own first frame where we have one. Using
-  // the still banner instead meant a refresh showed the photograph and
-  // then swapped to the video a moment later: a flash of the wrong
-  // picture on every visit.
-  const poster = show.bannerVideoPoster || '';
-  return `<div class="show-banner"><video src="${esc(show.bannerVideo)}"${poster ? ` poster="${esc(poster)}"` : ''} autoplay muted${show.bannerLoop === false ? '' : ' loop'} playsinline preload="auto" aria-hidden="true" style="object-position: ${Number(show.bannerFocusX ?? 50)}% ${Number(show.bannerFocusY ?? 50)}%"></video></div>`;
+  if (!show.banner) return '';
+  return `<div class="show-banner"><img src="${esc(showBannerWeb(show))}" alt=""></div>`;
 }
 
 // An operator may run a mailing list beside this - listmonk, a hosted

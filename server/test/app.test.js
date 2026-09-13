@@ -211,62 +211,43 @@ test('funding services show as buttons and as feed funding links', async () => {
   assert.ok(admin.includes('Where listeners can support you'));
 });
 
-test('the look: colours, background, type and words of your own', async () => {
-  // Unthemed, the public page carries no style block at all.
+test('the look: the accent colour and words of your own', async () => {
+  // On the default colour, the public page carries no style block at all.
   let page = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(!page.includes('<style>'), 'no theme, no cost');
+  assert.ok(!page.includes('<style>'), 'the default costs nothing');
 
   let res = await fetch(`${BASE}/admin/look`, form({
     accent: '#e91e63',
-    bgMode: 'gradient', bgColor: '#1e1b4b', bgColor2: '#831843', bgAngle: '200',
-    panel: 'glass', radius: '4', font: 'serif', width: 'wide',
-    episodes: 'compact', mode: 'dark', tagline: 'Two nerds, one microphone',
-    footer: '(c) 2026 Test Show', css: '.lede { font-style: italic; }',
+    tagline: 'Two nerds, one microphone',
+    footer: '(c) 2026 Test Show',
   }));
   assert.strictEqual(res.status, 200);
 
   page = await (await fetch(`${BASE}/shows/test-show`)).text();
   assert.ok(page.includes('--accent-light: #e91e63'), 'the chosen colour leads the palette');
   assert.ok(page.includes('--accent-dark:'), 'and a dark-mode shade is derived from it');
-  assert.ok(page.includes('linear-gradient(200deg, #1e1b4b, #831843)'));
-  assert.ok(page.includes('backdrop-filter'), 'glass cards');
-  assert.ok(page.includes('--panel-radius: 4px'));
-  assert.ok(page.includes('Georgia'));
-  assert.ok(page.includes('max-width: 76rem'));
-  assert.ok(page.includes('data-theme="dark"'), 'a fixed mode is set on the page itself');
+  assert.ok(page.includes('--link-light:'), 'links get a shade that clears 4.5:1');
   assert.ok(page.includes('Two nerds, one microphone'));
   assert.ok(page.includes('(c) 2026 Test Show'));
-  assert.ok(page.includes('.lede { font-style: italic; }'), 'custom CSS is kept');
 
-  // The look reaches every page of the site, not just the front one.
+  // The colour reaches every page of the site, not just the front one.
   assert.ok((await (await fetch(`${BASE}/hosts`)).text()).includes('--accent-light: #e91e63'));
 
-  // Anything that would phone out is stripped, and nothing can break out
-  // of the style element.
+  // Anything that is not a colour falls back to the default rather than
+  // landing in the page.
   res = await fetch(`${BASE}/admin/look`, form({
-    accent: '#e91e63', bgMode: 'default', panel: 'solid', radius: '22',
-    font: 'manrope', width: 'standard', episodes: 'row', mode: 'auto', toggle: '1',
-    css: '@import url(https://evil.example/x.css); body { background: url("https://evil.example/pixel.png"); } </style><script>alert(1)</script>',
-  }));
-  assert.strictEqual(res.status, 200);
-  page = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(!page.includes('evil.example'), 'no off-site fetches survive');
-  assert.ok(!page.includes('<script>alert'), 'no breaking out of the style element');
-
-  // The footer is not optional any more: the mark stays, and the line
-  // beside it is the show's own words when it has set any.
-  const withBrand = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(withBrand.includes('foot-brand'), 'the mark is there');
-  res = await fetch(`${BASE}/admin/look`, form({
-    accent: '#e91e63', bgMode: 'default', panel: 'solid', radius: '22',
-    font: 'manrope', width: 'standard', episodes: 'row', mode: 'auto', toggle: '1',
+    accent: '</style><script>alert(1)</script>',
     footer: 'Made in a shed',
   }));
   assert.strictEqual(res.status, 200);
-  const stillBranded = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(stillBranded.includes('foot-brand'), 'and cannot be asked away');
-  assert.ok(stillBranded.includes('foot-lm'), 'nor can the mark beside it');
-  assert.ok(stillBranded.includes('Made in a shed'), 'their own line stays');
+  page = await (await fetch(`${BASE}/shows/test-show`)).text();
+  assert.ok(!page.includes('<script>alert'), 'nothing breaks out of the style element');
+
+  // The footer is not optional: the mark stays, and the line beside it
+  // is the show's own words when it has set any.
+  assert.ok(page.includes('foot-brand'), 'the mark is there');
+  assert.ok(page.includes('foot-lm'), 'and the mark beside it');
+  assert.ok(page.includes('Made in a shed'), 'their own line stays');
   // The admin keeps its own branding regardless: that is our software,
   // not their website.
   const adminPage = await (await fetch(`${BASE}/admin/podcast`, { headers: { cookie } })).text();
@@ -302,26 +283,11 @@ test('the look: colours, background, type and words of your own', async () => {
   assert.ok(snippet.includes('wireless'), 'the summary carries on past the greeting');
   assert.ok(snippet.length > 100, 'and fills the card like everyone else');
 
-  // Photos are circles by default; shape and size are their own controls
-  // rather than the corner slider, and they reach the public pages.
-  res = await fetch(`${BASE}/admin/look`, form({
-    accent: '#e91e63', bgMode: 'default', panel: 'solid', radius: '48',
-    font: 'manrope', width: 'standard', episodes: 'row', mode: 'auto', toggle: '1',
-    imgShape: 'rounded', photoSize: 'xl', artSize: 'l',
-  }));
-  assert.strictEqual(res.status, 200);
-  page = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(page.includes('--panel-radius: 48px'), 'corners go further than they did');
-  assert.ok(page.includes('.show-art { width: 14rem'), 'the cover can be made bigger');
-  const hostsHtml = await (await fetch(`${BASE}/hosts`)).text();
-  assert.ok(/\.host-photo \{ width: 9rem/.test(hostsHtml), 'host photos can be made bigger');
-  assert.ok(hostsHtml.includes('.host-photo, .host-thumb, .host-photo-blank { border-radius: var(--radius); }'));
-
   // And it can all be put back.
   res = await fetch(`${BASE}/admin/look`, form({ reset: '1' }));
   assert.strictEqual(res.status, 200);
   page = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(!page.includes('<style>'), 'default look leaves no trace');
+  assert.ok(!page.includes('<style>'), 'the default leaves no trace');
 });
 
 test('editing saves itself: podcast details, a host and an episode', async () => {
@@ -426,68 +392,19 @@ test('social links, with Matrix leading', async () => {
   assert.ok(admin.includes('social_peertube') && admin.includes('social_lemmy') && admin.includes('social_bluesky'));
 });
 
-test('a banner video loops unless told otherwise', async () => {
+test('the banner is drawn when one has been uploaded', async () => {
   const MEDIA_PATH = ['/me', 'dia'].join('');
-  // Pretend a video has already passed the upload check.
-  let res = await fetch(`${BASE}/admin/shows/test-show/settings`, form({
-    name: 'Test Show', description: 'Edited in place.', language: 'en',
-    bannerVideo: `${MEDIA_PATH}/test-show/loop.mp4`, bannerLoop: '1', live: '1',
-  }));
-  assert.strictEqual(res.status, 204);
+  // With none uploaded the page starts at the title.
   let page = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.match(page, /<video[^>]*\sloop/, 'looping by default');
+  assert.ok(!page.includes('show-banner'), 'nothing at all without one');
 
-  res = await fetch(`${BASE}/admin/shows/test-show/settings`, form({
+  const res = await fetch(`${BASE}/admin/shows/test-show/settings`, form({
     name: 'Test Show', description: 'Edited in place.', language: 'en',
-    bannerVideo: `${MEDIA_PATH}/test-show/loop.mp4`, live: '1',
+    banner: `${MEDIA_PATH}/test-show/still.jpg`, live: '1',
   }));
   assert.strictEqual(res.status, 204);
   page = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(page.includes('<video'), 'the video is still there');
-  assert.ok(!/<video[^>]*\sloop/.test(page), 'and now plays once');
-
-  // Put it back so later assertions see the usual page.
-  await fetch(`${BASE}/admin/shows/test-show/settings`, form({
-    name: 'Test Show', description: 'Edited in place.', language: 'en', live: '1',
-  }));
-});
-
-test('with both a still and a video, the banner is a choice', async () => {
-  const MEDIA_PATH = ['/me', 'dia'].join('');
-  const settings = (extra) => form({
-    name: 'Test Show', description: 'Edited in place.', language: 'en',
-    banner: `${MEDIA_PATH}/test-show/still.jpg`,
-    bannerVideo: `${MEDIA_PATH}/test-show/clip.mp4`,
-    live: '1', ...extra,
-  });
-
-  await fetch(`${BASE}/admin/shows/test-show/settings`, settings({ bannerMode: 'video' }));
-  let page = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.match(page, /<video[^>]*class=|show-banner"><video/, 'the video');
-
-  await fetch(`${BASE}/admin/shows/test-show/settings`, settings({ bannerMode: 'image' }));
-  page = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(page.includes('show-banner"><img'), 'the still');
-  assert.ok(!page.includes('show-banner"><video'), 'and only the still');
-
-  // Random is a coin toss per visit, so ask enough times to see both.
-  await fetch(`${BASE}/admin/shows/test-show/settings`, settings({ bannerMode: 'random' }));
-  const seen = new Set();
-  for (let i = 0; i < 40; i++) {
-    const html = await (await fetch(`${BASE}/shows/test-show`)).text();
-    seen.add(html.includes('show-banner"><video') ? 'video' : 'image');
-    if (seen.size === 2) break;
-  }
-  assert.strictEqual(seen.size, 2, 'both turned up');
-
-  // The choice offers itself only when there is something to choose.
-  const admin = await (await fetch(`${BASE}/admin/podcast`, { headers: { cookie } })).text();
-  assert.ok(admin.includes('name="bannerMode"'), 'both uploaded, so the choice is there');
-
-  // Put the page back the way the other tests expect it.
-  await fetch(`${BASE}/admin/shows/test-show/settings`, form({
-    name: 'Test Show', description: 'Edited in place.', language: 'en', live: '1',
-  }));
+  assert.ok(page.includes('show-banner"><img'), 'and the strip once there is');
 });
 
 test('a second show is refused (this edition manages one podcast)', async () => {

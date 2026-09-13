@@ -35,8 +35,6 @@ const MIME = {
   '.ico': 'image/x-icon',
   '.woff2': 'font/woff2',
   '.txt': 'text/plain; charset=utf-8',
-  // The HandBrake preset offered on the podcast page.
-  '.json': 'application/json',
 };
 
 // The same reasoning as the media files below: a feed is meant to be
@@ -155,25 +153,8 @@ function route(req, res) {
   if (req.method === 'PUT' && p === '/admin/api/upload') {
     if (DEMO) return sendJson(res, 403, { error: 'demo instance is read-only' });
     if (!admin.currentUser(req)) return sendJson(res, 401, { error: 'not signed in' });
-    const check = url.searchParams.get('check');
     media.saveUpload(req, MEDIA_DIR, url.searchParams.get('show') || 'show', url.searchParams.get('filename') || 'file')
-      .then(async (result) => {
-        // A banner video is measured the moment it lands, and thrown
-        // away again if it is too big for the job. The alternative -
-        // re-encoding whatever arrives - is the one thing a small VPS
-        // should not be asked to do.
-        if (check === 'banner-video') {
-          const file = path.join(DATA_DIR, decodeURIComponent(result.urlPath.slice(1)));
-          const info = await media.probeVideo(file);
-          const problem = media.bannerVideoProblem(info && { ...info, bytes: result.size });
-          if (problem) {
-            fs.rm(file, { force: true }, () => {});
-            return sendJson(res, 400, { error: problem });
-          }
-          return sendJson(res, 200, { ...result, width: info.width, height: info.height, duration: info.duration });
-        }
-        return sendJson(res, 200, result);
-      })
+      .then((result) => sendJson(res, 200, result))
       .catch((err) => sendJson(res, 400, { error: err.message }));
     return;
   }
@@ -407,10 +388,10 @@ function route(req, res) {
     return sendHtml(res, publicSite.episodePage(show, episode, DOMAIN, said));
   }
 
-  // The four directories the image ships, plus /js/: FOSSCast puts no
+  // The three directories the image ships, plus /js/: FOSSCast puts no
   // script there itself, and the door is left open on purpose so that
   // an operator mounting their own web/ over the image's can serve one.
-  if (p.startsWith('/css/') || p.startsWith('/fonts/') || p.startsWith('/img/') || p.startsWith('/js/') || p.startsWith('/presets/')) {
+  if (p.startsWith('/css/') || p.startsWith('/fonts/') || p.startsWith('/img/') || p.startsWith('/js/')) {
     return serveStatic(res, p);
   }
   send(res, 404, 'not found');

@@ -30,7 +30,7 @@ const MEDIA_UPLOADS = !/^(0|off|false|no)$/i.test((process.env.MEDIA_UPLOADS || 
 const ARCHIVE_HELP = (process.env.HELP_ARCHIVE_URL || '').trim()
   || 'https://github.com/lightmorphic/fosscast/blob/main/docs/archive-org.md';
 const feedAliases = require('./feedaliases');
-const { probeDuration, ensureWebImage, ensureVideoPoster, typeFor } = require('./media');
+const { probeDuration, ensureWebImage, typeFor } = require('./media');
 const importer = require('./import');
 const { sendMail, configured: mailConfigured } = require('./mailer');
 const { APPS, SUPPORT, SOCIAL, showPage, prefixed } = require('./public');
@@ -510,14 +510,6 @@ function createAdminRouter(ctx) {
         const web = await ensureWebImage(dataDir, show[field], cap, suffix);
         if (web && show[`${field}Web`] !== web) { show[`${field}Web`] = web; showsChanged = true; }
       }
-      // A banner video's own first frame stands in while it loads.
-      if (show.bannerVideo) {
-        const poster = await ensureVideoPoster(dataDir, show.bannerVideo);
-        if (poster && show.bannerVideoPoster !== poster) { show.bannerVideoPoster = poster; showsChanged = true; }
-      } else if (show.bannerVideoPoster) {
-        delete show.bannerVideoPoster;
-        showsChanged = true;
-      }
       // A background image covers the whole screen, so its web copy is
       // the largest of the lot.
       if (show.theme && show.theme.bgImage) {
@@ -806,77 +798,26 @@ function createAdminRouter(ctx) {
   }
 
   // ---------- Look ----------
-  // The submitted controls as a theme object. Used by both the save and
-  // the preview, so what you see is what gets stored.
-  function themeFromForm(form) {
-    return themes.normalise({
-      accent: form.get('accent'),
-      bgMode: form.get('bgMode'),
-      bgColor: form.get('bgColor'),
-      bgColor2: form.get('bgColor2'),
-      bgAngle: form.get('bgAngle'),
-      bgImage: form.get('bgImage'),
-      bgFit: form.get('bgFit'),
-      bgAttach: form.get('bgAttach'),
-      bgBlur: form.get('bgBlur'),
-      bgDim: form.get('bgDim'),
-      panel: form.get('panel'),
-      radius: form.get('radius'),
-      font: form.get('font'),
-      mode: form.get('mode'),
-      toggle: form.get('toggle') === '1',
-      width: form.get('width'),
-      episodes: form.get('episodes'),
-      imgShape: form.get('imgShape'),
-      photoSize: form.get('photoSize'),
-      artSize: form.get('artSize'),
-      bannerFull: form.get('bannerFull') === '1',
-      tagline: form.get('tagline'),
-      footer: form.get('footer'),
-      css: form.get('css'),
-    });
-  }
 
-
-  // The public site belongs to the podcaster, so its colours, type,
-  // background and card style are theirs to set. Every control writes a
-  // token the stylesheet already reads, and the preview beside them is
-  // the real front page in an iframe, restyled as they touch things -
-  // no saving to find out what it looks like.
+  // The public site belongs to the podcaster, so its accent colour and
+  // the two lines of words under its name are theirs to set. The
+  // preview beside the form is the real front page, rendered by the
+  // server from what has just been saved - no guessing, and nothing to
+  // save twice.
   function lookPage(show, notice = '') {
     const t = themes.normalise(show.theme);
-    const swatches = themes.PRESETS.map(([key, label, hex]) => `
-      <button type="button" class="swatch${t.accent === hex ? ' current' : ''}" data-accent="${esc(hex)}" style="--sw: ${esc(hex)}" title="${esc(label)}" aria-label="${esc(label)}"></button>`).join('');
-
-    // A choice is a row of chips: the options are short, so they belong
-    // side by side rather than stacked full-width. The note for whichever
-    // is chosen shows underneath, one line, instead of a note per option
-    // shouting at once.
-    const chips = (name, options, current, style = () => '') => {
-      const chosen = options.find(([key]) => key === current) || options[0];
-      return `<div class="picks" role="radiogroup">
-        ${options.map(([key, label, note]) => `
-        <label class="pick${current === key ? ' current' : ''}"${style(key)}>
-          <input type="radio" name="${name}" value="${esc(key)}"${current === key ? ' checked' : ''} data-note="${esc(note || '')}">
-          <span>${esc(label)}</span>
-        </label>`).join('')}
-      </div>
-      <p class="hint pick-hint" id="note-${name}">${esc(chosen[2] || '')}</p>`;
-    };
-
     return adminPage({
       title: 'Look',
       active: 'look',
       body: `<h1 class="page-title">Look</h1>
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
-      <p class="hint">Your site, your colours. Every change saves itself and
+      <p class="hint">Your site, your colour. Every change saves itself and
       shows up in the preview as you go.</p>
 
       <div class="look-layout">
       <form method="post" action="/admin/look" id="look-form">
         <section class="panel" id="sec-colour">
           <h2>Colour</h2>
-          <div class="swatches">${swatches}</div>
           <div class="inline-fields">
             <label class="inline-label" for="accent-hex">Hex</label>
             <input id="accent-hex" name="accent" class="hex-field" maxlength="7" value="${esc(t.accent)}">
@@ -886,104 +827,15 @@ function createAdminRouter(ctx) {
           dark -- is worked out from this one.</p>
         </section>
 
-        <section class="panel" id="sec-background">
-          <h2>Background</h2>
-          ${chips('bgMode', [['default', 'Plain', 'White, or near-black in dark mode.'], ['solid', 'One colour', ''], ['gradient', 'Gradient', ''], ['image', 'Image', 'A photo or pattern behind everything.']], t.bgMode)}
-          <div class="bg-colors inline-fields">
-            <label class="inline-label" for="bg-color">Colour</label>
-            <input id="bg-color" name="bgColor" type="color" class="color-chip" value="${esc(t.bgColor)}">
-            <label class="inline-label" for="bg-color2">to</label>
-            <input id="bg-color2" name="bgColor2" type="color" class="color-chip" value="${esc(t.bgColor2)}">
-            <input id="bg-angle" name="bgAngle" type="range" min="0" max="360" value="${t.bgAngle}" class="inline-range" aria-label="Gradient angle">
-          </div>
-          <div class="bg-image-fields">
-            <input id="bg-image" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="bg-image-url" data-status="bg-image-status" data-preview="bg-image-img">
-            <p class="hint" id="bg-image-status">${t.bgImage ? 'Uploaded.' : 'Wide and not too busy works best.'}</p>
-            <input type="hidden" id="bg-image-url" name="bgImage" value="${esc(t.bgImage)}">
-            <img class="bg-preview" id="bg-image-img" alt="" src="${esc(t.bgImageWeb || t.bgImage)}"${t.bgImage ? '' : ' style="display:none"'}>
-            <div class="slider-row"><label class="inline-label" for="bg-dim">Dim <b>${t.bgDim}%</b></label>
-            <input id="bg-dim" name="bgDim" type="range" min="0" max="85" value="${t.bgDim}"></div>
-            <div class="slider-row"><label class="inline-label" for="bg-blur">Blur <b>${t.bgBlur}px</b></label>
-            <input id="bg-blur" name="bgBlur" type="range" min="0" max="24" value="${t.bgBlur}"></div>
-            ${chips('bgFit', [['cover', 'Fill the screen', ''], ['tile', 'Tile it', '']], t.bgFit)}
-            ${chips('bgAttach', [['fixed', 'Stays put', ''], ['scroll', 'Scrolls', '']], t.bgAttach)}
-          </div>
-        </section>
-
-        <section class="panel" id="sec-cards">
-          <h2>Cards</h2>
-          ${chips('panel', themes.PANELS, t.panel)}
-          <div class="slider-row"><label class="inline-label" for="radius">Corners <b>${t.radius}px</b></label>
-          <input id="radius" name="radius" type="range" min="0" max="48" value="${t.radius}"></div>
-        </section>
-
-        <section class="panel" id="sec-type">
-          <h2>Type</h2>
-          ${chips('font', themes.FONTS.map(([k, l, , note]) => [k, l, note]), t.font,
-            (key) => ` style="font-family: ${themes.FONTS.find(([k]) => k === key)[2].replaceAll('"', '&quot;')}"`)}
-        </section>
-
-        <section class="panel" id="sec-layout">
-          <h2>Layout</h2>
-          <div class="subsection">
-          <p class="group-label">Page width</p>
-          ${chips('width', themes.WIDTHS.map(([k, l]) => [k, l, '']), t.width)}
-          </div>
-          <div class="subsection">
-          <p class="group-label">Episodes</p>
-          ${chips('episodes', themes.EPISODE_LAYOUTS.map(([k, l]) => [k, l.replace(' the text', '').replace(', small thumbnails', ''), '']), t.episodes)}
-          <label class="switch-label">
-            <input type="checkbox" name="bannerFull" value="1" class="switch-input"${t.bannerFull ? ' checked' : ''}>
-            <span class="switch" aria-hidden="true"></span>
-            <span>Banner runs edge to edge</span>
-          </label>
-          </div>
-        </section>
-
-        <section class="panel" id="sec-photos">
-          <h2>Photos &amp; artwork</h2>
-          <div class="subsection">
-          <p class="group-label">Host photos</p>
-          ${chips('imgShape', themes.IMAGE_SHAPES.map(([k, l]) => [k, l, '']), t.imgShape)}
-          ${chips('photoSize', themes.IMAGE_SIZES.map(([k, l]) => [k, l, '']), t.photoSize)}
-          </div>
-          <div class="subsection">
-          <p class="group-label">Cover on the front page</p>
-          ${chips('artSize', themes.ART_SIZES.map(([k, l]) => [k, l, '']), t.artSize)}
-          </div>
-        </section>
-
-        <section class="panel" id="sec-mode">
-          <h2>Light or dark</h2>
-          ${chips('mode', [['auto', 'Follow the visitor', "Their device decides, and they can flip it."], ['light', 'Always light', ''], ['dark', 'Always dark', '']], t.mode)}
-          <label class="switch-label">
-            <input type="checkbox" name="toggle" value="1" class="switch-input"${t.toggle ? ' checked' : ''}>
-            <span class="switch" aria-hidden="true"></span>
-            <span>Offer the light/dark switch</span>
-          </label>
-        </section>
-
         <section class="panel" id="sec-words">
           <h2>Words of your own</h2>
           <label for="tagline">Tagline</label>
+          <p class="hint">One line under the name, on the front page.</p>
           <input id="tagline" name="tagline" maxlength="200" value="${esc(t.tagline)}" placeholder="Two nerds, one microphone">
-        </section>
-
-        <section class="panel" id="sec-footer">
-          <h2>Footer</h2>
-          <label for="footer-text">Your own line</label>
+          <label for="footer-text">Footer</label>
           <p class="hint">Your copyright, your credit, whatever you like.</p>
           <input id="footer-text" name="footer" maxlength="300" value="${esc(t.footer)}" placeholder="&copy; ${new Date().getFullYear()} ${esc(show.name)}">
-
         </section>
-
-        <details class="panel" id="sec-css"${t.css ? ' open' : ''}>
-          <summary><h2>Custom CSS</h2></summary>
-          <p class="hint">Added last, so it wins. Anything that would load
-          from another site is stripped: your pages never call out to
-          anyone.</p>
-          <textarea id="custom-css" name="css" rows="6" maxlength="8000" spellcheck="false" placeholder=".show-hero h1 { letter-spacing: -.04em; }">${esc(t.css)}</textarea>
-        </details>
 
         <div class="save-bar">
           <span class="save-state" id="save-state" aria-live="polite"></span>
@@ -1306,20 +1158,6 @@ function createAdminRouter(ctx) {
           <img class="art-preview" id="art-preview-img" alt="" src="${show.artwork ? esc(show.artworkWeb || show.artwork) : ''}"${show.artwork ? '' : ' style="display:none"'}>
           </div>
 
-          ${show.bannerVideo && show.banner ? `
-          <div class="subsection">
-            <label>Banner</label>
-            <p class="hint">You have uploaded both, so choose which the
-            front page uses. <b>Random</b> tosses a coin on every visit.</p>
-            <div class="picks" role="radiogroup" aria-label="Which banner the front page uses">
-              ${[['image', 'Image'], ['video', 'Video'], ['random', 'Random']]
-                .map(([key, label]) => `<label class="pick${(show.bannerMode || 'video') === key ? ' current' : ''}">
-                  <input type="radio" name="bannerMode" value="${key}"${(show.bannerMode || 'video') === key ? ' checked' : ''}>
-                  <span>${label}</span>
-                </label>`).join('')}
-            </div>
-          </div>` : ''}
-
           <div class="subsection">
           <label for="sbanner">Website banner</label>
           <p class="hint">The strip across the top of your site, drawn
@@ -1335,85 +1173,6 @@ function createAdminRouter(ctx) {
 
           </div>
 
-          <div class="subsection">
-          <label for="sbannervideo">Banner video (optional)</label>
-          <p class="hint">A few seconds of video in place of the still
-          banner, playing silently. Every visitor downloads it in full,
-          every visit, and nothing here re-encodes it &mdash; so the file
-          you upload is exactly what your server sends and what their
-          data allowance pays for. Small is the whole game.</p>
-          <ul class="checks limits">
-            <li><span aria-hidden="true">&bull;</span><span><strong>Keep the shape it came in</strong> and shrink it until the smaller side just clears <strong>976 x 244</strong> &mdash; the size the banner is drawn at. A 16:9 clip comes out 976 x 549. Do not crop: you choose what shows below</span></li>
-            <li><span aria-hidden="true">&bull;</span><span><strong>Under 1 MB.</strong> Refused past 2 MB</span></li>
-            <li><span aria-hidden="true">&bull;</span><span><strong>5 to 8 seconds</strong>, looping. Refused past 15</span></li>
-            <li><span aria-hidden="true">&bull;</span><span><strong>About 1 Mbps</strong> &mdash; the rate is what costs you bandwidth. Refused past 1.5</span></li>
-            <li><span aria-hidden="true">&bull;</span><span><strong>No audio track.</strong> It plays muted, so sound is bytes nobody hears</span></li>
-            <li><span aria-hidden="true">&bull;</span><span>MP4 (H.264) or WebM, no bigger than 1920 x 1080</span></li>
-          </ul>
-          <details class="recipe">
-            <summary>Making one in HandBrake (free, on every platform)</summary>
-            <p class="hint"><a href="/presets/fosscast-banner.json" download>Download the FOSSCast banner preset</a>
-            and load it with <b>Presets &rarr; Import from file</b>: it sets
-            everything below in one go. It only makes the clip smaller
-            &mdash; it never crops or stretches it, because which part of
-            the picture ends up in the banner is chosen here, not there.</p>
-            <p class="hint">Or set it by hand:</p>
-            <ol class="steps">
-              <li>Open your clip. Under <b>Dimensions</b>, keep
-              <b>Anamorphic: off</b> and the aspect ratio <b>locked</b>, and
-              set the size to fit inside <b>976 x 976</b>. A 16:9 clip
-              comes out 976 x 549; a strip comes out 976 x 244. Never
-              smaller than 976 across or 244 down, or it cannot fill the
-              banner.</li>
-              <li>Under <b>Video</b>: encoder <b>H.264</b>, framerate
-              <b>Same as source</b> with <b>Peak framerate</b>, and quality
-              <b>RF 30</b>. Higher RF means a smaller file; 28 to 32 all look
-              fine at this size.</li>
-              <li>Under <b>Audio</b>, remove every track. It is played muted.</li>
-              <li>Tick <b>Web optimised</b> so playback starts before the
-              file has finished arriving.</li>
-              <li>Encode, and check the result is comfortably under a
-              megabyte. If it is not, raise the RF number and try again.</li>
-            </ol>
-            <p class="hint">ffmpeg, if you prefer &mdash; scales to 1280
-            across, keeps the shape, no crop:
-            <code>ffmpeg -i in.mp4 -vf "scale=976:-2" -c:v libx264 -crf 30 -preset slow -an -movflags +faststart out.mp4</code></p>
-          </details>
-          <p class="hint">Anything past those limits is refused, with a note
-          saying which one and by how much. Keep what matters central: the
-          sides crop on a phone, exactly as the still banner does.</p>
-          <input id="sbannervideo" type="file" accept="video/mp4,video/webm" data-upload data-check="banner-video" data-show="${esc(show.slug)}" data-target="bannerVideo" data-status="bannervideo-status">
-          <p class="hint" id="bannervideo-status">${show.bannerVideo ? 'Uploaded.' : 'None. The still banner is used.'}</p>
-          <input type="hidden" id="bannerVideo" name="bannerVideo" value="${esc(show.bannerVideo || '')}">
-          <label class="switch-label">
-            <input type="checkbox" name="bannerLoop" value="1" class="switch-input"${show.bannerLoop === false ? '' : ' checked'}>
-            <span class="switch" aria-hidden="true"></span>
-            <span>Loop it &mdash; otherwise it plays once and holds on its last frame</span>
-          </label>
-
-          <input type="hidden" name="bannerFocusX" id="bannerFocusX" value="${Number(show.bannerFocusX ?? 50)}">
-          <input type="hidden" name="bannerFocusY" id="bannerFocusY" value="${Number(show.bannerFocusY ?? 50)}">
-          ${show.bannerVideo ? `
-          <p class="group-label">Which part shows</p>
-          <p class="hint">The whole clip is below, playing. The red box is
-          the banner: drag it to whatever part of the picture should be on
-          your front page. Nothing is cut from the file &mdash; the box only
-          decides what the strip looks at.</p>
-          <div class="focus-picker" id="focus-picker"
-               data-x="${Number(show.bannerFocusX ?? 50)}" data-y="${Number(show.bannerFocusY ?? 50)}">
-            <video id="focus-video" src="${esc(show.bannerVideo)}" muted loop playsinline autoplay preload="metadata"></video>
-            <div class="focus-box" id="focus-box" tabindex="0" role="slider"
-                 aria-label="The part of the video the banner shows"
-                 aria-valuemin="0" aria-valuemax="100" aria-valuenow="${Number(show.bannerFocusX ?? 50)}"></div>
-          </div>
-          <p class="group-label">As it will look</p>
-          <div class="focus-result">
-            <video id="focus-result-video" src="${esc(show.bannerVideo)}" muted${show.bannerLoop === false ? '' : ' loop'} playsinline autoplay preload="metadata"></video>
-          </div>
-          <p class="hint">The still banner is still worth keeping: it is
-          the poster shown while the video loads, and what a visitor who
-          asks their device for less motion sees instead.</p>` : ''}
-          </div>
         </section>
 
         <section class="panel pane pane-support" id="sec-people">
@@ -2111,7 +1870,7 @@ function createAdminRouter(ctx) {
     if (p === '/admin/podcast/edit' && req.method === 'GET') { redirect(res, '/admin/podcast'); return true; }
     // Old links keep working.
     if (p === '/admin/shows' && req.method === 'GET') { redirect(res, '/admin/episodes'); return true; }
-    // Look: the public site's colours, background, type and card style.
+    // Look: the public site's accent colour and the podcaster's own words.
     if (p === '/admin/look' && req.method === 'GET') {
       const show = shows()[0];
       if (!show) { redirect(res, '/admin/podcast'); return true; }
@@ -2126,15 +1885,13 @@ function createAdminRouter(ctx) {
       const entry = list.find((s) => s.id === show.id);
       if (form.get('reset')) delete entry.theme;
       else {
-        const next = themeFromForm(form);
-        // The web copy of a background image is kept alongside it.
-        if (next.bgImage && next.bgImage === (entry.theme || {}).bgImage) {
-          next.bgImageWeb = (entry.theme || {}).bgImageWeb || '';
-        }
-        entry.theme = next;
+        entry.theme = themes.normalise({
+          accent: form.get('accent'),
+          tagline: form.get('tagline'),
+          footer: form.get('footer'),
+        });
       }
       store.save('shows', list);
-      refreshWebImages().catch(() => {});
       // Editing the look saves as it goes: the page answers with the
       // front page as it now stands, which is both the confirmation and
       // the preview, in one round trip. Only the reset button reloads.
@@ -2435,20 +2192,6 @@ function createAdminRouter(ctx) {
         if (/^\/media\/[^/]+\/[^/]+$/.test(artwork)) entry.artwork = artwork;
         const banner = String(form.get('banner') || '').trim();
         if (/^\/media\/[^/]+\/[^/]+$/.test(banner)) entry.banner = banner;
-        entry.bannerLoop = form.get('bannerLoop') === '1';
-        entry.bannerMode = ['video', 'image', 'random'].includes(form.get('bannerMode'))
-          ? form.get('bannerMode') : 'video';
-        // Where the banner looks, as a percentage across and down, the
-        // way CSS object-position reads it.
-        const focus = (name) => {
-          const n = Number(form.get(name));
-          return Number.isFinite(n) ? Math.max(0, Math.min(100, Math.round(n))) : 50;
-        };
-        entry.bannerFocusX = focus('bannerFocusX');
-        entry.bannerFocusY = focus('bannerFocusY');
-        const bannerVideo = String(form.get('bannerVideo') || '').trim();
-        if (/^\/media\/[^/]+\/[^/]+$/.test(bannerVideo)) entry.bannerVideo = bannerVideo;
-        else if (!bannerVideo) delete entry.bannerVideo;
         // web copies of the new artwork/banner are made just after save
         entry.social = {};
         for (const [key] of SOCIAL) {

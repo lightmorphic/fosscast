@@ -102,12 +102,8 @@ const PAGE_EMBED = (() => {
 
 function publicPage({ title, description, body, image, icon, nav = [], theme = null, footer = '' }) {
   const look = theme ? require('./theme').normalise(theme) : null;
-  // A fixed light or dark choice is the operator's; "auto" leaves it to
-  // the visitor's own device and their toggle.
-  const forced = look && look.mode !== 'auto' ? look.mode : '';
-  const showToggle = !look || look.toggle;
   return `<!doctype html>
-<html lang="en" data-accent="deep_orange"${forced ? ` data-theme="${forced}"` : ''}>
+<html lang="en" data-accent="deep_orange">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -120,15 +116,15 @@ ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
 <link rel="stylesheet" href="/css/site.css?v=0.16.0">
 ${look ? require('./theme').styleTag(look) : ''}
-${forced ? '' : `<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>`}
+<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body>
 <header class="top top-minimal${nav.length ? ' top-nav' : ''}">
   ${siteMenu(nav)}
-  ${!showToggle ? '' : `<button class="btn-icon theme-toggle" type="button" id="theme-toggle" title="Light or dark" aria-label="Switch between light and dark">
+  <button class="btn-icon theme-toggle" type="button" id="theme-toggle" title="Light or dark" aria-label="Switch between light and dark">
     <span class="icon-light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg></span>
     <span class="icon-dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.8 6.8 0 0 0 9.5 9.5z"/></svg></span>
-  </button>`}
+  </button>
 </header>
 <main class="wrap">
 ${body}
@@ -146,20 +142,6 @@ ${body}
 ${PAGE_EMBED ? `<script src="${esc(PAGE_EMBED)}" defer></script>` : ''}
 <script>
 
-
-// A banner video where the visitor has asked for less motion: hold it
-// on its first frame rather than looping it at them. The CSS rule that
-// used to claim to do this only pauses CSS animations, which a video
-// is not.
-(function stillBanner() {
-  if (!matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  var banner = document.querySelector('.show-banner video');
-  if (!banner) return;
-  banner.removeAttribute('autoplay');
-  banner.autoplay = false;
-  banner.pause();
-  banner.addEventListener('play', function () { banner.pause(); });
-})();
 
 ${THEME_TOGGLE_JS}
 document.addEventListener('click', function (e) {
@@ -238,8 +220,7 @@ document.addEventListener('change', (e) => {
   };
 
   say('Uploading ' + file.name + ' (' + (file.size / 1048576).toFixed(1) + ' MB)...', false);
-  var check = input.dataset.check ? '&check=' + encodeURIComponent(input.dataset.check) : '';
-  fetch('/admin/api/upload?show=' + encodeURIComponent(input.dataset.show) + '&filename=' + encodeURIComponent(file.name) + check, {
+  fetch('/admin/api/upload?show=' + encodeURIComponent(input.dataset.show) + '&filename=' + encodeURIComponent(file.name), {
     method: 'PUT', body: file,
   }).then((r) => r.json()).then((d) => {
     if (d.urlPath) {
@@ -250,23 +231,6 @@ document.addEventListener('change', (e) => {
       // change event on the picker fired before the file had finished
       // arriving, which saved the previous value over the new one.
       target.dispatchEvent(new Event('input', { bubbles: true }));
-      if (input.dataset.check === 'banner-video') {
-        if (window.fosscastFraming) {
-          window.fosscastFraming.show(d.urlPath);
-        } else {
-          // No framing picker on the page yet - this is the first video.
-          // Wait for the save to land, then let the server draw it.
-          const state = input.form && input.form.querySelector('.save-state');
-          let waited = 0;
-          const wait = setInterval(() => {
-            waited += 200;
-            if ((state && state.textContent === 'Saved') || waited > 6000) {
-              clearInterval(wait);
-              location.reload();
-            }
-          }, 200);
-        }
-      }
     }
     else {
       say(d.error || 'That upload did not work, and the server did not say why.', true);
@@ -339,123 +303,6 @@ document.addEventListener('change', (e) => {
   }, { passive: true });
   window.addEventListener('resize', update);
   update();
-})();
-
-// Choosing what the banner looks at. The whole clip plays; a red 4:1
-// box sits over it; dragging the box picks the part of the picture the
-// strip shows. The box is the banner's shape, so what you frame is
-// exactly what appears - and the result plays underneath as proof.
-//
-// The numbers stored are CSS object-position percentages, which is the
-// same thing said in the language the public page speaks: 0% puts the
-// left (or top) edge of the picture against the left (or top) edge of
-// the strip, 100% the right (or bottom).
-(function bannerFraming() {
-  var picker = document.getElementById('focus-picker');
-  var video = document.getElementById('focus-video');
-  var box = document.getElementById('focus-box');
-  if (!picker || !video || !box) return;
-  var result = document.getElementById('focus-result-video');
-  var fieldX = document.getElementById('bannerFocusX');
-  var fieldY = document.getElementById('bannerFocusY');
-  var x = Number(picker.dataset.x);
-  var y = Number(picker.dataset.y);
-  var slackX = 0;
-  var slackY = 0;
-
-  // The box is the largest 4:1 rectangle that fits the clip as shown,
-  // so it can only travel along the axis with room to spare.
-  function layout() {
-    var w = video.clientWidth;
-    var h = video.clientHeight;
-    if (!w || !h) return;
-    var boxW = Math.min(w, h * 4);
-    var boxH = boxW / 4;
-    box.style.width = boxW + 'px';
-    box.style.height = boxH + 'px';
-    slackX = Math.max(0, w - boxW);
-    slackY = Math.max(0, h - boxH);
-    picker.classList.toggle('locked-x', slackX < 1);
-    picker.classList.toggle('locked-y', slackY < 1);
-    draw();
-  }
-
-  function draw() {
-    box.style.left = (slackX * x / 100) + 'px';
-    box.style.top = (slackY * y / 100) + 'px';
-    box.setAttribute('aria-valuenow', String(slackX >= 1 ? x : y));
-    if (result) result.style.objectPosition = x + '% ' + y + '%';
-  }
-
-  function set(nextX, nextY, save) {
-    x = Math.max(0, Math.min(100, nextX));
-    y = Math.max(0, Math.min(100, nextY));
-    draw();
-    if (fieldX) fieldX.value = Math.round(x);
-    if (fieldY) fieldY.value = Math.round(y);
-    // The form saves itself; tell it something changed.
-    if (save && fieldX && fieldX.form) fieldX.form.dispatchEvent(new Event('input', { bubbles: true }));
-  }
-
-  var dragging = false;
-  function fromPointer(e) {
-    var area = video.getBoundingClientRect();
-    var boxRect = box.getBoundingClientRect();
-    var left = e.clientX - area.left - boxRect.width / 2;
-    var top = e.clientY - area.top - boxRect.height / 2;
-    set(slackX ? (left / slackX) * 100 : 50, slackY ? (top / slackY) * 100 : 50, false);
-  }
-
-  box.addEventListener('pointerdown', function (e) {
-    dragging = true;
-    box.setPointerCapture(e.pointerId);
-    picker.classList.add('dragging');
-    e.preventDefault();
-  });
-  box.addEventListener('pointermove', function (e) { if (dragging) fromPointer(e); });
-  box.addEventListener('pointerup', function (e) {
-    if (!dragging) return;
-    dragging = false;
-    picker.classList.remove('dragging');
-    box.releasePointerCapture(e.pointerId);
-    set(x, y, true);
-  });
-  // A click anywhere on the clip centres the box there.
-  picker.addEventListener('click', function (e) {
-    if (e.target === box) return;
-    fromPointer(e);
-    set(x, y, true);
-  });
-  // And the keyboard moves it, for anyone not using a mouse.
-  box.addEventListener('keydown', function (e) {
-    var step = e.shiftKey ? 10 : 2;
-    var handled = true;
-    if (e.key === 'ArrowLeft') set(x - step, y, true);
-    else if (e.key === 'ArrowRight') set(x + step, y, true);
-    else if (e.key === 'ArrowUp') set(x, y - step, true);
-    else if (e.key === 'ArrowDown') set(x, y + step, true);
-    else if (e.key === 'Home') set(0, 0, true);
-    else if (e.key === 'End') set(100, 100, true);
-    else handled = false;
-    if (handled) e.preventDefault();
-  });
-
-  video.addEventListener('loadedmetadata', layout);
-  window.addEventListener('resize', layout);
-  if (video.readyState >= 1) layout();
-  draw();
-
-  // A newly uploaded clip replaces the one being framed: the box has to
-  // be measured again, because the new file is very likely a different
-  // shape from the old one.
-  window.fosscastFraming = {
-    show: function (src) {
-      video.src = src;
-      video.load();
-      if (result) { result.src = src; result.load(); }
-      video.addEventListener('loadedmetadata', layout, { once: true });
-    },
-  };
 })();
 
 // Editing saves itself. Any form marked data-autosave stores what has
@@ -580,46 +427,15 @@ document.addEventListener('change', (e) => {
   });
 })();
 
-// The Look page: swatches, live labels, fields that appear only when
-// they apply, and a preview that is the real page rendered by the
-// server with the pending theme - so it cannot drift from the result.
+// The Look page: the accent colour, the podcaster's own words, and a
+// preview that is the real page rendered by the server from what has
+// just been saved - so it cannot drift from the result.
 (function look() {
   const form = document.getElementById('look-form');
   const frame = document.getElementById('look-preview');
   if (!form) return;
   const hex = document.getElementById('accent-hex');
   const picker = document.getElementById('accent-pick');
-
-  function relevant() {
-    const mode = form.querySelector('input[name=bgMode]:checked');
-    const which = mode ? mode.value : 'default';
-    form.querySelectorAll('.bg-colors').forEach((el) => {
-      el.style.display = which === 'solid' || which === 'gradient' ? '' : 'none';
-    });
-    form.querySelectorAll('.bg-image-fields').forEach((el) => {
-      el.style.display = which === 'image' ? '' : 'none';
-    });
-    form.querySelectorAll('.pick').forEach((p) => {
-      const input = p.querySelector('input');
-      p.classList.toggle('current', input.checked);
-    });
-  }
-
-  function labels() {
-    const set = (id, value) => {
-      const el = form.querySelector('label[for=' + id + '] b');
-      if (el) el.textContent = value;
-    };
-    set('radius', form.radius.value + 'px');
-    set('bg-dim', form.bgDim.value + '%');
-    set('bg-blur', form.bgBlur.value + 'px');
-    // One note, for whichever chip is chosen, rather than a note per chip.
-    form.querySelectorAll('.picks').forEach((group) => {
-      const chosen = group.querySelector('input:checked');
-      const note = document.getElementById('note-' + (chosen ? chosen.name : ''));
-      if (chosen && note) note.textContent = chosen.dataset.note || '';
-    });
-  }
 
   // The look saves itself. One request stores the change and returns the
   // front page as it now stands, so the preview is the saved truth
@@ -648,19 +464,10 @@ document.addEventListener('change', (e) => {
     }, 500);
   }
 
-  form.addEventListener('input', () => { relevant(); labels(); preview(); });
-  form.addEventListener('change', () => { relevant(); labels(); preview(); });
+  form.addEventListener('input', preview);
+  form.addEventListener('change', preview);
 
-  form.querySelectorAll('.swatch').forEach((sw) => {
-    sw.addEventListener('click', () => {
-      const value = sw.dataset.accent;
-      hex.value = value;
-      if (picker) picker.value = value;
-      form.querySelectorAll('.swatch').forEach((s) => s.classList.toggle('current', s === sw));
-      preview();
-    });
-  });
-  if (picker) picker.addEventListener('input', () => { hex.value = picker.value; preview(); });
+  if (picker) picker.addEventListener('input', () => { hex.value = picker.value; });
   if (hex) hex.addEventListener('input', () => {
     if (/^#?[0-9a-fA-F]{6}$/.test(hex.value) && picker) picker.value = hex.value.startsWith('#') ? hex.value : '#' + hex.value;
   });
@@ -673,9 +480,6 @@ document.addEventListener('change', (e) => {
     body.set('live', '1');
     navigator.sendBeacon('/admin/look', body);
   });
-
-  relevant();
-  labels();
 })();
 
 // Choosing an episode's audio from what is already at archive.org. It
