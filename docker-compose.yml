@@ -43,32 +43,35 @@ services:
         max-file: "3"
 
 
-  # Bundled reverse proxy with automatic HTTPS certificates. A plain
-  # `docker compose up -d` gives a complete public site; hosts whose
-  # machine already runs its own proxy on 80/443 use
-  # docker-compose.byo-proxy.yml instead.
-  caddy:
-    image: caddy:2-alpine
-    restart: unless-stopped
-    # Optional: a first run has no .env yet, and compose must not refuse
-    # to start over a file the app creates itself.
-    env_file:
-      - path: .env
-        required: false
-    ports:
-      - "80:80"
-      - "443:443"
-    volumes:
-      - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - caddy_data:/data
-      - caddy_config:/config
-    cap_drop: [ALL]
-    cap_add: [NET_BIND_SERVICE]
-    security_opt:
-      - no-new-privileges:true
-    pids_limit: 256
-    logging: *log
+  # HTTPS, and the certificate, done for you. Already running nginx,
+  # Apache, a tunnel or any other proxy on this machine? Leave this
+  # commented out and point yours at ${BIND_HOST}:${HTTP_PORT}, which is
+  # 127.0.0.1:3100 unless you changed it. Otherwise take the "# " off
+  # every line from here to the bottom of the file, change nothing else,
+  # and Caddy will fetch and renew the certificate on its own within a
+  # minute of the first request.
+#   caddy:
+#     image: caddy:2-alpine
+#     restart: unless-stopped
+#     # Optional: a first run has no .env yet, and compose must not refuse
+#     # to start over a file the app creates itself.
+#     env_file:
+#       - path: .env
+#         required: false
+#     ports:
+#       - "80:80"
+#       - "443:443"
+#     volumes:
+#       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+#       - caddy_data:/data
+#       - caddy_config:/config
+#     cap_drop: [ALL]
+#     cap_add: [NET_BIND_SERVICE]
+#     security_opt:
+#       - no-new-privileges:true
+#     pids_limit: 256
+#     logging: *log
 
-volumes:
-  caddy_data:
-  caddy_config:
+# volumes:
+#   caddy_data:
+#   caddy_config:

@@ -68,7 +68,7 @@ echo "== Starting the stack =="
 cd "$BASE"
 if [ -n "$CADDY_SITES" ]; then
   echo "using the proxy already on this box ($CADDY_SITES)"
-  DATA_PATH="$BASE/data" docker compose -f docker-compose.byo-proxy.yml -p "$PROJECT" up -d --build
+  DATA_PATH="$BASE/data" docker compose -p "$PROJECT" up -d --build
   mkdir -p "$CADDY_SITES"
   cat > "$CADDY_SITES/$PROJECT.caddy" << EOF
 $DOMAIN {
@@ -89,7 +89,12 @@ EOF
     docker exec "$c" caddy reload --config /etc/caddy/Caddyfile >/dev/null 2>&1 && echo "reloaded $c"
   done
 else
-  DATA_PATH="$BASE/data" docker compose -p "$PROJECT" up -d --build
+  # Nothing is fronting this box yet, so the bundled Caddy is switched
+  # on: the same compose file with the hashes taken off its last block.
+  # Every other comment in that file is indented, so this only ever
+  # uncomments the service it was written to uncomment.
+  sed 's/^# //' docker-compose.yml > docker-compose.https.yml
+  DATA_PATH="$BASE/data" docker compose -f docker-compose.https.yml -p "$PROJECT" up -d --build
 fi
 
 # Docker may still have created a mount source as root during startup.

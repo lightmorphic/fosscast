@@ -45,7 +45,13 @@ test('nothing in the app knows the paid product exists', () => {
 test('the one-file install needs nothing but the published image', () => {
   const compose = read('docker-compose.pull.yml');
   const images = [...compose.matchAll(/^\s*image:\s*(\S+)/gm)].map((m) => m[1]);
-  assert.deepEqual(images, ['ghcr.io/lightmorphic/fosscast:latest', 'caddy:2-alpine']);
+  assert.deepEqual(images, ['ghcr.io/lightmorphic/fosscast:latest']);
+  // The bundled Caddy is commented out, so a machine that already runs
+  // a proxy does not have 80 and 443 taken from under it. Taking the
+  // hashes off is the whole of switching it on.
+  const uncommented = compose.split('\n').map((l) => (l.startsWith('# ') ? l.slice(2) : l)).join('\n');
+  assert.match(uncommented, /^\s*image:\s*caddy:2-alpine/m, 'the hashes are the only thing switching Caddy off');
+  assert.match(compose, /^\s*- "127\.0\.0\.1:3100:3100"/m, 'and something is reachable either way');
   // No build context, no bind mount of a checkout: a paste and nothing
   // else has to be enough.
   assert.doesNotMatch(compose, /^\s*build:/m);
