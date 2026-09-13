@@ -592,7 +592,6 @@ html { scroll-behavior: smooth; }
 }
 .sister b { color: var(--fg); font-weight: 600; }
 .sister a { font-weight: 700; }
-.gpl { font-size: 0.8125rem; color: var(--muted-fg); }
 @media (max-width: 40rem) {
   .foot { justify-content: center; text-align: center; }
 }
@@ -675,7 +674,6 @@ main.legal .lede { color: var(--muted-fg); }
   .top-link,
   .sub-foot-links a,
   .gh-links a,
-  .gpl a { min-height: 44px; display: inline-flex; align-items: center; }
 }
 
 .legal-more { margin-top: 2.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border); }
