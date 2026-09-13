@@ -524,27 +524,6 @@ td.media-cell { max-width: 12rem; overflow: hidden; text-overflow: ellipsis; whi
 }
 .foot-line { font-size: 0.8125rem; color: var(--muted-fg); }
 
-.lightmorphic-badge {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  width: fit-content;
-  background: #111827;
-  border: 1px solid rgba(255,255,255,.12);
-  border-radius: 999px;
-  padding: 8px 16px 8px 10px;
-  box-shadow: 0 1px 0 rgba(255,255,255,0.03) inset, 0 4px 12px rgba(0,0,0,0.25);
-  text-decoration: none;
-  font-size: 0.82rem;
-  color: #9ca3af;
-  transition: background 150ms ease, border-color 150ms ease;
-}
-.lightmorphic-badge:hover { background: #1f2937; border-color: #9ca3af; }
-.lightmorphic-badge img { display: block; height: 25px; width: auto; }
-.lightmorphic-badge .external-link-icon { display: block; width: 12px; height: 12px; opacity: 0.6; color: #9ca3af; }
-.lightmorphic-badge .external-link-icon svg { width: 100%; height: 100%; }
-
 /* ---------- Demo instance banner ---------- */
 .demo-bar {
   background: var(--accent-container);
@@ -809,20 +788,6 @@ body.embedded .wrap { padding-top: 0.5rem; }
   cursor: pointer;
 }
 .linkish:hover { text-decoration: underline; }
-
-/* A row in an archive.org list: what it is, when, and the button that
-   takes it. Same shape whether it is an item or a file inside one. */
-.ia-item {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 0.6rem 0;
-  border-bottom: 1px solid var(--border);
-}
-.ia-item:last-child { border-bottom: none; }
-.ia-item strong { flex: 1; min-width: 0; font-size: 0.9375rem; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.ia-item .hint { flex: none; font-size: 0.8125rem; }
-.ia-item .btn-secondary { flex: none; margin-top: 0; }
 
 /* ---------- Feed check ---------- */
 /* Ten short ticks down the left of a full-width card left the right

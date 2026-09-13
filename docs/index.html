@@ -124,10 +124,10 @@
   },
   {
    "@type": "Question",
-   "name": "Where does live streaming fit?",
+   "name": "Does it record episodes?",
    "acceptedAnswer": {
     "@type": "Answer",
-    "text": "It does not, and that is deliberate. FOSSCast is the published show. Recording and going live are a different job for a different tool, so your public site stays small, fast and hard to break."
+    "text": "No, and that is deliberate. FOSSCast is the published podcast: its pages, its feed and its numbers. Recording is a different job for a different tool, so your public site stays small, fast and hard to break."
    }
   },
   {
@@ -168,10 +168,10 @@
 <main id="content" tabindex="-1">
 
   <!-- The stage. A real FOSSCast show page, drawn in HTML rather than
-       screenshotted, restyling itself the moment you arrive: colour,
-       background, cards, corners, layout. It runs through what the Look
-       tab can do and then hands the controls over. Nothing is loaded
-       from anywhere; every frame of it is this page. -->
+       screenshotted, changing colour the moment you arrive. It runs
+       through what the Look tab can do and then hands the control over.
+       Nothing is loaded from anywhere; every frame of it is this
+       page. -->
   <section class="stage" aria-labelledby="stage-h">
     <div class="stage-inner">
       <div class="stage-words">
@@ -192,7 +192,7 @@
 
       <div class="stage-screen">
         <div class="screen-frame">
-          <div class="demo-site" id="demo-site" data-bg="plain" data-cards="solid" data-shape="round" data-episodes="row">
+          <div class="demo-site" id="demo-site">
             <div class="demo-chrome"><span></span><span></span><span></span></div>
             <div class="demo-page">
               <div class="demo-nav">
@@ -253,11 +253,11 @@
   <section class="hands" id="build" aria-labelledby="hands-h">
     <div class="hands-head">
       <h2 id="hands-h">Now you drive</h2>
-      <p class="lede">These are the real controls from the Look tab, and
-      that is the real page above responding to them. Every shade you do
-      not choose is worked out from the one you do, in light and in dark,
-      including a link colour checked for contrast so nothing you pick
-      can end up unreadable.</p>
+      <p class="lede">That is the one control the Look tab has, and the
+      page above is responding to it. Every other shade is worked out
+      from the colour you pick, in light and in dark, including a link
+      colour walked darker or lighter until it clears 4.5:1 against the
+      page, so nothing you choose can end up unreadable.</p>
     </div>
 
     <div class="demo-controls" id="demo-root">
@@ -275,53 +275,11 @@
         </div>
       </div>
 
-      <div class="control">
-        <p class="demo-label">Background</p>
-        <div class="demo-chips" data-set="bg">
-          <button type="button" class="demo-chip current" data-bg="plain">Plain</button>
-          <button type="button" class="demo-chip" data-bg="tint">One colour</button>
-          <button type="button" class="demo-chip" data-bg="gradient">Gradient</button>
-          <button type="button" class="demo-chip" data-bg="night">Dark</button>
-        </div>
-      </div>
-
-      <div class="control">
-        <p class="demo-label">Cards</p>
-        <div class="demo-chips" data-set="cards">
-          <button type="button" class="demo-chip current" data-cards="solid">Solid</button>
-          <button type="button" class="demo-chip" data-cards="outline">Outlined</button>
-          <button type="button" class="demo-chip" data-cards="glass">Glass</button>
-        </div>
-      </div>
-
-      <div class="control">
-        <p class="demo-label">Corners <b id="demo-radius-value">18px</b></p>
-        <input type="range" id="demo-radius" min="0" max="34" value="18" autocomplete="off" aria-label="Corner rounding">
-      </div>
-
-      <div class="control">
-        <p class="demo-label">Host photos</p>
-        <div class="demo-chips" data-set="shape">
-          <button type="button" class="demo-chip current" data-shape="round">Circles</button>
-          <button type="button" class="demo-chip" data-shape="rounded">Rounded</button>
-          <button type="button" class="demo-chip" data-shape="square">Square</button>
-        </div>
-      </div>
-
-      <div class="control">
-        <p class="demo-label">Episodes</p>
-        <div class="demo-chips" data-set="episodes">
-          <button type="button" class="demo-chip current" data-episodes="row">Beside</button>
-          <button type="button" class="demo-chip" data-episodes="stacked">Above</button>
-          <button type="button" class="demo-chip" data-episodes="compact">Compact</button>
-        </div>
-      </div>
     </div>
 
-    <p class="hands-more">Fourteen preset colours or any hex code, five
-    typefaces, three page widths, three episode layouts, four cover
-    sizes, your own tagline and footer line, and a custom CSS box for
-    anything the tabs do not cover.</p>
+    <p class="hands-more">Eight here to try; in the dashboard it is any
+    hex code you like, with a tagline and a footer line of your own
+    beside it.</p>
   </section>
   <!-- What happens after publish. The one thing a podcaster actually
        wants to know, animated as it scrolls into view. -->
@@ -339,7 +297,7 @@
         </span>
         <h3>Your page is written</h3>
         <p>An episode page with your notes, your chapters and a player,
-        and the show's front page updated, both plain HTML that a search
+        and the podcast's front page updated, both plain HTML that a search
         engine can read.</p>
       </li>
       <li class="step">
@@ -427,19 +385,21 @@
       </article>
       <article class="thing">
         <h3>Media anywhere</h3>
-        <p>Upload to your own server or point at files hosted elsewhere,
-        archive.org included. Both are first class. Range requests are
-        handled properly, so players seek instantly.</p>
+        <p>Upload to the machine this runs on, or point at a file you
+        host somewhere else. Both are first class, and the download is
+        counted here either way. Range requests are handled properly, so
+        players seek instantly.</p>
       </article>
       <article class="thing">
         <h3>Fits the server you already have</h3>
-        <p>The bundled Caddy is optional, never assumed. nginx, Apache, a
-        Cloudflare Tunnel, a tailnet-only instance behind Tailscale: all
-        supported, all documented, all tested.</p>
+        <p>The bundled Caddy is commented out in the compose file, so it
+        cannot take ports 80 and 443 from a proxy you already run. nginx,
+        Apache, a Cloudflare Tunnel, a tailnet-only instance behind
+        Tailscale: point any of them at 127.0.0.1:3100.</p>
       </article>
       <article class="thing">
         <h3>One instance, one podcast</h3>
-        <p>A decision, not a shortcut. One show per instance keeps the
+        <p>A decision, not a shortcut. One podcast per instance keeps the
         whole thing small enough to read in an afternoon and to trust
         with your audience. Running three shows? Run three instances.
         They are tiny.</p>
@@ -543,38 +503,53 @@
         <button type="button" class="file-copy" id="copy-compose" data-copied="Copied">Copy</button>
       </figcaption>
       <div class="file-body">
-        <pre id="compose"><code><span class="l">x-config: <span class="a">&amp;config</span></span><span class="l edit">  DOMAIN: podcast.example.com          <span class="c"># your address</span></span><span class="l edit">  ADMIN_EMAIL: you@example.com         <span class="c"># the first login</span></span><span class="l edit">  ADMIN_PASSWORD: change-me-to-something-long</span><span class="l"></span><span class="l">services:</span><span class="l">  app:</span><span class="l">    image: ghcr.io/lightmorphic/fosscast:latest</span><span class="l">    restart: unless-stopped</span><span class="l">    environment: <span class="a">*config</span></span><span class="l">    volumes:</span><span class="l">      - fosscast_data:/data</span><span class="l">    read_only: true</span><span class="l">    tmpfs: [/tmp]</span><span class="l">    cap_drop: [ALL]</span><span class="l">    security_opt: [no-new-privileges:true]</span><span class="l"></span><span class="l">  caddy:</span><span class="l">    image: caddy:2-alpine</span><span class="l">    restart: unless-stopped</span><span class="l">    environment: <span class="a">*config</span></span><span class="l">    command: sh -c 'caddy reverse-proxy --from "$$DOMAIN" --to app:3100'</span><span class="l">    ports: ["80:80", "443:443"]</span><span class="l">    volumes:</span><span class="l">      - caddy_data:/data</span><span class="l">      - caddy_config:/config</span><span class="l">    cap_add: [NET_BIND_SERVICE]</span><span class="l"></span><span class="l">volumes:</span><span class="l">  fosscast_data:</span><span class="l">  caddy_data:</span><span class="l">  caddy_config:</span></code></pre>
+        <pre id="compose"><code><span class="l">x-config: <span class="a">&amp;config</span></span><span class="l edit">  DOMAIN: podcast.example.com          <span class="c"># your public address</span></span><span class="l edit">  ADMIN_EMAIL: you@example.com         <span class="c"># the first admin account</span></span><span class="l edit">  ADMIN_PASSWORD: change-me-to-something-long</span><span class="l"></span><span class="l">services:</span><span class="l">  app:</span><span class="l">    image: ghcr.io/lightmorphic/fosscast:latest</span><span class="l">    restart: unless-stopped</span><span class="l">    environment: <span class="a">*config</span></span><span class="l">    # Your own proxy dials this. Behind the bundled Caddy below it is</span><span class="l">    # simply unused, so it is right either way.</span><span class="l">    ports:</span><span class="l">      - &quot;127.0.0.1:3100:3100&quot;</span><span class="l">    volumes:</span><span class="l">      - fosscast_data:/data</span><span class="l">    read_only: true</span><span class="l">    tmpfs:</span><span class="l">      - /tmp</span><span class="l">    cap_drop: [ALL]</span><span class="l">    security_opt:</span><span class="l">      - no-new-privileges:true</span><span class="l">    pids_limit: 256</span><span class="l">    healthcheck:</span><span class="l">      test: [&quot;CMD&quot;, &quot;wget&quot;, &quot;-qO-&quot;, &quot;http://127.0.0.1:3100/healthz&quot;]</span><span class="l">      interval: 30s</span><span class="l">      timeout: 5s</span><span class="l">      retries: 3</span><span class="l">    logging: &amp;log</span><span class="l">      driver: json-file</span><span class="l">      options:</span><span class="l">        max-size: &quot;10m&quot;</span><span class="l">        max-file: &quot;3&quot;</span><span class="l"></span><span class="l off">  # HTTPS, and the certificate, done for you. Already running nginx,</span><span class="l off">  # Apache, a tunnel or any other proxy on this machine? Leave this</span><span class="l off">  # commented out and point yours at 127.0.0.1:3100. Otherwise take the</span><span class="l off">  # &quot;# &quot; off every line from here to the bottom of the file, change</span><span class="l off">  # nothing else, and Caddy will fetch and renew the certificate on its</span><span class="l off">  # own within a minute of the first request.</span><span class="l off">#   caddy:</span><span class="l off">#     image: caddy:2-alpine</span><span class="l off">#     restart: unless-stopped</span><span class="l off">#     environment: <span class="a">*config</span></span><span class="l off">#     command: sh -c &#x27;caddy reverse-proxy --from &quot;$$DOMAIN&quot; --to app:3100&#x27;</span><span class="l off">#     ports:</span><span class="l off">#       - &quot;80:80&quot;</span><span class="l off">#       - &quot;443:443&quot;</span><span class="l off">#     volumes:</span><span class="l off">#       - caddy_data:/data</span><span class="l off">#       - caddy_config:/config</span><span class="l off">#     cap_drop: [ALL]</span><span class="l off">#     cap_add: [NET_BIND_SERVICE]</span><span class="l off">#     security_opt:</span><span class="l off">#       - no-new-privileges:true</span><span class="l off">#     pids_limit: 256</span><span class="l off">#     logging: *log</span><span class="l"></span><span class="l">volumes:</span><span class="l">  fosscast_data:</span><span class="l off">#   caddy_data:</span><span class="l off">#   caddy_config:</span></code></pre>
       </div>
       <p class="file-legend"><span class="key" aria-hidden="true"></span>
-      The three lines you change. Everything else is already right.</p>
+      The three lines you change. The greyed block at the foot is HTTPS:
+      take the hashes off it if nothing else is fronting this machine.</p>
     </figure>
   </section>
 
 </main>
 
 <footer class="foot">
-  <p class="sister">FOSSCast publishes the show:
+  <p class="sister">FOSSCast publishes the podcast:
   <a href="https://fossstudio.org" translate="no">FOSSStudio</a> is where you make it:
-  <b>a self-hosted video podcast studio, a StreamYard replacement for everyone.</b>
-  Guests join by link with no account and no download, up to ten of them,
-  with a soundboard, intro videos and per-person recording. Go live on
-  your own watch page, at your own address, with its own chat beside the
-  video, and out to YouTube at the same time if you want it. One
-  click publishes a finished recording straight into FOSSCast.</p>
-
-  <a class="lightmorphic-badge" href="https://lightmorphic.com" target="_blank" rel="noopener noreferrer" translate="no">
-    <span>Created by</span>
-    <img src="/img/lightmorphic-dark-tb-250x50-sq.webp" alt="Lightmorphic" width="125" height="25" loading="lazy">
-    <span class="external-link-icon" aria-hidden="true">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-        <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>
-        <path d="M15 3h6v6"/>
-        <line x1="10" y1="14" x2="21" y2="3"/>
-      </svg>
-    </span>
-  </a>
+  <b>a self-hosted video podcast studio you run yourself.</b>
+  Guests join by a link, with no account and no download. Everyone is
+  recorded on their own track, so a bad connection costs nobody else
+  their audio. One click publishes the finished recording straight into
+  FOSSCast.</p>
 
   <span class="gpl">Free software under the <a href="https://www.gnu.org/licenses/agpl-3.0.html">AGPL v3</a> &middot; <a href="https://github.com/lightmorphic/fosscast">Read the source on GitHub</a></span>
+
+  <div class="gh-foot">
+    <div class="gh-marks">
+      <a href="https://github.com/lightmorphic/fosscast" aria-label="FOSSCast on GitHub">
+        <svg viewBox="0 0 16 16" width="22" height="22" aria-hidden="true" fill="currentColor">
+          <path d="M8 0C3.58 0 0 3.58 0 8c0 3.54 2.29 6.53 5.47 7.59.4.07.55-.17.55-.38 0-.19-.01-.82-.01-1.49-2.01.37-2.53-.49-2.69-.94-.09-.23-.48-.94-.82-1.13-.28-.15-.68-.52-.01-.53.63-.01 1.08.58 1.23.82.72 1.21 1.87.87 2.33.66.07-.52.28-.87.51-1.07-1.78-.2-3.64-.89-3.64-3.95 0-.87.31-1.59.82-2.15-.08-.2-.36-1.02.08-2.12 0 0 .67-.21 2.2.82.64-.18 1.32-.27 2-.27.68 0 1.36.09 2 .27 1.53-1.04 2.2-.82 2.2-.82.44 1.1.16 1.92.08 2.12.51.56.82 1.27.82 2.15 0 3.07-1.87 3.75-3.65 3.95.29.25.54.73.54 1.48 0 1.07-.01 1.93-.01 2.2 0 .21.15.46.55.38A8.01 8.01 0 0 0 16 8c0-4.42-3.58-8-8-8Z"/>
+        </svg>
+      </a>
+      <a href="https://opensource.org/license/agpl-v3" aria-label="AGPL-3.0, an Open Source Initiative approved licence">
+        <svg viewBox="0 0 24 24" width="22" height="22" aria-hidden="true" fill="none"
+             stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="9.2" r="6.4"/>
+          <path d="M9.6 14.4 7.9 21.5" stroke-linecap="round"/>
+          <path d="M14.4 14.4 16.1 21.5" stroke-linecap="round"/>
+        </svg>
+      </a>
+    </div>
+    <nav class="gh-links" aria-label="Source code">
+      <a href="https://github.com/lightmorphic/fosscast">Repository</a>
+      <a href="https://github.com/lightmorphic/fosscast#readme">Documentation</a>
+      <a href="https://github.com/lightmorphic/fosscast/blob/main/SECURITY.md">Security</a>
+      <a href="https://github.com/lightmorphic/fosscast/blob/main/LICENSE">Licence</a>
+      <a href="https://github.com/lightmorphic/fosscast/commits/main">Changelog</a>
+      <a href="https://github.com/lightmorphic/fosscast/issues">Issues</a>
+      <a href="https://github.com/lightmorphic/fosscast/releases">Releases</a>
+    </nav>
+  </div>
 
   <div class="sub-foot">
     <p>&copy; Lightmorphic Ltd. Registered in England and Wales, company
@@ -609,10 +584,9 @@
   var stage = document.querySelector('.stage');
   if (!site) return;
 
-  function mark(button, group) {
-    var siblings = button.parentElement.querySelectorAll('.demo-chip, .demo-swatch');
+  function mark(button) {
+    var siblings = button.parentElement.querySelectorAll('.demo-swatch');
     Array.prototype.forEach.call(siblings, function (c) { c.classList.toggle('current', c === button); });
-    if (group) site.dataset[group] = button.dataset[group];
   }
 
   function accent(value) {
@@ -625,20 +599,10 @@
   if (root) {
     root.addEventListener('click', function (e) {
       var swatch = e.target.closest('.demo-swatch');
-      if (swatch) { stop(); mark(swatch); accent(swatch.dataset.accent); return; }
-      var chip = e.target.closest('.demo-chip');
-      if (!chip) return;
+      if (!swatch) return;
       stop();
-      var group = chip.parentElement.dataset.set;
-      mark(chip, group);
-    });
-
-    var radius = document.getElementById('demo-radius');
-    var radiusValue = document.getElementById('demo-radius-value');
-    if (radius) radius.addEventListener('input', function () {
-      stop();
-      site.style.setProperty('--demo-radius', radius.value + 'px');
-      if (radiusValue) radiusValue.textContent = radius.value + 'px';
+      mark(swatch);
+      accent(swatch.dataset.accent);
     });
   }
 
@@ -658,36 +622,22 @@
   }
 
   var SCENES = [
-    { accent: '#ff5721', bg: 'plain',    cards: 'solid',   shape: 'round',   episodes: 'row',      radius: 18, word: 'already built.' },
-    { accent: '#2563eb', bg: 'tint',     cards: 'outline', shape: 'rounded', episodes: 'stacked',  radius: 6,  word: 'your colour.' },
-    { accent: '#16a34a', bg: 'gradient', cards: 'glass',   shape: 'round',   episodes: 'compact',  radius: 30, word: 'your shape.' },
-    { accent: '#8b5cf6', bg: 'night',    cards: 'solid',   shape: 'square',  episodes: 'row',      radius: 2,  word: 'light or dark.' },
-    { accent: '#d97706', bg: 'plain',    cards: 'outline', shape: 'rounded', episodes: 'stacked',  radius: 22, word: 'your call.' }
+    { accent: '#ff5721', word: 'already built.' },
+    { accent: '#2563eb', word: 'your colour.' },
+    { accent: '#16a34a', word: 'the whole palette.' },
+    { accent: '#8b5cf6', word: 'light or dark.' },
+    { accent: '#d97706', word: 'your call.' }
   ];
 
   function apply(scene) {
     accent(scene.accent);
-    site.dataset.bg = scene.bg;
-    site.dataset.cards = scene.cards;
-    site.dataset.shape = scene.shape;
-    site.dataset.episodes = scene.episodes;
-    site.style.setProperty('--demo-radius', scene.radius + 'px');
     var swap = document.getElementById('swap');
     if (swap) swap.textContent = scene.word;
-    // keep the controls honest about what is on screen
+    // keep the swatches honest about what is on screen
     if (root) {
       root.querySelectorAll('.demo-swatch').forEach(function (s) {
         s.classList.toggle('current', s.dataset.accent === scene.accent);
       });
-      ['bg', 'cards', 'shape', 'episodes'].forEach(function (group) {
-        root.querySelectorAll('[data-set="' + group + '"] .demo-chip').forEach(function (c) {
-          c.classList.toggle('current', c.dataset[group] === scene[group]);
-        });
-      });
-      var radius = document.getElementById('demo-radius');
-      var radiusValue = document.getElementById('demo-radius-value');
-      if (radius) radius.value = scene.radius;
-      if (radiusValue) radiusValue.textContent = scene.radius + 'px';
     }
   }
 

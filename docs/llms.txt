@@ -32,8 +32,8 @@ supported.
 - It never phones home. No update check, no telemetry, no crash
   reporting, no CDN, no third-party font or script.
 - It sets no cookie for listeners and builds no listener profile.
-- It does not require you to store audio on the same machine: episodes
-  can point at files anywhere, Archive.org included.
+- It does not require you to store audio on the same machine: an
+  episode can point at a file anywhere that serves byte ranges.
 
 ## Cost
 

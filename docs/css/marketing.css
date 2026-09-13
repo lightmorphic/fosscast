@@ -370,6 +370,10 @@ main > section:last-child { border-bottom: 0; }
   background: color-mix(in srgb, var(--accent) 7%, transparent);
 }
 .file .edit::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--accent); }
+/* A line of the compose file that ships commented out. It is still the
+   file, so it is still shown; it is just not doing anything yet. */
+.l.off { opacity: 0.55; }
+
 .file-legend {
   margin: 0; max-width: none;
   padding: 0.7rem 1rem; border-top: 1px solid var(--rule);
@@ -435,8 +439,7 @@ main > section:last-child { border-bottom: 0; }
 
 .demo-label { margin: 1rem 0 0.4rem; font-size: 0.8125rem; font-weight: 600; color: var(--muted-fg); }
 .demo-label:first-child { margin-top: 0; }
-.demo-label b { color: var(--fg); font-variant-numeric: tabular-nums; }
-.demo-swatches, .demo-chips { display: flex; flex-wrap: wrap; gap: 0.45rem; }
+.demo-swatches { display: flex; flex-wrap: wrap; gap: 0.45rem; }
 .demo-swatch {
   width: 1.75rem; height: 1.75rem; padding: 0;
   border-radius: 50%; border: 2px solid transparent;
@@ -444,15 +447,6 @@ main > section:last-child { border-bottom: 0; }
   box-shadow: 0 0 0 1px var(--panel-border) inset;
 }
 .demo-swatch.current { border-color: var(--fg); }
-.demo-chip {
-  font: inherit; font-size: 0.8125rem; font-weight: 500;
-  padding: 0.3rem 0.7rem; border-radius: 999px;
-  border: 1px solid var(--border); background: transparent; color: var(--fg);
-  cursor: pointer;
-}
-.demo-chip:hover { border-color: var(--accent); }
-.demo-chip.current { background: var(--accent-container); color: var(--on-accent-container); border-color: transparent; }
-#demo-radius { width: 100%; accent-color: var(--accent); margin-top: 0.25rem; }
 
 .demo-site {
   --demo-accent: #ff5721;
@@ -475,23 +469,6 @@ main > section:last-child { border-bottom: 0; }
   color: var(--demo-fg);
   transition: background 200ms ease, color 200ms ease;
 }
-.demo-site[data-bg="tint"] { --demo-bg: #fdf0f4; --demo-card: rgba(255,255,255,0.92); }
-.demo-site[data-bg="gradient"] {
-  --demo-bg: linear-gradient(155deg, #1e1b4b, #831843);
-  --demo-fg: #ffffff;
-  --demo-muted: rgba(255, 255, 255, 0.72);
-  --demo-card: rgba(22, 22, 30, 0.6);
-  --demo-line: rgba(255, 255, 255, 0.14);
-}
-.demo-site[data-bg="night"] {
-  --demo-bg: #0b0b0e;
-  --demo-fg: #fafafa;
-  --demo-muted: rgba(250, 250, 250, 0.66);
-  --demo-card: #1b1d29;
-  --demo-line: rgba(255, 255, 255, 0.09);
-}
-.demo-site[data-cards="outline"] { --demo-shadow: none; }
-.demo-site[data-cards="glass"] { --demo-shadow: none; }
 
 .demo-chrome {
   display: flex; gap: 0.375rem; padding: 0.5rem 0.75rem;
@@ -515,7 +492,6 @@ main > section:last-child { border-bottom: 0; }
   padding: 0.75rem;
   transition: border-radius 160ms ease, background 200ms ease;
 }
-.demo-site[data-cards="glass"] .demo-card { backdrop-filter: blur(8px); }
 .demo-hero { display: flex; gap: 0.875rem; align-items: center; }
 .demo-cover {
   width: 4rem; height: 4rem; flex: none;
@@ -542,10 +518,6 @@ main > section:last-child { border-bottom: 0; }
   background: linear-gradient(140deg, color-mix(in srgb, var(--demo-accent) 70%, #fff), var(--demo-accent));
   transition: width 160ms ease, height 160ms ease, border-radius 160ms ease;
 }
-.demo-site[data-episodes="stacked"] .demo-episode { flex-direction: column; align-items: stretch; }
-.demo-site[data-episodes="stacked"] .demo-thumb { width: 100%; height: 3.5rem; }
-.demo-site[data-episodes="compact"] .demo-episode { padding: 0.45rem 0.7rem; }
-.demo-site[data-episodes="compact"] .demo-thumb { width: 1.6rem; height: 1.6rem; }
 
 .demo-hosts { display: grid; gap: 0.75rem; grid-template-columns: 1fr 1fr; }
 .demo-host { display: flex; gap: 0.625rem; align-items: center; }
@@ -557,8 +529,6 @@ main > section:last-child { border-bottom: 0; }
   border-radius: 50%;
   transition: border-radius 160ms ease;
 }
-.demo-site[data-shape="rounded"] .demo-face { border-radius: calc(var(--demo-radius) * 0.5); }
-.demo-site[data-shape="square"] .demo-face { border-radius: 0; }
 .demo-role { margin: 0; font-size: 0.6875rem; color: var(--demo-accent-text); }
 .demo-note { margin: 0.625rem 0 0; }
 @media (prefers-reduced-motion: reduce) {
@@ -655,6 +625,26 @@ html { scroll-behavior: smooth; }
 }
 main:focus { outline: none; }
 
+/* The open-source sub-footer: the two marks on the left, the links into
+   the repository on the right. It sits above the legal block, and both
+   read as one quiet band at the foot of the page. */
+.gh-foot { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border);
+  display: flex; flex-wrap: wrap; gap: 1rem 2rem;
+  align-items: center; justify-content: space-between; width: 100%; }
+.gh-marks { display: flex; align-items: center; gap: 1rem; }
+.gh-marks a { display: inline-flex; align-items: center; color: var(--muted-fg); padding: 0.4rem 0; }
+.gh-marks a:hover { color: var(--fg); }
+.gh-links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem;
+  margin-left: auto; justify-content: flex-end; }
+.gh-links a { font-size: 0.8125rem; color: var(--muted-fg); text-decoration: none; }
+.gh-links a:hover { color: var(--fg); text-decoration: underline; }
+
+/* On a narrow screen the links go under the marks rather than being
+   squeezed against them, still reading left to right in the same order. */
+@media (max-width: 46rem) {
+  .gh-links { margin-left: 0; justify-content: flex-start; gap: 0.25rem 1rem; }
+}
+
 .sub-foot { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border);
   display: flex; flex-wrap: wrap; gap: 0.75rem 2rem; align-items: baseline;
   justify-content: space-between; width: 100%; }
@@ -671,7 +661,10 @@ main:focus { outline: none; }
 .sub-foot-links a:hover { color: var(--fg); text-decoration: underline; }
 
 /* The small print pages: one column, easy to read, nothing clever. */
-main.legal { max-width: 46rem; }
+/* The small print pages have no sections to carry the page's margins,
+   so they carry their own: the same column the header and the footer
+   sit in, rather than hard against the left edge of the window. */
+main.legal { max-width: 46rem; margin: 0 auto; padding: 3rem 1.5rem 1rem; }
 main.legal h1 { font-size: 2rem; letter-spacing: -0.02em; margin-bottom: 0.5rem; }
 main.legal h2 { font-size: 1.25rem; margin-top: 2rem; }
 main.legal p, main.legal li { max-width: 65ch; line-height: 1.65; }
@@ -681,6 +674,7 @@ main.legal .lede { color: var(--muted-fg); }
 @media (max-width: 1024px) {
   .top-link,
   .sub-foot-links a,
+  .gh-links a,
   .gpl a { min-height: 44px; display: inline-flex; align-items: center; }
 }
 
