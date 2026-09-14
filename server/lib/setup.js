@@ -9,6 +9,14 @@
 // self-hoster can run, and being able to run it is the proof that the
 // box is theirs.
 //
+// From the box itself the code is not asked for at all. Reaching an
+// unclaimed instance from the machine it runs on is the same proof,
+// arrived at without anybody reading a log - Charlie, 14 September
+// 2026: "I don't like that you have to go into the logs to find a code.
+// There must be a simpler way." What counts as the machine itself, and
+// why a reverse proxy sitting on it cannot borrow the answer, is in
+// lib/local.js.
+//
 // The code lives in memory for the life of the process. It is never
 // written to disk, so it is not in a backup, and it is a different code
 // after every restart.
@@ -28,13 +36,16 @@ function announce() {
     '  ----------------------------------------------------------',
     '  Nobody owns this FOSSCast yet.',
     '',
-    '  Open it in a browser and it will ask you for this code:',
+    '  Open it in a browser on this machine and it will simply ask you',
+    '  to set an email and a password. Being here is proof enough.',
+    '',
+    '  From another machine it asks for this code as well:',
     '',
     `      ${code}`,
     '',
-    '  It is only in this log, so only somebody who can reach this',
-    '  machine can claim the instance. It changes every restart and',
-    '  is never written to disk.',
+    '  The code is only in this log, so only somebody who can reach',
+    '  this machine can claim the instance from elsewhere. It changes',
+    '  every restart and is never written to disk.',
     '  ----------------------------------------------------------',
     '',
   ].join('\n'));

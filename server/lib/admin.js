@@ -36,6 +36,7 @@ const settingsScreen = require('./admin/settings-page');
 const setupScreen = require('./admin/setup-page');
 const helpScreen = require('./admin/help-page');
 const setup = require('./setup');
+const local = require('./local');
 const passkeys = require('./passkeys');
 const totp = require('./totp');
 
@@ -318,13 +319,18 @@ function createAdminRouter(ctx) {
     // so every admin address leads to the same place. The code that
     // guards it is in the container's log and nowhere else.
     if (!users().length) {
-      if (p === '/admin/setup' && req.method === 'GET') { html(res, claimPage()); return true; }
+      // Reaching an unclaimed instance from the machine it runs on is
+      // the same proof the code was asking for, so the code is not
+      // asked for. lib/local.js says how that is decided and why a
+      // proxy in front cannot borrow it.
+      const here = local.isLocal(req);
+      if (p === '/admin/setup' && req.method === 'GET') { html(res, claimPage({ local: here })); return true; }
       if (p === '/admin/setup' && req.method === 'POST') {
         const ip = clientIp(req);
         // A setup code is six digits. Guessing is rate-limited the same
         // way a password is, and for the same reason.
         if (limiter.blocked(ip)) {
-          html(res, claimPage({ error: 'Too many attempts. Try again later.' }), 429);
+          html(res, claimPage({ local: here, error: 'Too many attempts. Try again later.' }), 429);
           return true;
         }
         const form = await formBody(req, readBody);
@@ -332,9 +338,10 @@ function createAdminRouter(ctx) {
         const password = String(form.get('password') || '');
         const again = String(form.get('again') || '');
 
-        if (!setup.matches(form.get('code'))) {
+        if (!here && !setup.matches(form.get('code'))) {
           limiter.fail(ip);
           html(res, claimPage({
+            local: here,
             email,
             error: 'That is not the code in the log. It changes on every restart, so read it '
               + 'again rather than reusing an older one.',
@@ -342,15 +349,15 @@ function createAdminRouter(ctx) {
           return true;
         }
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-          html(res, claimPage({ error: 'That does not look like an email address.' }), 400);
+          html(res, claimPage({ local: here, error: 'That does not look like an email address.' }), 400);
           return true;
         }
         if (password !== again) {
-          html(res, claimPage({ email, error: 'The two passwords are not the same.' }), 400);
+          html(res, claimPage({ local: here, email, error: 'The two passwords are not the same.' }), 400);
           return true;
         }
         const wrong = setup.problem(password, email);
-        if (wrong) { html(res, claimPage({ email, error: wrong }), 400); return true; }
+        if (wrong) { html(res, claimPage({ local: here, email, error: wrong }), 400); return true; }
 
         limiter.ok(ip);
         const user = {

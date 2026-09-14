@@ -1,8 +1,12 @@
 'use strict';
-// The first run, as three screens rather than three lines in a compose
-// file: prove you can read this machine's log, choose a password FOSSCast
-// will actually argue with you about, and then - in the same minute,
-// while you are still here - add a passkey and a second factor.
+// The first run, as two screens rather than three lines in a compose
+// file: choose a password FOSSCast will actually argue with you about,
+// and then - in the same minute, while you are still here - add a
+// passkey and a second factor.
+//
+// Opened from the machine FOSSCast runs on, that is the whole of it.
+// Opened from anywhere else, the first screen also asks for the code
+// from the log, because from there nothing else says who you are.
 //
 // Charlie: "When you log in for the first time you create the password,
 // and also give them the chance to do 2FA. People use weak passwords and
@@ -80,22 +84,30 @@ async function addPasskey(label, say) {
 `;
 
 module.exports = function create({ brandName }) {
-  // Step one and two on one screen: the code, then the account. Putting
-  // the code on a screen of its own would make somebody read the log,
-  // come back, and then be asked for everything else anyway.
-  function claimPage({ error = '', email = '', suggestion = '' } = {}) {
+  // The code, where it is needed, and the account, on one screen.
+  // Putting the code on a screen of its own would make somebody read the
+  // log, come back, and then be asked for everything else anyway.
+  //
+  // `local` is true when the request came from the machine FOSSCast is
+  // running on. Being there is the same proof the code was asking for,
+  // so the code is not asked for - and it is not mentioned either.
+  // Explaining a field somebody does not have to fill in is a field
+  // somebody still has to read.
+  function claimPage({ error = '', email = '', suggestion = '', local = false } = {}) {
     const passphrase = suggestion || setup.suggest();
     return adminPage({
       title: 'Set up',
       authed: false,
       body: `<section class="panel narrow">
         <h1 class="page-title">Set up ${esc(brandName)}</h1>
-        <p class="lede">Nobody owns this yet. Two things and it is yours.</p>
+        <p class="lede">${local
+    ? 'Nobody owns this yet. Set a login and it is yours.'
+    : 'Nobody owns this yet. Two things and it is yours.'}</p>
 
         ${error ? `<p class="form-error">${esc(error)}</p>` : ''}
 
         <form method="post" action="/admin/setup">
-          <h2>The code from the log</h2>
+          ${local ? '' : `<h2>The code from the log</h2>
           <p class="hint">FOSSCast printed a six-digit code when it
           started, and that is the only place it exists. On the machine
           this runs on:</p>
@@ -105,7 +117,7 @@ module.exports = function create({ brandName }) {
           what stops a stranger claiming your instance before you do.</p>
           <label for="code">Setup code</label>
           <input id="code" name="code" inputmode="numeric" autocomplete="off"
-            spellcheck="false" placeholder="000-000" required maxlength="7">
+            spellcheck="false" placeholder="000-000" required maxlength="7">`}
 
           <h2>Your login</h2>
           <label for="email">Email</label>
