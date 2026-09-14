@@ -1,14 +1,18 @@
 'use strict';
-// Who may claim an instance without the code from the log.
+// Who may claim an instance, and how few times.
 //
-// The rule is that being on the machine FOSSCast runs on, in the first
-// half hour after it starts, is proof enough, and that nothing a
-// stranger can write into a request may imitate being there. The test that matters most is the last kind: a
-// request from off the machine carrying X-Forwarded-For: 127.0.0.1,
-// which is the header a reverse proxy writes and anybody can forge. If
-// that ever claims an instance, every FOSSCast behind a proxy belongs
-// to whoever asks first, so it is checked here and not only reasoned
-// about.
+// By default the first person to open an unclaimed FOSSCast claims it,
+// from wherever they are: there is no code, and the window in which
+// somebody else could get there first is said out loud in the log
+// rather than guarded against. What must hold is the other half - that
+// once it has an owner there is no second sign-up, from anywhere, ever.
+//
+// REQUIRE_SETUP_CODE is the escape hatch for an instance whose port is
+// open to the internet before it has been claimed. Where it is set the
+// code is required from everywhere, and no header may talk its way out
+// of it: the test that matters is a request from a real non-loopback
+// address carrying X-Forwarded-For: 127.0.0.1, which is the header a
+// reverse proxy writes and anybody can forge.
 
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
@@ -18,17 +22,18 @@ const os = require('node:os');
 const path = require('node:path');
 const http = require('node:http');
 const local = require('../lib/local');
-const setup = require('../lib/setup');
-const setupScreen = require('../lib/admin/setup-page');
 
-const PORT = 4960 + Math.floor(Math.random() * 30);
-const DATA = fs.mkdtempSync(path.join(os.tmpdir(), 'fosscast-local-'));
+const OPEN_PORT = 4960 + Math.floor(Math.random() * 15);
+const CODE_PORT = OPEN_PORT + 15;
+const OPEN_DATA = fs.mkdtempSync(path.join(os.tmpdir(), 'fosscast-open-'));
+const CODE_DATA = fs.mkdtempSync(path.join(os.tmpdir(), 'fosscast-code-'));
 const PASSWORD = 'harbor-thistle-pewter-quarry-lantern';
 
 // An address of this machine that is not loopback, so a request can be
 // made that arrives the way a request from another machine arrives. A
 // box with nothing but loopback cannot be asked these questions over
-// HTTP; the decision itself is still checked below, every way round.
+// HTTP; the decision behind the log line is still checked below, every
+// way round.
 function outsideAddress() {
   for (const entries of Object.values(os.networkInterfaces())) {
     for (const entry of entries || []) {
@@ -39,23 +44,29 @@ function outsideAddress() {
 }
 
 const OUTSIDE = outsideAddress();
-let child;
+const started = [];
+let codeLog = '';
+let theCode = '';
 
 // fetch cannot choose which of this machine's addresses it speaks from,
-// and that choice is the whole point here, so the requests are made by
-// hand.
-function request({ from, to, host, method = 'GET', path: where = '/admin/setup', headers = {}, form }) {
+// and that choice is the whole point of some of these, so the requests
+// are made by hand.
+function request({
+  port, from, to = '127.0.0.1', host, method = 'GET',
+  path: where = '/admin/setup', headers = {}, form, cookie,
+}) {
   const body = form ? new URLSearchParams(form).toString() : null;
   return new Promise((resolve, reject) => {
     const req = http.request({
       host: to,
-      port: PORT,
+      port,
       method,
       path: where,
       localAddress: from,
       headers: {
-        host: host || `${to}:${PORT}`,
+        host: host || `${to}:${port}`,
         ...(body ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}),
+        ...(cookie ? { cookie } : {}),
         ...headers,
       },
     }, (res) => {
@@ -69,44 +80,235 @@ function request({ from, to, host, method = 'GET', path: where = '/admin/setup',
   });
 }
 
-function users() {
-  const file = path.join(DATA, 'users.json');
+function users(dir) {
+  const file = path.join(dir, 'users.json');
   return fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, 'utf8')) : [];
 }
 
-before(async () => {
-  const env = { ...process.env, HTTP_PORT: String(PORT), DATA_DIR: DATA };
+function start(port, dir, extra = {}) {
+  const env = {
+    ...process.env, HTTP_PORT: String(port), DATA_DIR: dir, ...extra,
+  };
   delete env.ADMIN_EMAIL;
   delete env.ADMIN_PASSWORD;
   delete env.DOMAIN;
-  child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
-    env, stdio: ['ignore', 'ignore', 'inherit'],
+  if (!extra.REQUIRE_SETUP_CODE) delete env.REQUIRE_SETUP_CODE;
+  const child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
+    env, stdio: ['ignore', 'pipe', 'inherit'],
   });
+  started.push(child);
+  return child;
+}
+
+async function waitFor(port) {
   const end = Date.now() + 5000;
   for (;;) {
     try {
-      const res = await fetch(`http://127.0.0.1:${PORT}/healthz`);
-      if (res.ok) break;
+      const res = await fetch(`http://127.0.0.1:${port}/healthz`);
+      if (res.ok) return;
     } catch { /* not up yet */ }
-    if (Date.now() > end) throw new Error('the server did not start');
+    if (Date.now() > end) throw new Error(`nothing answered on ${port}`);
+    await new Promise((r) => setTimeout(r, 100));
+  }
+}
+
+before(async () => {
+  start(OPEN_PORT, OPEN_DATA).stdout.resume();
+  const guarded = start(CODE_PORT, CODE_DATA, { REQUIRE_SETUP_CODE: '1' });
+  guarded.stdout.on('data', (chunk) => { codeLog += chunk.toString(); });
+  await waitFor(OPEN_PORT);
+  await waitFor(CODE_PORT);
+  const end = Date.now() + 5000;
+  for (;;) {
+    const found = codeLog.match(/^\s+(\d{3}-\d{3})\s*$/m);
+    if (found) { [, theCode] = found; break; }
+    if (Date.now() > end) throw new Error('no code was printed');
     await new Promise((r) => setTimeout(r, 100));
   }
 });
 
 after(() => {
-  if (child) child.kill();
-  fs.rmSync(DATA, { recursive: true, force: true });
+  for (const child of started) child.kill();
+  fs.rmSync(OPEN_DATA, { recursive: true, force: true });
+  fs.rmSync(CODE_DATA, { recursive: true, force: true });
 });
 
 // ---------------------------------------------------------------------
-// The decision itself, asked every way round
+// The ordinary install: no code, first person in
 // ---------------------------------------------------------------------
 
-test('the machine itself is the socket saying so, never a header', () => {
+test('an unclaimed instance asks for a login and nothing else', async () => {
+  const page = await request({ port: OPEN_PORT });
+  assert.strictEqual(page.status, 200);
+  assert.ok(!page.text.includes('name="code"'), 'no field');
+  assert.ok(!page.text.includes('Setup code'), 'nothing called a setup code');
+  assert.ok(!page.text.includes('docker compose logs'), 'and nobody is sent to a log');
+});
+
+test('the first person to fill it in owns it, from wherever they are', async (t) => {
+  // Deliberately not from loopback where this machine has another
+  // address: being on the box is not what is being asked for any more,
+  // and a test that only ever claims from loopback would not notice if
+  // it quietly became so again.
+  const from = OUTSIDE || undefined;
+  if (!OUTSIDE) t.diagnostic('no address but loopback here, so claiming from loopback');
+
+  const claim = await request({
+    port: OPEN_PORT,
+    from,
+    to: OUTSIDE || '127.0.0.1',
+    method: 'POST',
+    form: { email: 'Owner@Example.test', password: PASSWORD, again: PASSWORD },
+  });
+  assert.strictEqual(claim.status, 303);
+  assert.ok(claim.headers.location.endsWith('/admin/setup/protect'));
+  assert.ok(claim.headers['set-cookie'][0].includes('fosscast_admin='), 'and signs them in');
+
+  const [owner] = users(OPEN_DATA);
+  assert.strictEqual(owner.email, 'owner@example.test', 'folded to lower case');
+  assert.ok(owner.hash.startsWith('scrypt$'), 'the password is hashed, never stored');
+  assert.ok(owner.totpSecret, 'a two-factor secret is ready if they want it');
+  assert.strictEqual(owner.totpEnabled, false, 'but it does nothing yet');
+});
+
+test('and that is the only sign-up there will ever be', async () => {
+  const second = {
+    method: 'POST',
+    form: { email: 'second@example.test', password: PASSWORD, again: PASSWORD },
+  };
+
+  // From the machine it runs on.
+  const near = await request({ port: OPEN_PORT, ...second });
+  assert.strictEqual(near.status, 303);
+  assert.ok(near.headers.location.endsWith('/admin/login'), 'setup is over');
+
+  // From off it.
+  if (OUTSIDE) {
+    const far = await request({ port: OPEN_PORT, from: OUTSIDE, to: OUTSIDE, ...second });
+    assert.strictEqual(far.status, 303);
+    assert.ok(far.headers.location.endsWith('/admin/login'));
+  }
+
+  // And by the owner, signed in, which is the one road that does not go
+  // through the guard that sends everybody else to the login page.
+  const signIn = await request({
+    port: OPEN_PORT,
+    method: 'POST',
+    path: '/admin/login',
+    form: { email: 'owner@example.test', password: PASSWORD },
+  });
+  const cookie = signIn.headers['set-cookie'][0].split(';')[0];
+  const inside = await request({ port: OPEN_PORT, cookie, ...second });
+  assert.strictEqual(inside.status, 404, 'there is no such thing as a second sign-up');
+
+  // The screen itself is gone.
+  const screen = await request({ port: OPEN_PORT });
+  assert.strictEqual(screen.status, 303);
+  assert.ok(screen.headers.location.endsWith('/admin/login'));
+
+  assert.strictEqual(users(OPEN_DATA).length, 1, 'still the one owner');
+  assert.strictEqual(users(OPEN_DATA)[0].email, 'owner@example.test');
+});
+
+// ---------------------------------------------------------------------
+// REQUIRE_SETUP_CODE, for the instance whose port is open early
+// ---------------------------------------------------------------------
+
+test('with the setting on, the code is printed and asked for', async () => {
+  assert.match(codeLog, /REQUIRE_SETUP_CODE is set/);
+  assert.match(codeLog, /never written to disk/);
+  assert.ok(/^\d{3}-\d{3}$/.test(theCode), 'six digits');
+  assert.ok(!fs.readdirSync(CODE_DATA).includes('setup.json'), 'and not on disk');
+
+  const page = await request({ port: CODE_PORT });
+  assert.ok(page.text.includes('name="code"'), 'the field is there');
+  assert.ok(page.text.includes('docker compose logs app'), 'and says where to read it');
+});
+
+test('no code, a wrong code, and a forged one all claim nothing', async () => {
+  const attempt = {
+    method: 'POST',
+    form: { email: 'thief@example.test', password: PASSWORD, again: PASSWORD },
+  };
+
+  const bare = await request({ port: CODE_PORT, ...attempt });
+  assert.strictEqual(bare.status, 403);
+
+  const wrong = await request({
+    port: CODE_PORT,
+    method: 'POST',
+    form: { code: '000-000', ...attempt.form },
+  });
+  assert.strictEqual(wrong.status, 403);
+
+  // The one that matters. X-Forwarded-For is written by whoever is in
+  // front of an app and anybody can put it in a request by hand, so it
+  // must never be worth anything here - from loopback, where a proxy
+  // would genuinely be, or from off the machine entirely.
+  const forgedNear = await request({
+    port: CODE_PORT,
+    headers: { 'X-Forwarded-For': '127.0.0.1', 'X-Real-IP': '127.0.0.1' },
+    ...attempt,
+  });
+  assert.strictEqual(forgedNear.status, 403);
+
+  if (OUTSIDE) {
+    const forgedFar = await request({
+      port: CODE_PORT,
+      from: OUTSIDE,
+      to: OUTSIDE,
+      host: `127.0.0.1:${CODE_PORT}`,
+      headers: { 'X-Forwarded-For': '127.0.0.1', 'X-Real-IP': '127.0.0.1' },
+      ...attempt,
+    });
+    assert.strictEqual(forgedFar.status, 403, 'a forged address claims nothing');
+  }
+
+  assert.deepStrictEqual(users(CODE_DATA), [], 'nothing was claimed');
+});
+
+test('the right code claims it, once', async () => {
+  const claim = await request({
+    port: CODE_PORT,
+    method: 'POST',
+    form: {
+      code: theCode, email: 'owner@example.test', password: PASSWORD, again: PASSWORD,
+    },
+  });
+  assert.strictEqual(claim.status, 303);
+  assert.ok(claim.headers.location.endsWith('/admin/setup/protect'));
+
+  // The code is spent along with the sign-up it belonged to.
+  const again = await request({
+    port: CODE_PORT,
+    method: 'POST',
+    form: {
+      code: theCode, email: 'thief@example.test', password: PASSWORD, again: PASSWORD,
+    },
+  });
+  assert.strictEqual(again.status, 303);
+  assert.ok(again.headers.location.endsWith('/admin/login'));
+  assert.strictEqual(users(CODE_DATA).length, 1);
+});
+
+// ---------------------------------------------------------------------
+// Where the claim came from, which is only ever the socket's own word
+// ---------------------------------------------------------------------
+//
+// Nothing turns on this any more - it decides no permission - but the
+// line it writes in the log is the only evidence there would be if
+// somebody else reached an unclaimed instance first, and evidence taken
+// from a forgeable header is worse than none.
+
+test('the claim is logged as coming from where it really came from', () => {
   const gateway = '172.17.0.1';
   local.setHostAddressForTests(gateway);
 
-  // A browser on the box, in a container and out of one.
+  // A browser on the box, in a container and out of one. Inside Docker
+  // a port published on 127.0.0.1 is reached through Docker's own
+  // relay, which dials the container from the bridge gateway, so that
+  // address is the machine too - but only in a container, where the
+  // gateway is the host rather than the building's router.
   assert.strictEqual(local.decide({ address: '127.0.0.1', headers: { host: 'localhost:3100' } }), true);
   assert.strictEqual(local.decide({ address: '::1', headers: { host: '[::1]:3100' } }), true);
   assert.strictEqual(local.decide({ address: '::ffff:127.0.0.1', headers: { host: '127.0.0.1:3100' } }), true);
@@ -131,18 +333,8 @@ test('the machine itself is the socket saying so, never a header', () => {
   // its address looks much like the one that is.
   assert.strictEqual(local.decide({ address: '172.17.0.5', headers: { host: '127.0.0.1:3100' } }), false);
 
-  // A proxy on the same machine dials from the same place a browser on
-  // it does. Either sign of one is enough to ask for the code.
-  assert.strictEqual(local.decide({
-    address: '127.0.0.1',
-    headers: { host: 'localhost:3100', 'x-forwarded-for': '203.0.113.9' },
-  }), false, 'a header a proxy adds says there is a proxy');
-  assert.strictEqual(local.decide({
-    address: '127.0.0.1',
-    headers: { host: 'podcast.example.com' },
-  }), false, 'a site name is not a name anybody types on the box');
-
-  // Every one of the forwarding headers counts, whatever it says.
+  // Something is in front, so what is behind it is not on the machine
+  // whatever address it dials from.
   for (const name of local.PROXY_HEADERS) {
     assert.strictEqual(
       local.decide({ address: '127.0.0.1', headers: { host: 'localhost', [name]: 'anything' } }),
@@ -150,154 +342,18 @@ test('the machine itself is the socket saying so, never a header', () => {
       `${name} means something is in front`,
     );
   }
+  assert.strictEqual(local.decide({
+    address: '127.0.0.1',
+    headers: { host: 'podcast.example.com' },
+  }), false, 'a site name is not a name anybody types on the box');
 
   local.setHostAddressForTests(undefined);
 });
 
 test('without a container the gateway is a router, and means nothing', () => {
-  // Read fresh: on a machine with no container around it, the default
-  // gateway is the building's router, and treating it as the machine
-  // itself would hand the instance to a network.
   local.setHostAddressForTests(undefined);
   if (!fs.existsSync('/.dockerenv') && !fs.existsSync('/run/.containerenv')) {
     assert.strictEqual(local.hostAddress(), null);
   }
   local.setHostAddressForTests(undefined);
-});
-
-test('the door closes half an hour after the instance starts', () => {
-  assert.ok(setup.withinOpeningTime(), 'open at the start, which is when people install');
-
-  // The half hour is not for the person installing it. It is for the
-  // one shape the address test cannot see through: a reverse proxy on
-  // the same machine that sets no forwarding header and rewrites Host
-  // to its upstream is, to us, word for word a browser on the box. So
-  // the door only stands open while somebody is plainly at it, and an
-  // instance left running and unclaimed stops offering itself.
-  setup.setStartedAtForTests(Date.now() - setup.OPENING - 1000);
-  assert.strictEqual(setup.withinOpeningTime(), false);
-  setup.setStartedAtForTests(Date.now());
-});
-
-test('somebody on the machine who came late is told why, not just refused', () => {
-  const { claimPage } = setupScreen({ brandName: 'FOSSCast' });
-
-  const open = claimPage({ local: true });
-  assert.ok(!open.includes('name="code"'));
-
-  const closed = claimPage({ local: false, late: true });
-  assert.ok(closed.includes('name="code"'), 'the code is asked for');
-  assert.ok(closed.includes('running a while'), 'and the change is explained');
-
-  // Somebody who was never on the machine is not told about a half hour
-  // that was never theirs.
-  const outside = claimPage({ local: false, late: false });
-  assert.ok(outside.includes('name="code"'));
-  assert.ok(!outside.includes('running a while'));
-});
-
-// ---------------------------------------------------------------------
-// The same thing over a real socket
-// ---------------------------------------------------------------------
-
-test('from the machine itself there is no code to type and none mentioned', async () => {
-  const page = await request({ to: '127.0.0.1', host: `127.0.0.1:${PORT}` });
-  assert.strictEqual(page.status, 200);
-  assert.ok(!page.text.includes('Setup code'), 'no field');
-  assert.ok(!page.text.includes('name="code"'), 'nothing to fill in');
-  assert.ok(!page.text.includes('docker compose logs'), 'and no explaining of a field that is gone');
-});
-
-test('from another machine the code is asked for, and a forged header is not it', async (t) => {
-  if (!OUTSIDE) {
-    t.skip('this machine has no address but loopback');
-    return;
-  }
-
-  const page = await request({ from: OUTSIDE, to: OUTSIDE });
-  assert.strictEqual(page.status, 200);
-  assert.ok(page.text.includes('name="code"'), 'the field is there');
-  assert.ok(page.text.includes('docker compose logs app'), 'and says where the code is');
-
-  // No code at all.
-  const bare = await request({
-    from: OUTSIDE,
-    to: OUTSIDE,
-    method: 'POST',
-    form: { email: 'thief@example.test', password: PASSWORD, again: PASSWORD },
-  });
-  assert.strictEqual(bare.status, 403);
-
-  // A wrong one.
-  const wrong = await request({
-    from: OUTSIDE,
-    to: OUTSIDE,
-    method: 'POST',
-    form: { code: '000-000', email: 'thief@example.test', password: PASSWORD, again: PASSWORD },
-  });
-  assert.strictEqual(wrong.status, 403);
-
-  // The one that matters: claiming to be loopback, in the header a
-  // proxy writes and anybody can write, and asking for the loopback
-  // name as well so nothing else gives it away.
-  const forged = await request({
-    from: OUTSIDE,
-    to: OUTSIDE,
-    method: 'POST',
-    host: `127.0.0.1:${PORT}`,
-    headers: { 'X-Forwarded-For': '127.0.0.1', 'X-Real-IP': '127.0.0.1' },
-    form: { email: 'thief@example.test', password: PASSWORD, again: PASSWORD },
-  });
-  assert.strictEqual(forged.status, 403, 'a forged address claims nothing');
-
-  const forgedPage = await request({
-    from: OUTSIDE,
-    to: OUTSIDE,
-    host: `127.0.0.1:${PORT}`,
-    headers: { 'X-Forwarded-For': '127.0.0.1' },
-  });
-  assert.ok(forgedPage.text.includes('name="code"'), 'and is still shown the field');
-
-  assert.deepStrictEqual(users(), [], 'nothing was claimed');
-});
-
-test('one sign-up and no more, from the machine itself as much as from outside', async () => {
-  const claim = await request({
-    to: '127.0.0.1',
-    host: `127.0.0.1:${PORT}`,
-    method: 'POST',
-    form: { email: 'owner@example.test', password: PASSWORD, again: PASSWORD },
-  });
-  assert.strictEqual(claim.status, 303);
-  assert.strictEqual(claim.headers.location, '/admin/setup/protect');
-  assert.strictEqual(users().length, 1);
-
-  // Being on the box was never permission to make a second owner. It
-  // was permission to make the first one, and that is spent.
-  const again = await request({
-    to: '127.0.0.1',
-    host: `127.0.0.1:${PORT}`,
-    method: 'POST',
-    form: { email: 'second@example.test', password: PASSWORD, again: PASSWORD },
-  });
-  assert.strictEqual(again.status, 303);
-  assert.strictEqual(again.headers.location, '/admin/login');
-
-  const screen = await request({ to: '127.0.0.1', host: `127.0.0.1:${PORT}` });
-  assert.strictEqual(screen.status, 303);
-  assert.strictEqual(screen.headers.location, '/admin/login', 'the setup screen is gone');
-
-  if (OUTSIDE) {
-    const outside = await request({
-      from: OUTSIDE,
-      to: OUTSIDE,
-      method: 'POST',
-      form: { code: '000-000', email: 'third@example.test', password: PASSWORD, again: PASSWORD },
-    });
-    assert.strictEqual(outside.status, 303);
-    assert.strictEqual(outside.headers.location, '/admin/login');
-  }
-
-  assert.strictEqual(users().length, 1, 'still the one owner');
-  assert.strictEqual(users()[0].email, 'owner@example.test');
 });

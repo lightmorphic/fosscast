@@ -4,10 +4,10 @@
 // and then - in the same minute, while you are still here - add a
 // passkey and a second factor.
 //
-// Opened from the machine FOSSCast runs on, in the first half hour
-// after it starts, that is the whole of it. Opened from anywhere else,
-// or later than that, the first screen also asks for the code from the
-// log, because by then nothing else says who you are.
+// The first screen asks for a code as well only where somebody has set
+// REQUIRE_SETUP_CODE; by default there is no code and no mention of
+// one, because the first person to open an unclaimed instance is the
+// person who just installed it.
 //
 // Charlie: "When you log in for the first time you create the password,
 // and also give them the chance to do 2FA. People use weak passwords and
@@ -89,36 +89,26 @@ module.exports = function create({ brandName }) {
   // Putting the code on a screen of its own would make somebody read the
   // log, come back, and then be asked for everything else anyway.
   //
-  // `local` is true when the request came from the machine FOSSCast is
-  // running on. Being there is the same proof the code was asking for,
-  // so the code is not asked for - and it is not mentioned either.
-  // Explaining a field somebody does not have to fill in is a field
-  // somebody still has to read.
-  //
-  // `late` is somebody on the machine itself who has come to it hours
-  // after it started. They were told in the log they would not need a
-  // code, so they are told here why they do.
-  function claimPage({ error = '', email = '', suggestion = '', local = false, late = false } = {}) {
+  // `code` is whether this instance was started with
+  // REQUIRE_SETUP_CODE. Where it was not - which is nearly everywhere -
+  // the field is gone and so is every word about it: explaining a field
+  // somebody does not have to fill in is a field somebody still has to
+  // read.
+  function claimPage({ error = '', email = '', suggestion = '', code = false } = {}) {
     const passphrase = suggestion || setup.suggest();
     return adminPage({
       title: 'Set up',
       authed: false,
       body: `<section class="panel narrow">
         <h1 class="page-title">Set up ${esc(brandName)}</h1>
-        <p class="lede">${local
-    ? 'Nobody owns this yet. Set a login and it is yours.'
-    : 'Nobody owns this yet. Two things and it is yours.'}</p>
+        <p class="lede">${code
+    ? 'Nobody owns this yet. Two things and it is yours.'
+    : 'Nobody owns this yet. Set a login and it is yours.'}</p>
 
         ${error ? `<p class="form-error">${esc(error)}</p>` : ''}
 
         <form method="post" action="/admin/setup">
-          ${local ? '' : `<h2>The code from the log</h2>
-          ${late ? `<p class="hint">This has been running a while. For
-          the first half hour after it starts, opening it here on the
-          machine itself is proof enough and there is nothing to type.
-          After that it asks for the code, because by then the person at
-          the keyboard might be anybody. Restarting it opens that half
-          hour again, with a new code.</p>` : ''}
+          ${!code ? '' : `<h2>The code from the log</h2>
           <p class="hint">FOSSCast printed a six-digit code when it
           started, and that is the only place it exists. On the machine
           this runs on:</p>
@@ -130,7 +120,7 @@ module.exports = function create({ brandName }) {
           <input id="code" name="code" inputmode="numeric" autocomplete="off"
             spellcheck="false" placeholder="000-000" required maxlength="7">`}
 
-          ${local ? '' : '<h2>Your login</h2>'}
+          ${code ? '<h2>Your login</h2>' : ''}
           <label for="email">Email</label>
           <input id="email" name="email" type="email" autocomplete="username"
             value="${esc(email)}" required maxlength="200">

@@ -2,15 +2,15 @@
 // The first run, without a line of it in a compose file.
 //
 // The instance is started with nothing at all in the environment - no
-// ADMIN_EMAIL, no ADMIN_PASSWORD, no DOMAIN - which is what the install
-// instructions now produce. What is checked is that the password rule
-// is enforced rather than advised, that an instance can only be claimed
-// once, and that two-factor stops a login that has the right password.
+// ADMIN_EMAIL, no ADMIN_PASSWORD, no DOMAIN, and no REQUIRE_SETUP_CODE
+// - which is what the install instructions produce. What is checked is
+// that the password rule is enforced rather than advised, that an
+// instance can only be claimed once, and that two-factor stops a login
+// that has the right password.
 //
-// These requests come from loopback, which is to say from the machine
-// FOSSCast is running on, so no code is asked for and the page does not
-// mention one. Who has to type the code, and what happens to somebody
-// from off the machine who says they are on it, is local-setup.test.js.
+// There is no setup code: the first person to open an unclaimed
+// FOSSCast claims it. The escape hatch for somebody who wants one back,
+// and what a forged header is worth against it, is local-setup.test.js.
 //
 // The passkey road is not here: it needs a browser with an
 // authenticator in it, and a fetch cannot sign anything. It is driven
@@ -30,7 +30,6 @@ const DATA = fs.mkdtempSync(path.join(os.tmpdir(), 'fosscast-setup-'));
 const PASSWORD = 'harbour-thistle-pewter-quarry-lantern';
 let child;
 let log = '';
-let code = '';
 
 async function until(fn, ms = 5000) {
   const end = Date.now() + ms;
@@ -63,6 +62,7 @@ before(async () => {
   delete env.ADMIN_EMAIL;
   delete env.ADMIN_PASSWORD;
   delete env.DOMAIN;
+  delete env.REQUIRE_SETUP_CODE;
   child = spawn(process.execPath, [path.join(__dirname, '..', 'server.js')], {
     env, stdio: ['ignore', 'pipe', 'inherit'],
   });
@@ -72,9 +72,7 @@ before(async () => {
     if (!res.ok) throw new Error('not up');
   });
   await until(async () => {
-    const found = log.match(/^\s+(\d{3}-\d{3})\s*$/m);
-    if (!found) throw new Error('no code yet');
-    [, code] = found;
+    if (!log.includes('Nobody owns this FOSSCast yet')) throw new Error('nothing said yet');
   });
 });
 
@@ -83,12 +81,14 @@ after(() => {
   fs.rmSync(DATA, { recursive: true, force: true });
 });
 
-test('an unclaimed instance sends everybody to setup, and prints a code', async () => {
+test('an unclaimed instance sends everybody to setup, and says the risk', async () => {
   assert.match(log, /Nobody owns this FOSSCast yet/);
-  assert.match(log, /From another machine, or later than that/, 'the log says who needs it and when');
-  assert.match(log, /never written to disk/);
-  assert.ok(/^\d{3}-\d{3}$/.test(code), 'the code is six digits');
-  assert.ok(!fs.readdirSync(DATA).includes('setup.json'), 'and it is not on disk');
+  assert.match(log, /no code to find/, 'the log does not send anybody to a log');
+  assert.ok(!/\d{3}-\d{3}/.test(log), 'and prints no code');
+
+  // The window is real and it is said rather than left to be found.
+  assert.match(log, /anybody who can reach the address could claim it/);
+  assert.match(log, /REQUIRE_SETUP_CODE=1/, 'and says what to do about it');
 
   // The log says "open it in a browser and it will ask you for this code",
   // and the address a person types is the domain, not /admin/setup. Charlie
@@ -144,7 +144,7 @@ test('a good password claims the instance', async () => {
 
 test('it is over: nobody can claim the instance a second time', async () => {
   const res = await post('/admin/setup', {
-    code, email: 'thief@example.test', password: PASSWORD, again: PASSWORD,
+    email: 'thief@example.test', password: PASSWORD, again: PASSWORD,
   });
   assert.strictEqual(res.status, 303);
   assert.strictEqual(res.headers.get('location'), '/admin/login', 'setup is over');

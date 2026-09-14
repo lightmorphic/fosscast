@@ -316,26 +316,23 @@ function createAdminRouter(ctx) {
 
     // ---- the first run ----------------------------------------------
     // Until somebody owns this instance there is nothing to log in to,
-    // so every admin address leads to the same place. Claiming it needs
-    // proof that the machine is yours: being at it, or the code from
-    // its log. Once it is claimed there is no second sign-up, from
-    // anywhere - the branch simply stops applying.
+    // so every admin address leads to the same place, and the first
+    // person to fill the form in owns it. Once it is claimed there is
+    // no second sign-up, from anywhere - the branch simply stops
+    // applying, and everything under /admin/setup falls through to the
+    // login or to a 404.
     if (!users().length) {
-      // Reaching an unclaimed instance from the machine it runs on is
-      // the same proof the code was asking for, so the code is not
-      // asked for. lib/local.js says how that is decided and why a
-      // proxy in front cannot borrow it; lib/setup.js says why the door
-      // only stands open for the first half hour.
-      const onTheBox = local.isLocal(req);
-      const here = onTheBox && setup.withinOpeningTime();
-      const late = onTheBox && !here;
-      if (p === '/admin/setup' && req.method === 'GET') { html(res, claimPage({ local: here, late })); return true; }
+      // Off by default: the first person to open an unclaimed instance
+      // claims it, and there is no code to go and find. lib/setup.js
+      // says what that costs and what REQUIRE_SETUP_CODE puts back.
+      const wantCode = setup.required();
+      if (p === '/admin/setup' && req.method === 'GET') { html(res, claimPage({ code: wantCode })); return true; }
       if (p === '/admin/setup' && req.method === 'POST') {
         const ip = clientIp(req);
         // A setup code is six digits. Guessing is rate-limited the same
         // way a password is, and for the same reason.
         if (limiter.blocked(ip)) {
-          html(res, claimPage({ local: here, late, error: 'Too many attempts. Try again later.' }), 429);
+          html(res, claimPage({ code: wantCode, error: 'Too many attempts. Try again later.' }), 429);
           return true;
         }
         const form = await formBody(req, readBody);
@@ -343,11 +340,10 @@ function createAdminRouter(ctx) {
         const password = String(form.get('password') || '');
         const again = String(form.get('again') || '');
 
-        if (!here && !setup.matches(form.get('code'))) {
+        if (wantCode && !setup.matches(form.get('code'))) {
           limiter.fail(ip);
           html(res, claimPage({
-            local: here,
-            late,
+            code: wantCode,
             email,
             error: 'That is not the code in the log. It changes on every restart, so read it '
               + 'again rather than reusing an older one.',
@@ -355,15 +351,15 @@ function createAdminRouter(ctx) {
           return true;
         }
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-          html(res, claimPage({ local: here, late, error: 'That does not look like an email address.' }), 400);
+          html(res, claimPage({ code: wantCode, error: 'That does not look like an email address.' }), 400);
           return true;
         }
         if (password !== again) {
-          html(res, claimPage({ local: here, late, email, error: 'The two passwords are not the same.' }), 400);
+          html(res, claimPage({ code: wantCode, email, error: 'The two passwords are not the same.' }), 400);
           return true;
         }
         const wrong = setup.problem(password, email);
-        if (wrong) { html(res, claimPage({ local: here, late, email, error: wrong }), 400); return true; }
+        if (wrong) { html(res, claimPage({ code: wantCode, email, error: wrong }), 400); return true; }
 
         limiter.ok(ip);
         const user = {
@@ -382,7 +378,13 @@ function createAdminRouter(ctx) {
         // The code has done its one job. Leaving it alive would leave a
         // second way to claim an instance that already has an owner.
         setup.clear();
-        console.log(`This FOSSCast now belongs to ${email}.`);
+        // Where from, as well as who. If somebody else got to an
+        // unclaimed instance first, this line in the log is the only
+        // evidence of it - so it is read from the socket's own address
+        // and never from a header a request can make up about itself
+        // (lib/local.js).
+        console.log(`This FOSSCast now belongs to ${email}, claimed from `
+          + `${local.isLocal(req) ? 'the machine it runs on' : 'another machine'}.`);
         redirect(res, '/admin/setup/protect', {
           'Set-Cookie': sessionCookie(req, auth.signSession(user.id, settings().secret), 7 * 24 * 3600),
         });
