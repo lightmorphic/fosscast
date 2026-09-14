@@ -316,8 +316,10 @@ function createAdminRouter(ctx) {
 
     // ---- the first run ----------------------------------------------
     // Until somebody owns this instance there is nothing to log in to,
-    // so every admin address leads to the same place. The code that
-    // guards it is in the container's log and nowhere else.
+    // so every admin address leads to the same place. Claiming it needs
+    // proof that the machine is yours: being at it, or the code from
+    // its log. Once it is claimed there is no second sign-up, from
+    // anywhere - the branch simply stops applying.
     if (!users().length) {
       // Reaching an unclaimed instance from the machine it runs on is
       // the same proof the code was asking for, so the code is not
