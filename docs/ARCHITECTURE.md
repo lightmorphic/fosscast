@@ -11,7 +11,7 @@ does not have to rediscover them.
 ## What FOSSCast is
 
 The public, audience-facing companion to FOSSStudio. FOSSStudio is the
-private studio shows are made in; FOSSCast is where audiences find and
+private studio episodes are recorded in; FOSSCast is where audiences find and
 play them. Separate repo, separate stack, separate deploys, on
 purpose. They integrate through one small, defined interface and must
 never be merged.

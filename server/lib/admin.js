@@ -32,6 +32,21 @@ const hostScreens = require('./admin/host-pages');
 const podcastScreens = require('./admin/podcast-page');
 const accountScreens = require('./admin/account-pages');
 
+// The admin addresses used to read /admin/shows/<slug>/settings and the
+// like: a tool for managing many podcasts, with a slug in the path that
+// can only ever have one value, on an instance that holds exactly one
+// podcast. They are now /admin/podcast/... and /admin/episodes/new.
+//
+// The old ones still answer. They are rewritten here rather than
+// redirected because every one of them is a form post, and a redirect
+// would arrive without the body somebody just typed.
+function modernPath(method, p) {
+  if (method === 'POST' && p === '/admin/shows') return '/admin/podcast/create';
+  const m = p.match(/^\/admin\/shows\/[a-z0-9-]+(\/episodes|\/delete|\/settings|\/import|\/aliases)$/);
+  if (!m) return p;
+  return m[1] === '/episodes' ? '/admin/episodes/new' : `/admin/podcast${m[1]}`;
+}
+
 function createAdminRouter(ctx) {
   // Episode permalinks must stay unique within a show: podcast apps
   // link to them from the feed.
@@ -207,7 +222,7 @@ function createAdminRouter(ctx) {
   }
 
   async function route(req, res, url) {
-    const p = url.pathname;
+    const p = modernPath(req.method, url.pathname);
     if (!p.startsWith('/admin')) return false;
     const domain = siteDomain();
 
@@ -314,7 +329,7 @@ function createAdminRouter(ctx) {
     // The edit form now lives on the podcast page itself.
     if (p === '/admin/podcast/edit' && req.method === 'GET') { redirect(res, '/admin/podcast'); return true; }
     // Old links keep working.
-    if (p === '/admin/shows' && req.method === 'GET') { redirect(res, '/admin/episodes'); return true; }
+    if (req.method === 'GET' && /^\/admin\/shows(\/[a-z0-9-]+)?$/.test(p)) { redirect(res, '/admin/episodes'); return true; }
     // Look: the public site's accent colour and the podcaster's own words.
     if (p === '/admin/look' && req.method === 'GET') {
       const show = shows()[0];
@@ -425,7 +440,7 @@ function createAdminRouter(ctx) {
       return true;
     }
 
-    if (p === '/admin/shows' && req.method === 'POST') {
+    if (p === '/admin/podcast/create' && req.method === 'POST') {
       const form = await formBody(req, readBody);
       const name = String(form.get('name') || '').trim().slice(0, 120);
       const description = String(form.get('description') || '').trim().slice(0, 2000);
@@ -468,13 +483,16 @@ function createAdminRouter(ctx) {
       return true;
     }
 
-    const showMatch = p.match(/^\/admin\/shows\/([a-z0-9-]+)(\/episodes|\/delete|\/settings|\/import|\/aliases)?$/);
-    if (showMatch) {
-      const show = shows().find((s) => s.slug === showMatch[1]);
-      if (!show) { html(res, adminPage({ title: 'Not found', body: '<p>Episode not found.</p>' }), 404); return true; }
-      const action = showMatch[2] || '';
-
-      if (!action && req.method === 'GET') { redirect(res, '/admin/episodes'); return true; }
+    // What a form on the Podcast page posts to, plus the new-episode
+    // form on the Episodes page. One instance is one podcast, so none of
+    // these name it.
+    const podcastMatch = p.match(/^\/admin\/(?:podcast\/(delete|settings|import|aliases)|(episodes)\/new)$/);
+    if (podcastMatch && req.method === 'POST') {
+      const show = shows()[0];
+      // Nothing to act on until the podcast exists. The create form is
+      // the Podcast page, so that is where to send them.
+      if (!show) { redirect(res, '/admin/podcast'); return true; }
+      const action = `/${podcastMatch[1] || podcastMatch[2]}`;
 
       if (action === '/delete' && req.method === 'POST') {
         store.save('shows', shows().filter((s) => s.id !== show.id));
@@ -635,7 +653,7 @@ function createAdminRouter(ctx) {
           // The old feed's identity moves with the episodes.
           if (!entry.podcastGuid && channel.podcastGuid) entry.podcastGuid = channel.podcastGuid;
           store.save('shows', showList);
-          html(res, episodesPage(entry, `Imported ${imported} show${imported === 1 ? '' : 's'} from the feed.`));
+          html(res, episodesPage(entry, `Imported ${imported} episode${imported === 1 ? '' : 's'} from the feed.`));
         } catch (err) {
           html(res, episodesPage(show, `Import failed: ${err.message}`));
         }

@@ -21,7 +21,7 @@ module.exports = function create() {
       body: `<h1 class="page-title">Look</h1>
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
       <p class="hint">Your site, your colour. Every change saves itself and
-      shows up in the preview as you go.</p>
+      appears in the preview as you go.</p>
 
       <div class="look-layout">
       <form method="post" action="/admin/look" id="look-form">

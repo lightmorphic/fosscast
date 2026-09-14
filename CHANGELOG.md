@@ -2,6 +2,28 @@
 
 All notable changes to FOSSCast are documented here.
 
+## Unreleased
+
+- **The podcast and the episode, and no third word.** There is a podcast
+  and there are its episodes; "show" meant both, sometimes in the same
+  sentence, and it is gone from everything a person reads. The worst of
+  it was on the dashboard, which told a newcomer to add "as many shows
+  (episodes) as you like".
+
+  The admin addresses went the same way. They used to read
+  `/admin/shows/<the-podcast-slug>/settings`: a tool for managing many
+  podcasts, with a slug in the path that can only ever have one value.
+  They are now `/admin/podcast/settings`, `/admin/podcast/import`,
+  `/admin/podcast/aliases`, `/admin/podcast/create` and
+  `/admin/episodes/new`. The old addresses still answer - they are
+  rewritten, not redirected, because a redirect would arrive without the
+  form body. Nothing outside the admin area changed: the public pages
+  and the feed are where they were, because a feed address is printed in
+  every directory and moving it is a different job.
+
+  The store still calls the collection `shows`; renaming it is a data
+  migration and does not belong in a commit about words.
+
 ## 0.1.0 - 2026-09-13
 
 The first public release, and the number says what it is: a beta.

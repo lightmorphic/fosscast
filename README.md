@@ -1,7 +1,7 @@
 > ## Public beta. Not ready to be relied on.
 >
 > **This is a public beta. It is not ready to be relied on. Data loss
-> and breaking changes are possible. Please do not put a real show on
+> and breaking changes are possible. Please do not put a real podcast on
 > it yet.**
 >
 > We want people to install it, break it and tell us what happened.
@@ -66,7 +66,7 @@ software, and you never will.
   Music, Pocket Casts, Overcast and Podcast Index, as buttons on the
   page once you have pasted each address in.
 - **Getting paid**: Patreon, Buy Me a Coffee, Ko-fi, Liberapay, GitHub
-  Sponsors, Open Collective and PayPal links become buttons on the show
+  Sponsors, Open Collective and PayPal links become buttons on the podcast
   page and `podcast:funding` tags in the feed.
 - **The people on it**: every host gets a photo, a role and a write-up,
   a card on the site's Hosts page and a page of their own -- and goes
@@ -96,7 +96,7 @@ These are not on the list and are not coming:
   app. FOSSCast accepts what it publishes and nothing more.
 - **Listener accounts, or an app of our own.** People subscribe in
   whatever podcast app they already use.
-- **More than one show per instance.** Run a second instance.
+- **More than one podcast per instance.** Run a second instance.
 
 Some of those exist in the hosted service. They are not being withheld
 from the free edition as a lever: they are a different product with a
@@ -217,7 +217,7 @@ lives in the `fosscast_data` volume and is untouched by updates.
 
 Working on FOSSCast itself, rather than running it? Clone the
 repository and use `docker-compose.yml`, which builds from source and
-mounts `web/` so edits show up on reload.
+mounts `web/` so edits appear on reload.
 
 ### Bring your own reverse proxy (nginx, Apache, a tunnel)
 
@@ -326,7 +326,7 @@ over a direct route.
 Set `BIND_HOST` to the machine's tailnet address and the whole
 instance is private to your tailnet. Worth knowing: a podcast this
 private cannot be reached by public podcast apps, so this suits
-internal, member-only or staging instances rather than a public show.
+internal, member-only or staging instances rather than a public podcast.
 
 ### Managing your instance
 
@@ -337,7 +337,7 @@ dashboard you create your podcast and publish episodes (media by upload
 or by address: this machine, your own storage, anywhere that serves a
 file). The podcast gets its public pages and RSS feed automatically.
 
-One instance hosts one podcast: your show, your site, your feed, on
+One instance hosts one podcast: your episodes, your site, your feed, on
 your own hardware.
 
 ### Moving a podcast here from another host
@@ -346,7 +346,7 @@ Podcast apps and directories follow a move when you do two things, and
 you need the old feed's address to keep working while they catch up:
 
 1. **Import the old feed** in the dashboard. Episode GUIDs and the
-   show's `podcast:guid` come across, so directories see the same
+   podcast's `podcast:guid` come across, so directories see the same
    podcast rather than a new one, and nobody's app re-downloads the
    back catalogue.
 2. **On the old host**, add `<itunes:new-feed-url>` to the old feed
@@ -364,7 +364,7 @@ tags above only cover apps that subscribe to the feed directly.
 | What | Size | Notes |
 |---|---|---|
 | Podcast artwork | **3000 x 3000** square | JPG or PNG, RGB. Apple accepts 1400 x 1400 upwards; 3000 is the safe maximum every directory takes. Keep it under about 500 KB. |
-| Episode cover art | **3000 x 3000** square | Optional per episode. Apps that support per-episode art show it; the rest fall back to the podcast artwork, and so does this site. |
+| Episode cover art | **3000 x 3000** square | Optional per episode. Apps that support per-episode art use it; the rest fall back to the podcast artwork, and so does this site. |
 | Website banner | **976 x 244** (4:1) | JPG, PNG or WebP. That is the size it is drawn at; bigger is fine, since your browser shrinks a copy to 976 for the site and the file you chose is kept as it is. Edges crop on narrow screens, so keep anything important central. |
 
 The banner is drawn **976 x 244** points wide at the standard page width
@@ -374,7 +374,7 @@ which is where 1920 x 480 comes from.
 | Host photo | **800 x 800** square | Anything from 400 x 400 up. Your browser makes a 640px copy for the site; the file you choose is kept as it is. |
 
 Every episode always displays artwork: its own if it has some, the
-show's otherwise, on the site, in the embedded player and in the feed.
+podcast's otherwise, on the site, in the embedded player and in the feed.
 
 ### Forgotten passwords
 

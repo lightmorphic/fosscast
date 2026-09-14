@@ -8,8 +8,8 @@ const transcripts = require('../transcripts');
 const { MEDIA_UPLOADS, DEMO, formatDuration, formatChapters, deleteButton } = require('./bits');
 
 module.exports = function create({ episodes, mediaDir }) {
-  // The Shows page: the day-to-day work of adding and editing shows
-  // (episodes) of the podcast.
+  // The Episodes page: the day-to-day work of adding and editing the
+  // podcast's episodes.
   // A hundred episodes above the form for the hundred-and-first is a lot
   // of scrolling, so a menu can ask for one half or the other: "all" is
   // the list, "new" is the form, and neither is the whole page as before.
@@ -46,7 +46,7 @@ module.exports = function create({ episodes, mediaDir }) {
 
       ${only === 'all' ? '' : `<section class="panel">
         <h2>New episode</h2>
-        <form method="post" action="/admin/shows/${esc(show.slug)}/episodes">
+        <form method="post" action="/admin/episodes/new">
         <div class="form-cols">
         <div>
           <label for="title">Title</label>
@@ -75,7 +75,7 @@ module.exports = function create({ episodes, mediaDir }) {
           <input id="mediaUrl" name="mediaUrl" maxlength="1000" placeholder="https://files.example.com/ep12.mp3">
           <label for="epArt">Episode cover art (optional)</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels. Leave it
-          empty and the show uses the podcast's artwork.</p>
+          empty and the episode uses the podcast's artwork.</p>
           <input id="epArt" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="epArtwork" data-status="epart-status" data-preview="epart-preview-img">
           <p class="hint" id="epart-status"></p>
           <input type="hidden" id="epArtwork" name="artwork" value="">

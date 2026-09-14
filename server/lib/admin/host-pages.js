@@ -67,7 +67,7 @@ module.exports = function create({ store, shows }) {
       plenty: it is shrunk to a fast ${HOST_PHOTO_SIZE}px copy for the site,
       and the file you upload is kept as it is.</p>
       <input id="${prefix}photo" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="${prefix}photo-url" data-status="${prefix}photo-status" data-preview="${prefix}photo-img" data-web="${HOST_PHOTO_SIZE}" data-web-target="${prefix}photo-web">
-      <p class="hint" id="${prefix}photo-status">${photo ? 'Uploaded.' : 'None yet, so the card shows their initials.'}</p>
+      <p class="hint" id="${prefix}photo-status">${photo ? 'Uploaded.' : 'None yet, so the card uses their initials.'}</p>
       <input type="hidden" id="${prefix}photo-url" name="photo" value="${esc(host.photo || '')}">
       <input type="hidden" id="${prefix}photo-web" name="photoWeb" value="${esc(host.photoWeb || '')}">
       <img class="host-preview" id="${prefix}photo-img" alt="" src="${esc(photo)}"${photo ? '' : ' style="display:none"'}>
@@ -132,8 +132,8 @@ module.exports = function create({ store, shows }) {
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
       <p class="hint">Everyone who appears on ${esc(show.name)}. Each one gets
       a card on <a href="/hosts">the hosts page</a> and a page of their own,
-      and they travel in the feed as well, so apps can show who is on the
-      show. Drag-free ordering: the arrows set the order they appear in.</p>
+      and they travel in the feed as well, so apps can name who is on the
+      podcast. Drag-free ordering: the arrows set the order they appear in.</p>
 
       ${list.length ? `<section class="host-rows">${cards}</section>`
         : `<section class="panel"><p class="hint">No hosts yet. Add the first

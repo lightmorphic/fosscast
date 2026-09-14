@@ -268,12 +268,12 @@ function player(episode, show, domain) {
 function landing() {
   return publicPage({
     title: 'FOSSCast',
-    description: 'A home for an independent show: every published episode, playable in the browser and subscribable anywhere podcasts go.',
+    description: 'A home for an independent podcast: every published episode, playable in the browser and subscribable anywhere podcasts go.',
     body: `
   <section class="panel hero">
     <p class="status"><span aria-hidden="true">&#9679;</span> Being built in the open. First episodes soon.</p>
-    <h1>Your show, kept properly.</h1>
-    <p class="lede">FOSSCast is the public home of an independent show:
+    <h1>Your podcast, kept properly.</h1>
+    <p class="lede">FOSSCast is the public home of an independent podcast:
     every published episode on its own page, playable here and
     subscribable anywhere podcasts go, served from hardware you
     control.</p>

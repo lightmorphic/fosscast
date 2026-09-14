@@ -12,9 +12,9 @@ const { MEDIA_UPLOADS } = require('./bits');
 module.exports = function create({ episodes, settings }) {
   // The Podcast page: everything about the overall podcast on one page.
   // The instance hosts a single podcast; its details are filled in once
-  // and rarely change, so they live here, apart from the shows
-  // (episodes). The feed check lives here too, since it is about the
-  // podcast as a whole.
+  // and rarely change, so they live here, apart from the episodes.
+  // The feed check lives here too, since it is about the podcast as a
+  // whole.
   function podcastPage(show, notice = '', want = 'basics') {
     const items = episodes().filter((e) => e.showId === show.id);
     const checks = feedChecks(show, items);
@@ -43,7 +43,7 @@ module.exports = function create({ episodes, settings }) {
         in with its details, keeping the identifiers that stop listeners
         re-downloading anything. The audio stays where it is until you move
         it yourself.</p>
-        <form method="post" action="/admin/shows/${esc(show.slug)}/import">
+        <form method="post" action="/admin/podcast/import">
           <label for="feedUrl">Feed address</label>
           <input id="feedUrl" name="feedUrl" type="url" required maxlength="1000" placeholder="https://example.com/feed.xml">
           <button class="btn-primary" type="submit">Import episodes</button>
@@ -52,11 +52,11 @@ module.exports = function create({ episodes, settings }) {
 
       <section class="panel pane pane-feed" id="sec-old-addresses">
         <h2>Feed addresses you used to have</h2>
-        <p class="hint">If this show has lived somewhere else, put the old feed
+        <p class="hint">If this podcast has lived somewhere else, put the old feed
         address here and it keeps working: anyone still asking for it is sent
-        to this show's feed, permanently, so Apple, Spotify and the rest
+        to this podcast's feed, permanently, so Apple, Spotify and the rest
         update themselves. You never open a directory or fill in a form.</p>
-        <form method="post" action="/admin/shows/${esc(show.slug)}/aliases" data-autosave>
+        <form method="post" action="/admin/podcast/aliases" data-autosave>
           <label for="feedAliases">Old address</label>
           <input id="feedAliases" name="feedAliases" type="text" spellcheck="false"
             placeholder="/@${esc(show.slug)}/feed.xml"
@@ -85,7 +85,7 @@ module.exports = function create({ episodes, settings }) {
         </ul>
       </section>
 
-      <form method="post" action="/admin/shows/${esc(show.slug)}/settings" data-autosave>
+      <form method="post" action="/admin/podcast/settings" data-autosave>
         <section class="panel pane pane-basics" id="sec-basics">
           <h2>Basics</h2>
           <label for="sname">Name</label>
@@ -120,7 +120,7 @@ module.exports = function create({ episodes, settings }) {
             <input id="sowneremail" name="ownerEmail" type="email" maxlength="200" value="${esc(show.ownerEmail || '')}"></div>
           </div>
           <p class="hint">Directories require an owner email in the feed
-          and use it to verify you own the show: Spotify and Apple both
+          and use it to verify you own the podcast: Spotify and Apple both
           reject a feed without one. It is published in the feed, so use an
           address you are happy to make public. It does not have to be the
           address you log in with.</p>
@@ -146,7 +146,7 @@ module.exports = function create({ episodes, settings }) {
           small fast copy the website uses; the file you choose is kept as
           it is for the directories.</p>
           <input id="sart" type="file" accept="image/*" data-upload data-show="${esc(show.slug)}" data-target="artwork" data-status="art-status" data-preview="art-preview-img" data-web="1024" data-web-target="artworkWeb">
-          <p class="hint" id="art-status">${show.artwork ? 'Uploaded.' : 'None yet. Directories will not list a show without it.'}</p>
+          <p class="hint" id="art-status">${show.artwork ? 'Uploaded.' : 'None yet. Directories will not list a podcast without it.'}</p>
           <input type="hidden" id="artwork" name="artwork" value="${esc(show.artwork || '')}">
           <input type="hidden" id="artworkWeb" name="artworkWeb" value="${esc(show.artworkWeb || '')}">
           <img class="art-preview" id="art-preview-img" alt="" src="${show.artwork ? esc(show.artworkWeb || show.artwork) : ''}"${show.artwork ? '' : ' style="display:none"'}>
@@ -176,7 +176,7 @@ module.exports = function create({ episodes, settings }) {
             <div><label for="sfundurl">Support page address</label>
             <input id="sfundurl" name="fundingUrl" type="url" maxlength="500" value="${esc(show.funding?.url || '')}"></div>
             <div><label for="sfundlabel">Funding label</label>
-            <input id="sfundlabel" name="fundingLabel" maxlength="120" value="${esc(show.funding?.label || '')}" placeholder="Support the show"></div>
+            <input id="sfundlabel" name="fundingLabel" maxlength="120" value="${esc(show.funding?.label || '')}" placeholder="Support the podcast"></div>
           </div>
         </section>
 
@@ -205,7 +205,7 @@ module.exports = function create({ episodes, settings }) {
           <h2>Where listeners can support you</h2>
           <p class="hint">The services listeners already use to back a
           podcast. Paste your page on each one and its button appears on
-          your show page, and goes into the feed as a funding link so apps
+          your podcast page, and goes into the feed as a funding link so apps
           can offer it too. No account yet? The sign-up link beside each
           one takes you straight there.</p>
           ${SUPPORT.map(([key, label, signup, placeholder]) => `<label for="sup-${key}">${esc(label)}
@@ -215,7 +215,7 @@ module.exports = function create({ episodes, settings }) {
 
         <section class="panel pane pane-listen" id="sec-listen">
           <h2>Listen on</h2>
-          <p class="hint">Paste the address of your show on each platform
+          <p class="hint">Paste the address of your podcast on each platform
           and its button appears on your pages. You get these after
           submitting your RSS feed to them, which usually takes a few days.
           RSS is always offered, so listeners never wait on an approval.</p>
@@ -225,7 +225,7 @@ module.exports = function create({ episodes, settings }) {
 
         <section class="panel pane pane-social" id="sec-social">
           <h2>Find us on</h2>
-          <p class="hint">Where the show talks to its audience. Anything
+          <p class="hint">Where the podcast talks to its audience. Anything
           you fill in becomes a button on your page. Matrix first, then
           the rest of the open places, then the big platforms.</p>
           ${SOCIAL.map(([key, label, placeholder]) => `<label for="social-${key}">${esc(label)}</label>
@@ -238,7 +238,7 @@ module.exports = function create({ episodes, settings }) {
           <p class="hint">Only when moving from another host. Directories
           identify a podcast by this rather than by its address. Copy the
           <code>podcast:guid</code> from your old feed and the move is
-          treated as the same show. Importing an old feed fills this in by
+          treated as the same podcast. Importing an old feed fills this in by
           itself. Leave it empty for a new podcast.</p>
           <input id="sguid" name="podcastGuid" maxlength="60" value="${esc(show.podcastGuid || '')}" placeholder="">
         </section>
@@ -260,7 +260,7 @@ module.exports = function create({ episodes, settings }) {
         add artwork, a banner and everything else straight after.</p>
       </section>
       <section class="panel">
-        <form method="post" action="/admin/shows">
+        <form method="post" action="/admin/podcast/create">
           <label for="name">Name</label>
           <input id="name" name="name" required maxlength="120">
           <label for="description">Description</label>
@@ -272,7 +272,7 @@ module.exports = function create({ episodes, settings }) {
   }
 
   // What the directories insist on, checked against what is actually
-  // in the show right now.
+  // in the podcast right now.
   function feedChecks(show, showEpisodes) {
     const published = showEpisodes.filter((e) => !e.draft);
     return [
@@ -285,9 +285,9 @@ module.exports = function create({ episodes, settings }) {
       ['Author', !!show.author, 'Add an author name.'],
       ['A published episode', published.length > 0, 'Publish at least one episode before submitting.'],
       ['File sizes known', published.every((e) => Number(e.bytes) > 0),
-        'A show has no file size in the feed. Re-save it so the size can be read.'],
+        'An episode has no file size in the feed. Re-save it so the size can be read.'],
       ['Durations known', published.every((e) => Number(e.duration) > 0),
-        'A show has no duration. Re-save it so the length can be read.'],
+        'An episode has no duration. Re-save it so the length can be read.'],
     ];
   }
 

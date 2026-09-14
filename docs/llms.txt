@@ -7,13 +7,13 @@ Source: https://github.com/lightmorphic/fosscast
 ## Where it stands
 
 Version 0.1.0, a public beta. It is not ready to be relied on: data loss
-and breaking changes are possible, and nobody should put a real show on
+and breaking changes are possible, and nobody should put a real podcast on
 it yet. Releases are marked as pre-release on GitHub.
 
 ## What it is
 
 A podcast platform you run on your own server. One pasted docker-compose
-file installs it. It gives a show a website with a page per episode and
+file installs it. It gives a podcast a website with a page per episode and
 a page per host, an RSS feed carrying the full iTunes namespace and the
 modern Podcasting 2.0 tags, and download statistics drawn on your own
 server from counters that cannot be joined back to a person.

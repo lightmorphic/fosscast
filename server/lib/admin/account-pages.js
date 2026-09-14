@@ -24,7 +24,7 @@ module.exports = function create({ settings, shows, episodes, stats }) {
         <h1>Welcome to ${esc(BRAND)}</h1>
         <p class="lede">One thing to do first: create your podcast. Its
         public pages and RSS feed all follow from it, and then you add as
-        many shows (episodes) as you like.</p>
+        many episodes as you like.</p>
         <p><a class="btn-primary" href="/admin/podcast">Create your podcast</a></p>
       </section>`;
     return adminPage({

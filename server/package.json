@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "license": "AGPL-3.0-or-later",
-  "description": "Self-hosted podcast hosting: a website, a feed and honest statistics for one show, on your own server.",
+  "description": "Self-hosted podcast hosting: a website, a feed and honest statistics for one podcast, on your own server.",
   "scripts": {
     "start": "node server.js",
     "test": "node --test"
