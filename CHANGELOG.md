@@ -24,31 +24,28 @@ All notable changes to FOSSCast are documented here.
   there.
 
 - **The login is set in FOSSCast, not in a compose file.** `ADMIN_EMAIL`
-  and `ADMIN_PASSWORD` are gone from the install. Open a fresh instance
-  in a browser on the machine it is running on and it asks for an email
-  and a password, and nothing else: being there is the proof that the
-  machine is yours, so there is no code to go and look up.
+  and `ADMIN_PASSWORD` are gone from the install, and so is the setup
+  code that briefly replaced them. Open an unclaimed FOSSCast in a
+  browser and it asks for an email and a password; whoever does that
+  first owns the instance, and after that there is no second sign-up
+  from anywhere. Jellyfin, Immich and Home Assistant all work this way.
 
-  From another machine it asks for a six-digit code that the first run
-  prints in the container's log and nowhere else - being able to run
-  `docker compose logs app` is the same proof, arrived at the long way.
-  The code lives in memory, changes on every restart, and is spent the
-  moment an account exists.
+  The cost is said out loud in the startup log rather than left to be
+  discovered: until somebody claims it, anybody who can reach the
+  address could claim it instead. On a home network that is a minute and
+  nobody is looking; with the port open to the internet it is a real
+  window. Keep the port shut until it is claimed, or start with
+  `REQUIRE_SETUP_CODE=1`, which makes the first run print a six-digit
+  code - in memory only, never on disk, new on every restart - and
+  demand it from everybody before it will let anybody claim the
+  instance. Off by default, because the person it protects is the
+  exception and the log-reading was in everybody else's way.
 
-  What counts as the machine itself is decided from the socket's own
-  address and never from `X-Forwarded-For` or any of its relatives,
-  which anybody can write into a request by hand. A reverse proxy sitting
-  on that same machine dials FOSSCast from where a browser on it would,
-  so two further things are asked of a request before the code is
-  waived - no forwarding header of any kind, and a Host header naming
-  loopback rather than a site - and, because a bare `proxy_pass` gives
-  away neither, the no-code door is only open for the first half hour
-  after the process starts. After that the code is asked for from the
-  machine as much as from anywhere; restarting opens it again with a new
-  code.
-
-  Either way it is the one and only sign-up. Once the instance has an
-  owner the setup page is gone and the address refuses everybody.
+  Where a claim came from is written in the log beside who made it,
+  taken from the socket's own address and never from `X-Forwarded-For`
+  or its relatives, which anybody can put in a request by hand. If
+  somebody else did reach an unclaimed instance first, that line is the
+  only evidence there would be.
 
   The password rule is enforced rather than advised: twelve characters or
   more, and the openers (`password123`, `letmein`, `qwerty…`) are refused

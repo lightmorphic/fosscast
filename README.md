@@ -123,19 +123,19 @@ Point your domain's DNS at the machine, paste this into
 #
 #   docker compose up -d
 #
-# Then open http://127.0.0.1:3100 in a browser on that machine and set
-# your own email and password - and add a passkey and a second factor in
-# the same minute if you want them. There is nothing to look up: being
-# on the machine is the proof that the machine is yours.
+# Then open the site in a browser and set your own email and password -
+# and add a passkey and a second factor in the same minute if you want
+# them. There is no code to look up: the first person to open an
+# unclaimed FOSSCast claims it, and after that there is no second
+# sign-up from anywhere.
 #
-# From another machine, or more than half an hour after it started, it
-# asks for a code as well, which FOSSCast prints in its own log and
-# keeps nowhere else:
-#
-#   docker compose logs app
-#
-# That is the only sign-up there is. Once somebody owns the instance the
-# setup page is gone and no second account can be made from anywhere.
+# Do it now rather than tomorrow. Until it is claimed, anybody who can
+# reach the address could claim it instead. On a home network that is a
+# minute and nobody is looking. If the port is open to the internet
+# before you get there, it is a real window: keep the port shut until
+# you have claimed it, or add REQUIRE_SETUP_CODE: "1" to the environment
+# below, which makes FOSSCast print a code in its log
+# (docker compose logs app) and ask for it before it lets anybody in.
 #
 # Your domain, uploads and everything else are settings inside
 # FOSSCast, on its Settings and Account pages. None of them belong
@@ -153,6 +153,11 @@ services:
   app:
     image: ghcr.io/lightmorphic/fosscast:latest
     restart: unless-stopped
+    # Nothing here by default. REQUIRE_SETUP_CODE: "1" makes the first
+    # run print a code and demand it, for an instance whose port is open
+    # to the world before anybody has claimed it.
+    # environment:
+    #   REQUIRE_SETUP_CODE: "1"
     # Your own proxy dials this. Behind the bundled Caddy below it is
     # simply unused, so it is right either way.
     ports:
@@ -348,21 +353,24 @@ internal, member-only or staging instances rather than a public podcast.
 The dashboard lives at `/admin`. The first time you open it, nobody
 owns the instance yet, so it asks you to choose an email and a password
 - and to add a passkey and a second factor in the same minute if you
-want them.
+want them. There is no code to find and nothing to look up.
 
-Opened from the machine FOSSCast is running on, in the first half hour
-after it starts, that is all it asks. Being there is the proof that the
-machine is yours, and the address is taken from the connection itself,
-never from a header that anybody could write. From another machine, or
-later than that, it asks as well for a code that FOSSCast prints in its
-own log (`docker compose logs app`), holds in memory only, and changes
-on every restart. Either way, that is what stops a stranger claiming
-your instance before you get to it.
+Do it as soon as it is running. Until the instance is claimed, anybody
+who can reach the address could claim it instead of you. On a home
+network that is a minute long and nobody else is looking; if the port is
+open to the internet before you get there, it is a real window. Keep the
+port shut until you have claimed it, or set `REQUIRE_SETUP_CODE=1` in
+the environment: FOSSCast then prints a six-digit code on startup, holds
+it in memory only, changes it on every restart, and asks for it before
+it will let anybody claim the instance - so being able to run
+`docker compose logs app` becomes the proof that the machine is yours.
+It is off by default because most people are installing this on a box
+nobody else is pointed at, and being sent to a log was in their way.
 
-It is also the only sign-up there is. Once the instance has an owner the
-setup page is gone and the address refuses everybody, from the machine
-itself as much as from anywhere else. Further accounts are not a thing
-FOSSCast has: one instance, one podcast, one owner.
+Either way it is the only sign-up there is. Once the instance has an
+owner the setup page is gone and the address refuses everybody. Further
+accounts are not a thing FOSSCast has: one instance, one podcast, one
+owner.
 
 Everything else about the instance - its domain, whether audio may be
 uploaded here - is on the Settings page rather than in a compose file,

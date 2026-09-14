@@ -16,6 +16,10 @@ services:
       # Inside the container the app always listens on 3100; HTTP_PORT
       # in .env only changes the host port it is published on.
       HTTP_PORT: 3100
+      # Empty unless somebody sets it. "1" makes the first run print a
+      # setup code and ask for it before anybody can claim the instance,
+      # for a box whose port is open to the world before you get to it.
+      REQUIRE_SETUP_CODE: ${REQUIRE_SETUP_CODE:-}
       DATA_DIR: /data
       WEB_DIR: /app/web
     ports:

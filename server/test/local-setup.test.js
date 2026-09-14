@@ -23,7 +23,10 @@ const path = require('node:path');
 const http = require('node:http');
 const local = require('../lib/local');
 
-const OPEN_PORT = 4960 + Math.floor(Math.random() * 15);
+// 5100-5129, clear of every other test file's block. help.test.js has
+// 4950-4989 and this file used to overlap it: alone it passed, in the
+// suite it fought for a port.
+const OPEN_PORT = 5100 + Math.floor(Math.random() * 15);
 const CODE_PORT = OPEN_PORT + 15;
 const OPEN_DATA = fs.mkdtempSync(path.join(os.tmpdir(), 'fosscast-open-'));
 const CODE_DATA = fs.mkdtempSync(path.join(os.tmpdir(), 'fosscast-code-'));

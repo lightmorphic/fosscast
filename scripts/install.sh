@@ -6,12 +6,15 @@
 #   bash scripts/install.sh <domain> [options]
 #
 # It sets up no login. The first person to open the site in a browser
-# chooses their own password there. A password written into a file on
-# the server is not a password.
+# chooses their own email and password there, and after that there is no
+# second sign-up. A password written into a file on the server is not a
+# password.
 #
-# Opening it on the machine itself needs nothing else, but this script
-# is run over SSH and the browser is somewhere else, so it reads the
-# setup code out of the log and shows it at the end.
+# So open the site as soon as this finishes: until the instance is
+# claimed, anybody who can reach it could claim it instead. This script
+# puts FOSSCast behind a proxy on a public domain, which is exactly the
+# case where that matters, so it says so at the end and tells you how to
+# put the old setup code back if you would rather.
 #
 # Options:
 #   --port N          app port on the host      (default 3100)
@@ -116,21 +119,22 @@ curl -fsS "http://127.0.0.1:$PORT/healthz" && echo " OK"
 echo
 echo "FOSSCast is up at https://$DOMAIN"
 if [ "$NEW_INSTALL" = 1 ]; then
-  # The code is in the container's log and nowhere else. Read it back
-  # out rather than making one up here: this script does not get to
-  # decide who owns the instance either.
+  # A code only exists where somebody asked for one. Read it back out
+  # rather than making one up here: this script does not get to decide
+  # who owns the instance either.
   CODE="$(docker compose -p "$PROJECT" logs app 2>/dev/null | grep -oE '[0-9]{3}-[0-9]{3}' | tail -1 || true)"
   echo
-  echo "Nobody owns it yet. Open https://$DOMAIN/admin and it will ask"
-  echo "for a setup code, then let you choose your own login."
-  echo "(From a browser on this machine it asks for no code at all,"
-  echo "for the first half hour after it starts.)"
   if [ -n "$CODE" ]; then
+    echo "Nobody owns it yet. Open https://$DOMAIN/admin, give it the"
+    echo "code below, and choose your own login."
     echo
     echo "Setup code: $CODE"
   else
-    echo
-    echo "Read the code with: docker compose -p $PROJECT logs app"
+    echo "Nobody owns it yet. Open https://$DOMAIN/admin NOW and set"
+    echo "your own email and password - the first person to do that owns"
+    echo "this instance, and this address is already public. To make it"
+    echo "ask for a code from the log instead, put REQUIRE_SETUP_CODE=1"
+    echo "in the environment and start it again."
   fi
 else
   echo "Existing login kept. Dashboard: https://$DOMAIN/admin"

@@ -179,30 +179,25 @@ module.exports = function create() {
 
       ${section('login', 'How does the login work, and what if I am locked out?', `
         <p><b>The first time.</b> An instance nobody has claimed asks
-        you to set an email and a password, and nothing else - so long
-        as you open it on the machine FOSSCast is running on, in the
-        first half hour after it started. Being there is the proof that
-        the machine is yours, and the address it goes on comes from the
-        connection itself rather than from anything a request can claim
-        about itself.</p>
-        <p>Working on the machine over SSH? A tunnel counts as being
-        there - <code>ssh -L 3100:127.0.0.1:3100 yourbox</code>, then
-        <code>http://localhost:3100</code> in the browser in front of
-        you. Anybody who can open that tunnel could read the log through
-        it, so asking for the code as well would prove nothing.</p>
-        <p>From another machine, or later than that, it asks for a
-        six-digit code as well. Otherwise the first stranger to find the
-        address would own your podcast. FOSSCast prints the code in its
-        own log:</p>
+        you to set an email and a password, and nothing else. Whoever
+        does that first owns it: there is no code to find and no log to
+        read.</p>
+        <p>So claim it as soon as it is running. Until somebody does,
+        anybody who can reach the address could claim it instead of you.
+        On a home network that is a minute long and nobody else is
+        looking. If the port is open to the internet before you get
+        there, it is a real window - keep the port shut until you have
+        claimed it, or start FOSSCast with
+        <code>REQUIRE_SETUP_CODE=1</code>. That makes it print a
+        six-digit code when it starts and ask for it before it will let
+        anybody in:</p>
         <p class="cmd"><code>docker compose logs app</code></p>
         <p>The code is held in memory only, never written to disk, and
-        changes every time FOSSCast restarts. Lost it, or come to the
-        machine too late? Restart it: that prints a new code and opens
-        the half hour again.</p>
+        changes every time FOSSCast restarts. Lost it? Restart and read
+        the new one.</p>
         <p><b>And that is the only sign-up.</b> Once somebody owns the
         instance the setup page is gone and the address refuses
-        everybody, from the machine itself as much as from anywhere
-        else. There is no second account to make and no way to make
+        everybody. There is no second account to make and no way to make
         one.</p>
         <p><b>The password.</b> At least twelve characters, and not one
         of the ones everybody guesses. There are no rules about capitals
