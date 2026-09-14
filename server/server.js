@@ -294,6 +294,16 @@ function route(req, res) {
   }
   if (p === '/version') return sendJson(res, 200, { version: VERSION });
   if (p === '/') {
+    // Before anybody owns this, the front page is not a front page: it is
+    // a person who has just run the thing and been told by the log to open
+    // it in a browser. Sending them to a landing page with no way in makes
+    // a liar of that line - Charlie went looking for the setup screen and
+    // found a marketing page - so while the instance is unclaimed the
+    // address in the log leads where the log says it will.
+    if (!store.load('users', []).length) {
+      res.writeHead(302, { Location: '/admin/setup' });
+      return res.end();
+    }
     // One instance is one podcast, so the front page is that show, not a
     // generic landing. The landing only shows before a show exists.
     const shows = store.load('shows', []);

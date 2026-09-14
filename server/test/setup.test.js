@@ -85,7 +85,11 @@ test('an unclaimed instance sends everybody to setup, and prints a code', async 
   assert.ok(/^\d{3}-\d{3}$/.test(code), 'the code is six digits');
   assert.ok(!fs.readdirSync(DATA).includes('setup.json'), 'and it is not on disk');
 
-  for (const where of ['/admin', '/admin/episodes', '/admin/login', '/admin/settings']) {
+  // The log says "open it in a browser and it will ask you for this code",
+  // and the address a person types is the domain, not /admin/setup. Charlie
+  // followed that line on a fresh install, got the public landing page, and
+  // had nowhere to go from it.
+  for (const where of ['/', '/admin', '/admin/episodes', '/admin/login', '/admin/settings']) {
     const res = await fetch(`${BASE}${where}`, { redirect: 'manual' });
     assert.strictEqual(res.headers.get('location'), '/admin/setup', `${where} leads to setup`);
   }
@@ -200,3 +204,4 @@ test('the same password rule applies to a later change', async () => {
   assert.strictEqual(res.status, 400);
   assert.ok((await res.text()).includes('one of the first things anybody tries'));
 });
+
