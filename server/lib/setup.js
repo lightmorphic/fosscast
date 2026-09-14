@@ -9,13 +9,40 @@
 // self-hoster can run, and being able to run it is the proof that the
 // box is theirs.
 //
-// From the box itself the code is not asked for at all. Reaching an
-// unclaimed instance from the machine it runs on is the same proof,
-// arrived at without anybody reading a log - Charlie, 14 September
-// 2026: "I don't like that you have to go into the logs to find a code.
-// There must be a simpler way." What counts as the machine itself, and
-// why a reverse proxy sitting on it cannot borrow the answer, is in
-// lib/local.js.
+// From the box itself, in the first half hour, the code is not asked
+// for at all. Reaching an unclaimed instance from the machine it runs
+// on is the same proof, arrived at without anybody reading a log -
+// Charlie, 14 September 2026: "I don't like that you have to go into
+// the logs to find a code. There must be a simpler way." What counts as
+// the machine itself is in lib/local.js.
+//
+// The half hour is there because of the one shape lib/local.js cannot
+// see through. A reverse proxy on the same machine dials FOSSCast from
+// exactly where a browser on that machine dials it from, and while
+// almost every proxy gives itself away - a forwarding header, the site's
+// own name in Host - one configured to send neither is word for word
+// identical to somebody sitting at the keyboard. Measured against a
+// bare nginx proxy_pass, not guessed at.
+//
+// So that door is only open while somebody is plainly standing at it.
+// An install is claimed in the minute after it starts; what the window
+// takes away is the FOSSCast that was started, forgotten, and left
+// unclaimed behind such a proxy for a week. After it closes the code is
+// asked for again, from the machine as much as from anywhere else, and
+// a restart opens it once more with a new code.
+
+// Thirty minutes. Long enough that nobody doing the install notices it,
+// short enough that an instance left running is not still offering
+// itself. Not a setting: there are no settings until somebody owns the
+// instance, which is the thing being decided here.
+const OPENING = 30 * 60 * 1000;
+let startedAt = Date.now();
+
+function withinOpeningTime() { return Date.now() - startedAt < OPENING; }
+
+// Only for the tests, which cannot wait half an hour to find out what
+// happens after half an hour.
+function setStartedAtForTests(when) { startedAt = when; }
 //
 // The code lives in memory for the life of the process. It is never
 // written to disk, so it is not in a backup, and it is a different code
@@ -36,16 +63,19 @@ function announce() {
     '  ----------------------------------------------------------',
     '  Nobody owns this FOSSCast yet.',
     '',
-    '  Open it in a browser on this machine and it will simply ask you',
-    '  to set an email and a password. Being here is proof enough.',
+    '  Open it in a browser on this machine in the next half hour and',
+    '  it will simply ask you to set an email and a password. Being',
+    '  here is proof enough.',
     '',
-    '  From another machine it asks for this code as well:',
+    '  From another machine, or later than that, it asks for this code',
+    '  as well:',
     '',
     `      ${code}`,
     '',
     '  The code is only in this log, so only somebody who can reach',
     '  this machine can claim the instance from elsewhere. It changes',
-    '  every restart and is never written to disk.',
+    '  every restart and is never written to disk - and a restart also',
+    '  opens the half hour again.',
     '  ----------------------------------------------------------',
     '',
   ].join('\n'));
@@ -176,4 +206,7 @@ function suggest(count = 6) {
   return picked.join('-');
 }
 
-module.exports = { announce, current, clear, matches, problem, suggest, MINIMUM, WORDS };
+module.exports = {
+  announce, current, clear, matches, withinOpeningTime, setStartedAtForTests, OPENING,
+  problem, suggest, MINIMUM, WORDS,
+};

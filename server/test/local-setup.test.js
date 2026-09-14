@@ -1,9 +1,9 @@
 'use strict';
 // Who may claim an instance without the code from the log.
 //
-// The rule is that being on the machine FOSSCast runs on is proof
-// enough, and that nothing a stranger can write into a request may
-// imitate being there. The test that matters most is the last kind: a
+// The rule is that being on the machine FOSSCast runs on, in the first
+// half hour after it starts, is proof enough, and that nothing a
+// stranger can write into a request may imitate being there. The test that matters most is the last kind: a
 // request from off the machine carrying X-Forwarded-For: 127.0.0.1,
 // which is the header a reverse proxy writes and anybody can forge. If
 // that ever claims an instance, every FOSSCast behind a proxy belongs
@@ -18,6 +18,8 @@ const os = require('node:os');
 const path = require('node:path');
 const http = require('node:http');
 const local = require('../lib/local');
+const setup = require('../lib/setup');
+const setupScreen = require('../lib/admin/setup-page');
 
 const PORT = 4960 + Math.floor(Math.random() * 30);
 const DATA = fs.mkdtempSync(path.join(os.tmpdir(), 'fosscast-local-'));
@@ -161,6 +163,37 @@ test('without a container the gateway is a router, and means nothing', () => {
     assert.strictEqual(local.hostAddress(), null);
   }
   local.setHostAddressForTests(undefined);
+});
+
+test('the door closes half an hour after the instance starts', () => {
+  assert.ok(setup.withinOpeningTime(), 'open at the start, which is when people install');
+
+  // The half hour is not for the person installing it. It is for the
+  // one shape the address test cannot see through: a reverse proxy on
+  // the same machine that sets no forwarding header and rewrites Host
+  // to its upstream is, to us, word for word a browser on the box. So
+  // the door only stands open while somebody is plainly at it, and an
+  // instance left running and unclaimed stops offering itself.
+  setup.setStartedAtForTests(Date.now() - setup.OPENING - 1000);
+  assert.strictEqual(setup.withinOpeningTime(), false);
+  setup.setStartedAtForTests(Date.now());
+});
+
+test('somebody on the machine who came late is told why, not just refused', () => {
+  const { claimPage } = setupScreen({ brandName: 'FOSSCast' });
+
+  const open = claimPage({ local: true });
+  assert.ok(!open.includes('name="code"'));
+
+  const closed = claimPage({ local: false, late: true });
+  assert.ok(closed.includes('name="code"'), 'the code is asked for');
+  assert.ok(closed.includes('running a while'), 'and the change is explained');
+
+  // Somebody who was never on the machine is not told about a half hour
+  // that was never theirs.
+  const outside = claimPage({ local: false, late: false });
+  assert.ok(outside.includes('name="code"'));
+  assert.ok(!outside.includes('running a while'));
 });
 
 // ---------------------------------------------------------------------

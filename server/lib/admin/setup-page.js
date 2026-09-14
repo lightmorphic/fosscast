@@ -4,9 +4,10 @@
 // and then - in the same minute, while you are still here - add a
 // passkey and a second factor.
 //
-// Opened from the machine FOSSCast runs on, that is the whole of it.
-// Opened from anywhere else, the first screen also asks for the code
-// from the log, because from there nothing else says who you are.
+// Opened from the machine FOSSCast runs on, in the first half hour
+// after it starts, that is the whole of it. Opened from anywhere else,
+// or later than that, the first screen also asks for the code from the
+// log, because by then nothing else says who you are.
 //
 // Charlie: "When you log in for the first time you create the password,
 // and also give them the chance to do 2FA. People use weak passwords and
@@ -93,7 +94,10 @@ module.exports = function create({ brandName }) {
   // so the code is not asked for - and it is not mentioned either.
   // Explaining a field somebody does not have to fill in is a field
   // somebody still has to read.
-  function claimPage({ error = '', email = '', suggestion = '', local = false } = {}) {
+  // `late` is somebody on the machine itself who has come to it hours
+  // after it started. They were told in the log they would not need a
+  // code, so they are told here why they do.
+  function claimPage({ error = '', email = '', suggestion = '', local = false, late = false } = {}) {
     const passphrase = suggestion || setup.suggest();
     return adminPage({
       title: 'Set up',
@@ -108,6 +112,12 @@ module.exports = function create({ brandName }) {
 
         <form method="post" action="/admin/setup">
           ${local ? '' : `<h2>The code from the log</h2>
+          ${late ? `<p class="hint">This has been running a while. For
+          the first half hour after it starts, opening it here on the
+          machine itself is proof enough and there is nothing to type.
+          After that it asks for the code, because by then the person at
+          the keyboard might be anybody. Restarting it opens that half
+          hour again, with a new code.</p>` : ''}
           <p class="hint">FOSSCast printed a six-digit code when it
           started, and that is the only place it exists. On the machine
           this runs on:</p>

@@ -322,15 +322,18 @@ function createAdminRouter(ctx) {
       // Reaching an unclaimed instance from the machine it runs on is
       // the same proof the code was asking for, so the code is not
       // asked for. lib/local.js says how that is decided and why a
-      // proxy in front cannot borrow it.
-      const here = local.isLocal(req);
-      if (p === '/admin/setup' && req.method === 'GET') { html(res, claimPage({ local: here })); return true; }
+      // proxy in front cannot borrow it; lib/setup.js says why the door
+      // only stands open for the first half hour.
+      const onTheBox = local.isLocal(req);
+      const here = onTheBox && setup.withinOpeningTime();
+      const late = onTheBox && !here;
+      if (p === '/admin/setup' && req.method === 'GET') { html(res, claimPage({ local: here, late })); return true; }
       if (p === '/admin/setup' && req.method === 'POST') {
         const ip = clientIp(req);
         // A setup code is six digits. Guessing is rate-limited the same
         // way a password is, and for the same reason.
         if (limiter.blocked(ip)) {
-          html(res, claimPage({ local: here, error: 'Too many attempts. Try again later.' }), 429);
+          html(res, claimPage({ local: here, late, error: 'Too many attempts. Try again later.' }), 429);
           return true;
         }
         const form = await formBody(req, readBody);
@@ -342,6 +345,7 @@ function createAdminRouter(ctx) {
           limiter.fail(ip);
           html(res, claimPage({
             local: here,
+            late,
             email,
             error: 'That is not the code in the log. It changes on every restart, so read it '
               + 'again rather than reusing an older one.',
@@ -349,15 +353,15 @@ function createAdminRouter(ctx) {
           return true;
         }
         if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
-          html(res, claimPage({ local: here, error: 'That does not look like an email address.' }), 400);
+          html(res, claimPage({ local: here, late, error: 'That does not look like an email address.' }), 400);
           return true;
         }
         if (password !== again) {
-          html(res, claimPage({ local: here, email, error: 'The two passwords are not the same.' }), 400);
+          html(res, claimPage({ local: here, late, email, error: 'The two passwords are not the same.' }), 400);
           return true;
         }
         const wrong = setup.problem(password, email);
-        if (wrong) { html(res, claimPage({ local: here, email, error: wrong }), 400); return true; }
+        if (wrong) { html(res, claimPage({ local: here, late, email, error: wrong }), 400); return true; }
 
         limiter.ok(ip);
         const user = {

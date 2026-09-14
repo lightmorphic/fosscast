@@ -85,7 +85,7 @@ after(() => {
 
 test('an unclaimed instance sends everybody to setup, and prints a code', async () => {
   assert.match(log, /Nobody owns this FOSSCast yet/);
-  assert.match(log, /From another machine it asks for this code/, 'the log says who needs it');
+  assert.match(log, /From another machine, or later than that/, 'the log says who needs it and when');
   assert.match(log, /never written to disk/);
   assert.ok(/^\d{3}-\d{3}$/.test(code), 'the code is six digits');
   assert.ok(!fs.readdirSync(DATA).includes('setup.json'), 'and it is not on disk');
