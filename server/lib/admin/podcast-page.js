@@ -7,7 +7,7 @@ const CATEGORIES = require('../categories');
 const feedAliases = require('../feedaliases');
 const { APPS, SUPPORT, SOCIAL, prefixed } = require('../public');
 const { siteDomain } = require('../domain');
-const { MEDIA_UPLOADS } = require('./bits');
+const config = require('../config');
 
 module.exports = function create({ episodes, settings }) {
   // The Podcast page: everything about the overall podcast on one page.

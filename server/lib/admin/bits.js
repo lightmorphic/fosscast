@@ -5,18 +5,21 @@
 // are not a page.
 
 const { esc, ICONS } = require('../html');
+const config = require('../config');
 
 // Publishing from a studio is on unless the instance turns it off. The
 // card on the account page is the only way to reach the key, so it goes
 // with it.
-const STUDIO_PUBLISHING = !/^(0|off|false|no)$/i.test((process.env.STUDIO_PUBLISHING || '').trim());
-
+//
 // Some instances hold no audio at all: the episodes live on the
 // podcaster's own storage and the feed points there. Offering an upload
-// box on such an instance is offering something that cannot work.
-// MEDIA_UPLOADS=off takes it off the forms; the address box, which
-// every instance has, becomes the way in.
-const MEDIA_UPLOADS = !/^(0|off|false|no)$/i.test((process.env.MEDIA_UPLOADS || '').trim());
+// box on such an instance is offering something that cannot work, so
+// uploads have a switch of their own; the address box, which every
+// instance has, becomes the way in.
+//
+// Both are settings rather than constants: a switch you have to restart
+// a container to flip is not a switch. The screens call these each time
+// they draw.
 
 // A public demo hands its login to strangers, so demo mode makes the
 // whole instance read-only: nothing can be changed, uploaded, posted
@@ -36,10 +39,9 @@ const MAX_HOSTS = 40;
 
 // The dashboard must never render inside a stranger's iframe, but an
 // operator may name the one shell allowed to hold it - their own
-// portal, a homelab wall, an agency panel. FRAME_ANCESTORS is that
-// name (a CSP source list, e.g. https://portal.example.com); unset
-// means what it has always meant: nobody.
-const FRAME_ANCESTORS = (process.env.FRAME_ANCESTORS || '').trim();
+// portal, a homelab wall, an agency panel. The setting is that name (a
+// CSP source list, e.g. https://portal.example.com); empty means what
+// it has always meant: nobody.
 
 // A length on screen is minutes and seconds; stored, it is seconds.
 // Empty either way means nobody knows yet.
@@ -111,13 +113,14 @@ function redirect(res, to, extraHeaders = {}) {
 }
 
 function html(res, page, status = 200) {
+  const ancestors = config.frameAncestors();
   res.writeHead(status, {
     'Content-Type': 'text/html; charset=utf-8',
-    'Content-Security-Policy': `frame-ancestors ${FRAME_ANCESTORS || "'none'"}`,
+    'Content-Security-Policy': `frame-ancestors ${ancestors || "'none'"}`,
     // X-Frame-Options cannot say "this origin only", so when an
     // ancestor is allowed the CSP directive speaks alone. Every
     // browser that honours X-Frame-Options honours frame-ancestors.
-    ...(FRAME_ANCESTORS ? {} : { 'X-Frame-Options': 'DENY' }),
+    ...(ancestors ? {} : { 'X-Frame-Options': 'DENY' }),
   });
   res.end(page);
 }
@@ -151,7 +154,7 @@ function deleteButton(action, label) {
 }
 
 module.exports = {
-  STUDIO_PUBLISHING, MEDIA_UPLOADS, DEMO, MAX_SHOWS, HOST_PHOTO_SIZE, MAX_HOSTS,
+  DEMO, MAX_SHOWS, HOST_PHOTO_SIZE, MAX_HOSTS,
   formatDuration, parseDuration, parseChapters, formatChapters, slugify,
   parseCookies, clientIp, isSecure, redirect, html, sendJson, noContent,
   formBody, deleteButton,

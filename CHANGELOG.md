@@ -4,6 +4,22 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- **A Settings page, because /admin/settings was nothing at all.** It
+  answered with the page-not-found and nothing linked to it. It was not a
+  screen that lost its link and not a leftover from splitting `admin.js`
+  into `lib/admin/`: it has never existed in this repository, and the
+  reason is that an instance's own decisions were environment variables
+  in a compose file. They are settings now - the site's domain, whether
+  audio may be uploaded here, whether a studio may publish here, a
+  contact path, a mailing-list box, and the one origin allowed to frame
+  the dashboard - on their own page with its own menu item, saving as you
+  type and taking effect without a restart.
+
+  An instance that still has those variables in its compose file keeps
+  working: on the first start after this, each one is copied into the
+  store and a line in the log says that it can come out of the file. The
+  variable is read once and never again.
+
 - **The podcast and the episode, and no third word.** There is a podcast
   and there are its episodes; "show" meant both, sometimes in the same
   sentence, and it is gone from everything a person reads. The worst of

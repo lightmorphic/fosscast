@@ -3,7 +3,7 @@
 // the person using this rather than about the podcast itself.
 
 const { esc, adminPage, ICONS, isEmbedded, BRAND } = require('../html');
-const { STUDIO_PUBLISHING } = require('./bits');
+const config = require('../config');
 
 module.exports = function create({ settings, shows, episodes, stats }) {
   function dashboard(user) {
@@ -67,7 +67,7 @@ module.exports = function create({ settings, shows, episodes, stats }) {
         </form>
       </section>`}
 
-      ${STUDIO_PUBLISHING ? `<section class="panel narrow">
+      ${config.studioPublishing() ? `<section class="panel narrow">
         <h2>Studio publishing</h2>
         <p class="hint">The key FOSSStudio, or any other studio,
         uses to publish a finished recording straight into this instance.

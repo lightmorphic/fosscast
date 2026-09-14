@@ -617,7 +617,7 @@ const NEEDS_PODCAST = new Set(['hosts', 'episodes', 'look', 'stats']);
 function adminPage({ title, body, active = '', authed = true, embedded = isEmbedded(), hasPodcast = true }) {
   const nav = authed && !embedded
     ? `<nav class="admin-nav">
-        ${[['', 'Dashboard'], ['podcast', 'Podcast'], ['hosts', 'Hosts'], ['episodes', 'Episodes'], ['look', 'Look'], ['stats', 'Stats'], ['account', 'Account']]
+        ${[['', 'Dashboard'], ['podcast', 'Podcast'], ['hosts', 'Hosts'], ['episodes', 'Episodes'], ['look', 'Look'], ['stats', 'Stats'], ['settings', 'Settings'], ['account', 'Account']]
           .map(([slug, label]) => {
             if (!hasPodcast && NEEDS_PODCAST.has(slug)) {
               return `<span class="admin-link waiting" aria-disabled="true" title="Create your podcast first">${label}</span>`;

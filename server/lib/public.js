@@ -2,6 +2,7 @@
 // The public site: landing page, show pages with players, RSS feeds.
 
 const { esc, publicPage } = require('./html');
+const config = require('./config');
 
 const MEDIA_TYPES = {
   '.mp4': 'video/mp4', '.m4v': 'video/mp4', '.webm': 'video/webm',
@@ -345,17 +346,14 @@ function hostPhoto(host) { return host.photoWeb || host.photo || ''; }
 // The show's own menu. Pages beyond the front page only appear once
 // there is something on them.
 // A contact page served by something beside this - a form the operator
-// hosts, a helpdesk - joins the menu when CONTACT_PATH names its
-// same-site path. Unset, the menu is as it was.
-const CONTACT_PATH = (() => {
-  const raw = (process.env.CONTACT_PATH || '').trim();
-  return raw.startsWith('/') && !raw.includes('//') ? raw : '';
-})();
+// hosts, a helpdesk - joins the menu when the Settings page names its
+// same-site path. Empty, the menu is as it was.
 
 function siteNav(show, current = '') {
   const items = [['/', 'Home', current === 'home']];
   if (hosts(show).length) items.push(['/hosts', 'Hosts', current === 'hosts']);
-  if (CONTACT_PATH) items.push([CONTACT_PATH, 'Contact', current === 'contact']);
+  const contact = config.contactPath();
+  if (contact) items.push([contact, 'Contact', current === 'contact']);
   return items.length > 1 ? items : [];
 }
 
@@ -460,16 +458,14 @@ function bannerMarkup(show) {
 }
 
 // An operator may run a mailing list beside this - listmonk, a hosted
-// service, anything that can serve a small HTML fragment. MAILLIST_EMBED names a same-site path that
-// returns a sign-up box, or nothing when the list is switched off, and
-// the home page shows whatever comes back. Unset - which is every
-// existing install - nothing is fetched and nothing is drawn.
-const MAILLIST_EMBED = (() => {
-  const raw = (process.env.MAILLIST_EMBED || '').trim();
-  return raw.startsWith('/') && !raw.includes('//') ? raw : '';
-})();
+// service, anything that can serve a small HTML fragment. The setting
+// names a same-site path that returns a sign-up box, or nothing when the
+// list is switched off, and the home page shows whatever comes back.
+// Empty - which is every existing install - nothing is fetched and
+// nothing is drawn.
 
 function showPage(show, allEpisodes, domain) {
+  const maillist = config.maillistEmbed();
   const episodes = visible(allEpisodes);
   const items = episodes.length
     ? episodes.map((episode) => {
@@ -505,7 +501,7 @@ function showPage(show, allEpisodes, domain) {
     </div>
   </section>
   ${listenCard(show, domain)}
-  ${MAILLIST_EMBED ? `<div id="maillist" data-src="${esc(MAILLIST_EMBED)}"></div>
+  ${maillist ? `<div id="maillist" data-src="${esc(maillist)}"></div>
   <script>
   (function () {
     var slot = document.getElementById('maillist');

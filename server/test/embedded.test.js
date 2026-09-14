@@ -148,16 +148,24 @@ test('the mailing-list hook is inert unset and same-site only', async () => {
   const page = await (await fetch(`http://127.0.0.1:${PORT}/shows/quiet-show`)).text();
   assert.ok(!page.includes('maillist'), 'nothing drawn when nothing configured');
 
-  // The path rule refuses anything that could leave the site.
-  delete require.cache[require.resolve('../lib/public.js')];
-  process.env.MAILLIST_EMBED = 'https://evil.example/box';
-  const off = require('../lib/public.js');
-  delete require.cache[require.resolve('../lib/public.js')];
-  process.env.MAILLIST_EMBED = '/newsletter/box';
-  const on = require('../lib/public.js');
-  delete process.env.MAILLIST_EMBED;
-  delete require.cache[require.resolve('../lib/public.js')];
+  // The path rule refuses anything that could leave the site. It is a
+  // setting now rather than an environment variable, so it is set the
+  // way the Settings page sets it, against a store of its own.
+  const { Store } = require('../lib/store');
+  const config = require('../lib/config');
+  const publicSite = require('../lib/public.js');
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fosscast-maillist-'));
+  config.adopt(new Store(dir));
   const show = { id: 's1', slug: 'x', name: 'X', description: 'd' };
-  assert.ok(!off.showPage(show, [], 'x.example').includes('maillist'), 'an absolute address is refused');
-  assert.ok(on.showPage(show, [], 'x.example').includes('data-src="/newsletter/box"'), 'a same-site path is used');
+
+  config.set('maillistEmbed', 'https://evil.example/box');
+  assert.ok(!publicSite.showPage(show, [], 'x.example').includes('maillist'),
+    'an absolute address is refused');
+
+  config.set('maillistEmbed', '/newsletter/box');
+  assert.ok(publicSite.showPage(show, [], 'x.example').includes('data-src="/newsletter/box"'),
+    'a same-site path is used');
+
+  config.set('maillistEmbed', '');
+  fs.rmSync(dir, { recursive: true, force: true });
 });

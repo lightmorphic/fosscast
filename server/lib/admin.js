@@ -20,8 +20,9 @@ const importer = require('./import');
 const { APPS, SUPPORT, SOCIAL, showPage } = require('./public');
 const themes = require('./theme');
 const transcripts = require('./transcripts');
+const config = require('./config');
 const {
-  STUDIO_PUBLISHING, DEMO, MAX_SHOWS, MAX_HOSTS,
+  DEMO, MAX_SHOWS, MAX_HOSTS,
   parseDuration, parseChapters, slugify, parseCookies, clientIp, isSecure,
   redirect, html, sendJson, noContent, formBody,
 } = require('./admin/bits');
@@ -31,6 +32,7 @@ const lookScreen = require('./admin/look-page');
 const hostScreens = require('./admin/host-pages');
 const podcastScreens = require('./admin/podcast-page');
 const accountScreens = require('./admin/account-pages');
+const settingsScreen = require('./admin/settings-page');
 
 // The admin addresses used to read /admin/shows/<slug>/settings and the
 // like: a tool for managing many podcasts, with a slug in the path that
@@ -130,6 +132,7 @@ function createAdminRouter(ctx) {
   } = hostScreens({ store, shows });
   const { podcastPage, createPodcastPage } = podcastScreens({ episodes, settings });
   const { dashboard, accountPage } = accountScreens({ settings, shows, episodes, stats });
+  const { settingsPage, applySettingsForm } = settingsScreen();
 
   // ADMIN_EMAIL and ADMIN_PASSWORD are true every time the app starts,
   // not only the first time.
@@ -429,10 +432,20 @@ function createAdminRouter(ctx) {
     }
 
     if (p === '/admin/stats' && req.method === 'GET') { html(res, statsPage()); return true; }
+    if (p === '/admin/settings' && req.method === 'GET') { html(res, settingsPage()); return true; }
+    if (p === '/admin/settings' && req.method === 'POST') {
+      const form = await formBody(req, readBody);
+      applySettingsForm(form);
+      // Saved as it was typed, so there is nothing to send back and the
+      // browser stays on the box somebody just left.
+      if (form.get('live')) { noContent(res); return true; }
+      html(res, settingsPage());
+      return true;
+    }
     if (p === '/admin/account' && req.method === 'GET') { html(res, accountPage(user)); return true; }
     // Switched off, this falls through to the page-not-found below.
     // Returning unhandled from here would leave the request unanswered.
-    if (p === '/admin/account/studio-key' && req.method === 'POST' && STUDIO_PUBLISHING) {
+    if (p === '/admin/account/studio-key' && req.method === 'POST' && config.studioPublishing()) {
       const value = settings();
       value.studioToken = crypto.randomBytes(32).toString('hex');
       store.save('settings', value);

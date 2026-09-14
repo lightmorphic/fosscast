@@ -19,11 +19,14 @@ const transcripts = require('./lib/transcripts');
 const HTTP_PORT = Number(process.env.HTTP_PORT || 3100);
 const DATA_DIR = process.env.DATA_DIR || path.join(__dirname, 'data');
 const WEB_DIR = path.resolve(process.env.WEB_DIR || path.join(__dirname, '..', 'web'));
+const config = require('./lib/config');
 const { siteDomain } = require('./lib/domain');
-const DOMAIN = siteDomain();
 const VERSION = require('./package.json').version;
 
 const store = new Store(DATA_DIR);
+// Before anything reads a setting: anything still in the environment is
+// moved into the store, once, and said so in the log.
+config.adopt(store);
 
 const MIME = {
   '.css': 'text/css; charset=utf-8',
@@ -94,15 +97,16 @@ const DEMO = process.env.DEMO_MODE === '1';
 // Publishing from a studio can be turned off for an instance that does
 // not want the door open at all - one whose audio lives somewhere else,
 // or that simply never records that way. On by default: an instance
-// that says nothing keeps the feature it always had.
-const STUDIO_PUBLISHING = !/^(0|off|false|no)$/i.test((process.env.STUDIO_PUBLISHING || '').trim());
+// that says nothing keeps the feature it always had. It is a switch on
+// the Settings page, so it is read at the moment it is needed rather
+// than held in a constant somebody has to restart to change.
 
 // The studio's own key: FOSSStudio (or any other studio) sends it to
 // publish a finished recording. Nothing else uses it. Lengths are
 // compared first because timingSafeEqual throws on a mismatch, and the
 // length of a token is not the secret.
 function studioAuthed(req) {
-  if (!STUDIO_PUBLISHING) return false;
+  if (!config.studioPublishing()) return false;
   const token = (admin.settings().studioToken || '').trim();
   const given = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
   if (!token || !given || given.length !== token.length) return false;
@@ -277,7 +281,7 @@ function route(req, res) {
       list.push(episode);
       store.save('episodes', list);
       admin.measureEpisode(episode.id);
-      sendJson(res, 200, { ok: true, id: episode.id, draft: episode.draft, editUrl: `https://${DOMAIN}/admin/episodes/${episode.id}` });
+      sendJson(res, 200, { ok: true, id: episode.id, draft: episode.draft, editUrl: `https://${siteDomain()}/admin/episodes/${episode.id}` });
     }).catch(() => sendJson(res, 400, { error: 'bad request' }));
     return;
   }
@@ -298,7 +302,7 @@ function route(req, res) {
       const items = store.load('episodes', [])
         .filter((e) => e.showId === show.id)
         .sort((a, b) => (a.date < b.date ? 1 : -1));
-      return sendHtml(res, publicSite.showPage(show, items, DOMAIN));
+      return sendHtml(res, publicSite.showPage(show, items, siteDomain()));
     }
     return sendHtml(res, publicSite.landing());
   }
@@ -332,12 +336,12 @@ function route(req, res) {
       // Apps poll the feed about once a day, so counting distinct
       // pullers is the nearest honest thing to a subscriber count.
       stats.recordFeed(clientIp(req), req.headers['user-agent'] || '');
-      return send(res, 200, publicSite.feed(show, items, DOMAIN), {
+      return send(res, 200, publicSite.feed(show, items, siteDomain()), {
         'Content-Type': 'application/rss+xml; charset=utf-8',
         ...FEED_CORS,
       });
     }
-    return sendHtml(res, publicSite.showPage(show, items, DOMAIN));
+    return sendHtml(res, publicSite.showPage(show, items, siteDomain()));
   }
 
   // The hosts pages: the team as cards, and one page each. The instance
@@ -351,7 +355,7 @@ function route(req, res) {
     const host = publicSite.hosts(show)
       .find((h) => publicSite.hostSlug(h) === hostsMatch[1] || h.id === hostsMatch[1]);
     if (!host) return send(res, 404, 'not found');
-    return sendHtml(res, publicSite.hostPage(show, host, DOMAIN));
+    return sendHtml(res, publicSite.hostPage(show, host, siteDomain()));
   }
 
   const chaptersMatch = p.match(/^\/api\/v1\/episodes\/([a-f0-9-]+)\/chapters\.json$/);
@@ -366,7 +370,7 @@ function route(req, res) {
     const episode = store.load('episodes', []).find((e) => e.id === embedMatch[1]);
     const show = episode && store.load('shows', []).find((s) => s.id === episode.showId);
     if (!episode || !show || episode.draft) return send(res, 404, 'not found');
-    return sendHtml(res, publicSite.embedPage(show, episode, DOMAIN));
+    return sendHtml(res, publicSite.embedPage(show, episode, siteDomain()));
   }
 
   // An episode's own page: what podcast apps link to from the feed.
@@ -385,7 +389,7 @@ function route(req, res) {
     const said = episode.transcriptPublic && episode.transcript
       ? transcripts.parseCues(transcripts.read(MEDIA_DIR, episode.transcript) || '')
       : null;
-    return sendHtml(res, publicSite.episodePage(show, episode, DOMAIN, said));
+    return sendHtml(res, publicSite.episodePage(show, episode, siteDomain(), said));
   }
 
   // The three directories the image ships, plus /js/: FOSSCast puts no

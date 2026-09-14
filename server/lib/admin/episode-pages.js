@@ -5,7 +5,8 @@
 const { esc, adminPage } = require('../html');
 const { siteDomain } = require('../domain');
 const transcripts = require('../transcripts');
-const { MEDIA_UPLOADS, DEMO, formatDuration, formatChapters, deleteButton } = require('./bits');
+const { DEMO, formatDuration, formatChapters, deleteButton } = require('./bits');
+const config = require('../config');
 
 module.exports = function create({ episodes, mediaDir }) {
   // The Episodes page: the day-to-day work of adding and editing the
@@ -65,10 +66,10 @@ module.exports = function create({ episodes, mediaDir }) {
           <textarea id="epDescription" name="description" rows="8" maxlength="4000"></textarea>
         </div>
         <div>
-          ${MEDIA_UPLOADS ? `<label for="mediaFile">Media file (uploads to this server)</label>
+          ${config.mediaUploads() ? `<label for="mediaFile">Media file (uploads to this server)</label>
           <input id="mediaFile" type="file" accept="audio/*,video/*" data-upload data-show="${esc(show.slug)}" data-target="mediaUrl" data-status="upload-status">
           <p class="hint" id="upload-status"></p>` : ''}
-          <label for="mediaUrl">${MEDIA_UPLOADS ? 'Or the address of the audio' : 'The address of the audio'}</label>
+          <label for="mediaUrl">${config.mediaUploads() ? 'Or the address of the audio' : 'The address of the audio'}</label>
           <p class="hint">Where the file actually lives - your
           own storage, anywhere a listener's app can reach. MP3 is the one
           every app plays.</p>
