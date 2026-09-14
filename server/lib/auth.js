@@ -81,6 +81,32 @@ function verifyLoginLink(token, secret) {
   return { userId, jti };
 }
 
+// Half a login: the password was right and the second factor has not
+// been asked for yet. It is a signed token rather than anything kept on
+// the server, so nothing accumulates and a restart simply means asking
+// for the password again. Its own prefix, so it can never be presented
+// as a finished session cookie, and two minutes to type six digits.
+function signPending(userId, secret, ttlMs = 2 * 60 * 1000) {
+  const exp = Date.now() + ttlMs;
+  const payload = `pending.${userId}.${exp}`;
+  const mac = crypto.createHmac('sha256', secret).update(payload).digest('base64url');
+  return `${payload}.${mac}`;
+}
+
+function verifyPending(token, secret) {
+  if (typeof token !== 'string') return null;
+  const parts = token.split('.');
+  if (parts.length !== 4 || parts[0] !== 'pending') return null;
+  const [, userId, expStr, mac] = parts;
+  const expect = crypto.createHmac('sha256', secret)
+    .update(`pending.${userId}.${expStr}`).digest('base64url');
+  const a = Buffer.from(mac);
+  const b = Buffer.from(expect);
+  if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return null;
+  if (!/^\d+$/.test(expStr) || Date.now() > Number(expStr)) return null;
+  return userId;
+}
+
 // Too many failed logins from one IP locks that IP out for a while;
 // any successful login clears it.
 class RateLimiter {
@@ -116,4 +142,7 @@ class RateLimiter {
   }
 }
 
-module.exports = { hashPassword, verifyPassword, signSession, verifySession, signLoginLink, verifyLoginLink, RateLimiter };
+module.exports = {
+  hashPassword, verifyPassword, signSession, verifySession,
+  signLoginLink, verifyLoginLink, signPending, verifyPending, RateLimiter,
+};

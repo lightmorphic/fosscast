@@ -4,6 +4,40 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- **The login is set in FOSSCast, not in a compose file.** `ADMIN_EMAIL`
+  and `ADMIN_PASSWORD` are gone from the install. The first run prints a
+  six-digit setup code in the container's log and nowhere else, and the
+  page asks for it before it will let anybody claim the instance: being
+  able to run `docker compose logs app` is the proof that the machine is
+  yours. The code lives in memory, changes on every restart, and is spent
+  the moment an account exists.
+
+  The password rule is enforced rather than advised: twelve characters or
+  more, and the openers (`password123`, `letmein`, `qwerty…`) are refused
+  by name with a sentence saying what would pass. There are deliberately
+  no rules about capitals and symbols - they produce `Password1!` and
+  teach nobody anything. A six-word passphrase is offered beside the box.
+  The same rule now applies to changing a password later.
+
+- **Passkeys, and two-factor codes.** A passkey is offered during setup,
+  in the same minute the password is set, and on the Account page after
+  that: the browser keeps the private key, this server keeps only a
+  public key, and signing in is one tap with nothing typed. WebAuthn is
+  verified here in `lib/passkeys.js` rather than by a dependency.
+  Passkeys need HTTPS and only work on the address they were made on, so
+  the password stays as the way back in and says so on the page.
+
+  Two-factor is the ordinary TOTP kind from any authenticator app,
+  offered at setup rather than buried. There is no QR code, on purpose: a
+  picture that might not scan leaves somebody staring at a camera with no
+  idea whose fault it is, so the secret is printed in groups of four and
+  an `otpauth:` link is offered beside it.
+
+  Nobody running an instance today is dragged through any of this. If
+  `ADMIN_EMAIL` and `ADMIN_PASSWORD` are still in a compose file they go
+  on deciding the login exactly as before, and the log says once, on
+  every start, that they no longer have to.
+
 - **A Settings page, because /admin/settings was nothing at all.** It
   answered with the page-not-found and nothing linked to it. It was not a
   screen that lost its link and not a leftover from splitting `admin.js`

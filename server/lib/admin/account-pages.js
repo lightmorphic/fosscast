@@ -4,8 +4,10 @@
 
 const { esc, adminPage, ICONS, isEmbedded, BRAND } = require('../html');
 const config = require('../config');
+const setup = require('../setup');
+const totp = require('../totp');
 
-module.exports = function create({ settings, shows, episodes, stats }) {
+module.exports = function create({ settings, shows, episodes, stats, passkeyScript }) {
   function dashboard(user) {
     const show = shows()[0];
     const episodeList = episodes();
@@ -59,13 +61,83 @@ module.exports = function create({ settings, shows, episodes, stats }) {
         <form method="post" action="/admin/account/password">
           <label for="current">Current password</label>
           <input id="current" name="current" type="password" autocomplete="current-password" required>
-          <label for="next">New password (12 characters or more)</label>
-          <input id="next" name="next" type="password" autocomplete="new-password" minlength="12" required>
+          <label for="next">New password (${setup.MINIMUM} characters or more)</label>
+          <input id="next" name="next" type="password" autocomplete="new-password" minlength="${setup.MINIMUM}" required>
           <label for="again">New password again</label>
-          <input id="again" name="again" type="password" autocomplete="new-password" minlength="12" required>
+          <input id="again" name="again" type="password" autocomplete="new-password" minlength="${setup.MINIMUM}" required>
           <button class="btn-primary" type="submit">Change password</button>
         </form>
-      </section>`}
+        <p class="hint">Length is what makes one hard to guess. Stuck?
+        <code class="pick-me">${esc(setup.suggest())}</code> is six words
+        picked at random just now.</p>
+      </section>
+
+      <section class="panel narrow">
+        <h2>Passkeys</h2>
+        <p class="hint">Your phone or laptop keeps the key; this server
+        keeps only the public half, so there is nothing here worth
+        stealing and nothing to type. A passkey works only on the address
+        it was made on, which is why the password stays.
+        <a class="hint-link" href="/help#passkeys">What a passkey is</a></p>
+        ${(user.passkeys || []).length
+      ? `<ul class="plain-list">${user.passkeys.map((key) => `<li>
+            <span>${esc(key.label)}</span>
+            <span class="hint">on ${esc(key.domain)}, added ${esc(String(key.addedAt).slice(0, 10))}</span>
+            <form method="post" action="/admin/passkeys/${esc(key.id)}/delete" class="inline-form">
+              <button class="btn-secondary btn-confirm" type="submit">Remove</button>
+            </form>
+          </li>`).join('')}</ul>`
+      : '<p class="hint">None yet.</p>'}
+        <p class="hint" id="passkey-state" aria-live="polite"></p>
+        <label for="passkey-label">Name this device</label>
+        <input id="passkey-label" maxlength="60" placeholder="My laptop">
+        <button class="btn-secondary" type="button" id="add-passkey">Add a passkey</button>
+      </section>
+
+      <section class="panel narrow">
+        <h2>Two-factor</h2>
+        ${user.totpEnabled
+      ? `<p class="hint">On. The login asks for a code from your app after
+        your password. <span class="state-on">&#10003; Active</span></p>
+        <form method="post" action="/admin/account/twofactor">
+          <input type="hidden" name="off" value="1">
+          <label for="tf-pass">Your password, to turn it off</label>
+          <input id="tf-pass" name="password" type="password" autocomplete="current-password" required>
+          <button class="btn-secondary btn-confirm" type="submit">Turn two-factor off</button>
+        </form>`
+      : `<p class="hint">Off. A six-digit code from any authenticator app,
+        asked for after your password. Type this secret into the app, then
+        type back what it shows. There is no QR code on purpose: a picture
+        that might not scan is worse than none.</p>
+        <label for="tf-secret">Secret</label>
+        <div class="key-field">
+          <input id="tf-secret" type="text" value="${esc(totp.readable(user.totpSecret || ''))}" readonly spellcheck="false">
+        </div>
+        <p class="hint">A link, for an app that takes one:
+        <code>${esc(totp.otpauth(user.totpSecret || '', user.email, BRAND))}</code></p>
+        <form method="post" action="/admin/account/twofactor">
+          <label for="tf-code">The six digits it shows now</label>
+          <input id="tf-code" name="code" inputmode="numeric" autocomplete="one-time-code"
+            maxlength="6" spellcheck="false" required>
+          <button class="btn-secondary" type="submit">Turn two-factor on</button>
+        </form>`}
+      </section>
+
+      <script>${passkeyScript}
+      (function () {
+        var button = document.getElementById('add-passkey');
+        var state = document.getElementById('passkey-state');
+        var name = document.getElementById('passkey-label');
+        if (!button) return;
+        button.addEventListener('click', async function () {
+          button.disabled = true;
+          state.textContent = 'Waiting for your device...';
+          var ok = await addPasskey(name.value || 'This device', function (m) { state.textContent = m; });
+          if (ok) window.location.reload();
+          button.disabled = false;
+        });
+      })();
+      </script>`}
 
       ${config.studioPublishing() ? `<section class="panel narrow">
         <h2>Studio publishing</h2>

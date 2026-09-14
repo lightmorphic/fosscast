@@ -1,31 +1,33 @@
 # FOSSCast, the whole thing, from a single file.
 #
-# Everything you need to change is in the block at the top. Paste this
-# into docker-compose.yml, edit those three lines, and run:
+# There is nothing in this file to fill in. Paste it into
+# docker-compose.yml and run:
 #
 #   docker compose up -d
+#   docker compose logs app
 #
-# That is the install. No checkout, no build, no .env file, no
-# Caddyfile: the published image carries the app and its web assets.
+# The log prints a six-digit setup code. Open the site in a browser, give
+# it that code, and you set your own email and password there - and add a
+# passkey and a second factor in the same minute if you want them. The
+# code is only ever in that log, which is how FOSSCast knows the person
+# claiming it is the person who owns the machine.
 #
-# The bundled Caddy at the foot of this file is commented out. Take the
-# hashes off and it gets you an HTTPS certificate on its own; leave them
-# and point your existing proxy at 127.0.0.1:3100. Point your domain's
-# DNS at the machine before either.
+# Your domain, uploads, the studio key and everything else are settings
+# inside FOSSCast, on its Settings and Account pages. None of them belong
+# in a compose file: this file says what Docker needs, and nothing more.
+#
+# The bundled Caddy at the foot is commented out. Take the hashes off and
+# it gets you an HTTPS certificate on its own; leave them and point your
+# existing proxy at 127.0.0.1:3100. Point your domain's DNS at the
+# machine before either. Passkeys need HTTPS, so do one or the other.
 #
 # It runs the same image as the maintainer's own instances, built from
 # the main branch of github.com/lightmorphic/fosscast.
-
-x-config: &config
-  DOMAIN: podcast.example.com          # your public address
-  ADMIN_EMAIL: you@example.com         # the first admin account
-  ADMIN_PASSWORD: change-me-to-something-long
 
 services:
   app:
     image: ghcr.io/lightmorphic/fosscast:latest
     restart: unless-stopped
-    environment: *config
     # Your own proxy dials this. Behind the bundled Caddy below it is
     # simply unused, so it is right either way.
     ports:
@@ -53,14 +55,16 @@ services:
   # HTTPS, and the certificate, done for you. Already running nginx,
   # Apache, a tunnel or any other proxy on this machine? Leave this
   # commented out and point yours at 127.0.0.1:3100. Otherwise take the
-  # "# " off every line from here to the bottom of the file, change
-  # nothing else, and Caddy will fetch and renew the certificate on its
-  # own within a minute of the first request.
+  # "# " off every line from here to the bottom of the file and put your
+  # domain in the one place it is named.
+  #
+  # That name is Caddy's, not FOSSCast's: a certificate has to be asked
+  # for before anything is running, so the proxy cannot read it out of
+  # FOSSCast's settings. It is the only thing in this file anybody edits.
 #   caddy:
 #     image: caddy:2-alpine
 #     restart: unless-stopped
-#     environment: *config
-#     command: sh -c 'caddy reverse-proxy --from "$$DOMAIN" --to app:3100'
+#     command: caddy reverse-proxy --from podcast.example.com --to app:3100
 #     ports:
 #       - "80:80"
 #       - "443:443"

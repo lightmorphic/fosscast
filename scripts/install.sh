@@ -5,9 +5,13 @@
 # Run ON the server, from the directory this repo was copied into:
 #   bash scripts/install.sh <domain> [options]
 #
+# It sets up no login. FOSSCast prints a setup code when it starts and
+# this script shows it to you at the end; the first person to open the
+# site in a browser gives it that code and chooses their own password
+# there. A password written into a file on the server is not a password.
+#
 # Options:
 #   --port N          app port on the host      (default 3100)
-#   --admin-email X   first admin login         (default admin@<domain>)
 #   --caddy-sites D   folder of .caddy site files served by an existing
 #                     Caddy on this box (default /opt/caddy/sites when
 #                     it exists). Given one, FOSSCast runs without its
@@ -21,14 +25,12 @@ DOMAIN="${1:?usage: install.sh <domain> [options]}"
 shift || true
 
 PORT=3100
-ADMIN_EMAIL=""
 CADDY_SITES=""
 CADDY_SITES_SET=0
 
 while [ $# -gt 0 ]; do
   case "$1" in
     --port) PORT="${2:?}"; shift 2 ;;
-    --admin-email) ADMIN_EMAIL="${2:?}"; shift 2 ;;
     --caddy-sites) CADDY_SITES="${2:?}"; CADDY_SITES_SET=1; shift 2 ;;
     *) echo "unknown option: $1" >&2; exit 1 ;;
   esac
@@ -36,7 +38,6 @@ done
 
 BASE="$(cd "$(dirname "$0")/.." && pwd)"
 PROJECT="$(basename "$BASE")"
-ADMIN_EMAIL="${ADMIN_EMAIL:-admin@$DOMAIN}"
 [ "$CADDY_SITES_SET" = 1 ] || { [ -d /opt/caddy/sites ] && CADDY_SITES=/opt/caddy/sites; }
 
 echo "== Data directory =="
@@ -48,14 +49,14 @@ mkdir -p "$BASE/data" "$BASE/data/media"
 chown -R 1000:1000 "$BASE/data"
 
 if [ ! -f "$BASE/.env" ]; then
+  # Two lines, and both of them are Docker's business: which name the
+  # proxy answers on and which host port the app is published at. There
+  # is no login here and no studio key: FOSSCast makes its own secrets
+  # on first start and the login is set in the browser.
   echo "== First run: writing .env =="
-  ADMIN_PASS="$(openssl rand -base64 18 | tr -d '+/=' | head -c 20)"
   {
     echo "DOMAIN=$DOMAIN"
     echo "HTTP_PORT=$PORT"
-    echo "ADMIN_EMAIL=$ADMIN_EMAIL"
-    echo "ADMIN_PASSWORD=$ADMIN_PASS"
-    echo "PUBLISHER_TOKEN=$(openssl rand -hex 32)"
   } > "$BASE/.env"
   chmod 600 "$BASE/.env"
   NEW_INSTALL=1
@@ -112,10 +113,20 @@ curl -fsS "http://127.0.0.1:$PORT/healthz" && echo " OK"
 echo
 echo "FOSSCast is up at https://$DOMAIN"
 if [ "$NEW_INSTALL" = 1 ]; then
-  echo "Dashboard:  https://$DOMAIN/admin"
-  echo "Login:      $ADMIN_EMAIL"
-  echo "Password:   $ADMIN_PASS"
-  echo "Change it from the Account page after logging in."
+  # The code is in the container's log and nowhere else. Read it back
+  # out rather than making one up here: this script does not get to
+  # decide who owns the instance either.
+  CODE="$(docker compose -p "$PROJECT" logs app 2>/dev/null | grep -oE '[0-9]{3}-[0-9]{3}' | tail -1 || true)"
+  echo
+  echo "Nobody owns it yet. Open https://$DOMAIN/admin and it will ask"
+  echo "for a setup code, then let you choose your own login."
+  if [ -n "$CODE" ]; then
+    echo
+    echo "Setup code: $CODE"
+  else
+    echo
+    echo "Read the code with: docker compose -p $PROJECT logs app"
+  fi
 else
   echo "Existing login kept. Dashboard: https://$DOMAIN/admin"
 fi

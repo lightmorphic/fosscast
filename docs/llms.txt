@@ -20,9 +20,11 @@ server from counters that cannot be joined back to a person.
 
 ## How to install it
 
-Paste the file at https://fosscast.org/#install into docker-compose.yml,
-change the domain, the admin email and the admin password at the top,
-then run `docker compose up -d`. The image is
+Paste the file at https://fosscast.org/#install into docker-compose.yml
+and run `docker compose up -d`. There is nothing in the file to fill in:
+FOSSCast prints a setup code in its log, and the first person to open
+the site gives it that code and chooses their own login, with a passkey
+and a second factor offered at the same time. The image is
 ghcr.io/lightmorphic/fosscast:latest. The bundled Caddy is optional:
 nginx, Apache, a Cloudflare Tunnel and a Tailscale-only instance are all
 supported.

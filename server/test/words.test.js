@@ -8,8 +8,7 @@
 //
 // The second half renders every admin page and looks for the word
 // itself. The verb survives ("nothing to show yet"); what is banned is
-// the noun, so the sweep looks for the plural and for the article that
-// gives a noun away.
+// the noun, and a determiner in front of it is what gives a noun away.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
 const { spawn } = require('node:child_process');
@@ -116,6 +115,8 @@ test('the old addresses still answer, body and all', async () => {
   assert.strictEqual(listed.headers.get('location'), '/admin/episodes');
 });
 
+const DETERMINED_SHOW = /\b(a|an|the|this|that|your|our|its|their|each|every|one|another|many|more|other|several|both|two|three)\s+shows?\b/i;
+
 // Strip the markup, leaving what a person actually reads. Attribute
 // values go with it: data-show="..." is an identifier, not a word.
 function visibleText(html) {
@@ -134,14 +135,15 @@ test('no admin page calls the podcast or an episode a show', async () => {
     '/admin/podcast?s=analytics', '/admin/episodes', '/admin/hosts', '/admin/look',
     '/admin/stats', '/admin/account', '/admin/login',
   ];
-  const noun = /\b(a|an|the|this|that|your|our|its|their|each|every|one|another)\s+shows?\b/i;
-  const plural = /\bshows\b/i;
+  // A determiner in front is what gives a noun away. The verb is left
+  // alone: "nothing to show yet" and "type back what it shows" are both
+  // ordinary English and neither is the word we banned.
+  const noun = DETERMINED_SHOW;
   for (const p of pages) {
     const res = await fetch(`${BASE}${p}`, { headers: { cookie } });
     assert.strictEqual(res.status, 200, `${p} renders`);
     const words = visibleText(await res.text());
     assert.ok(!noun.test(words), `${p} calls something a show: ${(words.match(noun) || [])[0]}`);
-    assert.ok(!plural.test(words), `${p} says shows: ${(words.match(plural) || [])[0]}`);
   }
 });
 
@@ -150,7 +152,6 @@ test('the public pages say podcast too', async () => {
     const res = await fetch(`${BASE}${p}`);
     if (res.status === 404) continue; // no hosts added in this suite
     const words = visibleText(await res.text());
-    assert.ok(!/\b(a|an|the|this|your|our|its|each|every|one)\s+shows?\b/i.test(words),
-      `${p} calls something a show`);
+    assert.ok(!DETERMINED_SHOW.test(words), `${p} calls something a show`);
   }
 });

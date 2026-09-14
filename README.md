@@ -75,6 +75,10 @@ software, and you never will.
   transcripts, chapters, people and funding tags.
 - **Publish API**: a studio pushes finished recordings straight in as
   draft episodes.
+- **A login you set yourself**: no password in a compose file. The first
+  run asks for a code that only exists in the container's log, then
+  makes you choose a password it will argue with you about, and offers a
+  passkey and a second factor in the same minute.
 
 ## What it does not do
 
@@ -106,40 +110,41 @@ for them, the AGPL lets you fork this and build them yourself.
 
 ## Self-hosting
 
-One file, one command, no checkout. Everything you edit is in the block
-at the top, so nothing has to be hunted for in the body and the domain
-is typed once. Point your domain's DNS at the machine, paste this into
-`docker-compose.yml`, edit those lines, and run `docker compose up -d`:
+One file, one command, no checkout, and nothing in the file to fill in.
+Point your domain's DNS at the machine, paste this into
+`docker-compose.yml`, and run `docker compose up -d`:
 
 ```yaml
 # FOSSCast, the whole thing, from a single file.
 #
-# Everything you need to change is in the block at the top. Paste this
-# into docker-compose.yml, edit those three lines, and run:
+# There is nothing in this file to fill in. Paste it into
+# docker-compose.yml and run:
 #
 #   docker compose up -d
+#   docker compose logs app
 #
-# That is the install. No checkout, no build, no .env file, no
-# Caddyfile: the published image carries the app and its web assets.
+# The log prints a six-digit setup code. Open the site in a browser, give
+# it that code, and you set your own email and password there - and add a
+# passkey and a second factor in the same minute if you want them. The
+# code is only ever in that log, which is how FOSSCast knows the person
+# claiming it is the person who owns the machine.
 #
-# The bundled Caddy at the foot of this file is commented out. Take the
-# hashes off and it gets you an HTTPS certificate on its own; leave them
-# and point your existing proxy at 127.0.0.1:3100. Point your domain's
-# DNS at the machine before either.
+# Your domain, uploads, the studio key and everything else are settings
+# inside FOSSCast, on its Settings and Account pages. None of them belong
+# in a compose file: this file says what Docker needs, and nothing more.
+#
+# The bundled Caddy at the foot is commented out. Take the hashes off and
+# it gets you an HTTPS certificate on its own; leave them and point your
+# existing proxy at 127.0.0.1:3100. Point your domain's DNS at the
+# machine before either. Passkeys need HTTPS, so do one or the other.
 #
 # It runs the same image as the maintainer's own instances, built from
 # the main branch of github.com/lightmorphic/fosscast.
-
-x-config: &config
-  DOMAIN: podcast.example.com          # your public address
-  ADMIN_EMAIL: you@example.com         # the first admin account
-  ADMIN_PASSWORD: change-me-to-something-long
 
 services:
   app:
     image: ghcr.io/lightmorphic/fosscast:latest
     restart: unless-stopped
-    environment: *config
     # Your own proxy dials this. Behind the bundled Caddy below it is
     # simply unused, so it is right either way.
     ports:
@@ -167,14 +172,16 @@ services:
   # HTTPS, and the certificate, done for you. Already running nginx,
   # Apache, a tunnel or any other proxy on this machine? Leave this
   # commented out and point yours at 127.0.0.1:3100. Otherwise take the
-  # "# " off every line from here to the bottom of the file, change
-  # nothing else, and Caddy will fetch and renew the certificate on its
-  # own within a minute of the first request.
+  # "# " off every line from here to the bottom of the file and put your
+  # domain in the one place it is named.
+  #
+  # That name is Caddy's, not FOSSCast's: a certificate has to be asked
+  # for before anything is running, so the proxy cannot read it out of
+  # FOSSCast's settings. It is the only thing in this file anybody edits.
 #   caddy:
 #     image: caddy:2-alpine
 #     restart: unless-stopped
-#     environment: *config
-#     command: sh -c 'caddy reverse-proxy --from "$$DOMAIN" --to app:3100'
+#     command: caddy reverse-proxy --from podcast.example.com --to app:3100
 #     ports:
 #       - "80:80"
 #       - "443:443"
@@ -330,12 +337,22 @@ internal, member-only or staging instances rather than a public podcast.
 
 ### Managing your instance
 
-The dashboard lives at `/admin`. The first admin account comes from
-`ADMIN_EMAIL` and `ADMIN_PASSWORD` in `.env` (created on first start;
-change the password from the Account page after logging in). From the
-dashboard you create your podcast and publish episodes (media by upload
-or by address: this machine, your own storage, anywhere that serves a
-file). The podcast gets its public pages and RSS feed automatically.
+The dashboard lives at `/admin`. The first time you open it, nobody
+owns the instance yet, so it asks for the setup code FOSSCast printed in
+its log (`docker compose logs app`) and you choose your own email and
+password there - and add a passkey and a second factor in the same
+minute if you want them. The code is only in that log and changes on
+every restart, which is what stops a stranger claiming your instance
+before you get to it.
+
+Everything else about the instance - its domain, whether audio may be
+uploaded here, whether a studio may publish here - is on the Settings
+page rather than in a compose file, and takes effect without a restart.
+
+From the dashboard you create your podcast and publish episodes (media
+by upload or by address: this machine, your own storage, anywhere that
+serves a file). The podcast gets its public pages and RSS feed
+automatically.
 
 One instance hosts one podcast: your episodes, your site, your feed, on
 your own hardware.
@@ -379,8 +396,11 @@ podcast's otherwise, on the site, in the embedded player and in the feed.
 ### Forgotten passwords
 
 FOSSCast sends no email, so there is no reset link and nothing to
-configure. Anyone self-hosting this has a shell on the machine, and
-that is the way back in:
+configure. A passkey is usually the quicker way back in - it is on a
+device you still have - but if that is gone too, this is the road.
+
+Anyone self-hosting this has a shell on the machine, and that is the way
+back in:
 
 ```bash
 docker compose exec -T app node reset-password.js

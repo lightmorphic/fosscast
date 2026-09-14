@@ -16,7 +16,8 @@ const store = new Store(process.env.DATA_DIR || path.join(__dirname, 'data'));
 const users = store.load('users', []);
 
 if (users.length === 0) {
-  console.error('No accounts exist yet: set ADMIN_EMAIL and ADMIN_PASSWORD and restart.');
+  console.error('Nobody owns this instance yet. Open it in a browser: it asks for the setup');
+  console.error('code printed in this container\'s log and you choose a password there.');
   process.exit(1);
 }
 

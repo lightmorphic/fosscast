@@ -1370,3 +1370,39 @@ td.art-cell { width: 1%; padding-right: 0.25rem; }
   border-radius: 0.5rem; object-fit: cover;
 }
 .row-art-none { background: var(--muted); }
+
+/* ---------- Setup, passkeys and two-factor ---------- */
+/* The setup form is two parts on one card - the code, then the login -
+   and a heading that sits straight on the paragraph above it reads as
+   one run-on block. */
+form h2 { margin-top: 2rem; }
+form h2:first-child { margin-top: 0; }
+/* The suggested passphrase, meant to be read and typed rather than
+   admired: same monospace as a key field so the hyphens line up. */
+.pick-me {
+  font-family: ui-monospace, monospace;
+  font-size: 0.9375rem;
+  user-select: all;
+}
+/* A quiet break between the password form and the passkey button on the
+   login page. Not a coloured rule down the side of anything. */
+.rule {
+  border: 0;
+  border-top: 1px solid var(--border);
+  margin: 1.5rem 0;
+}
+/* The passkeys somebody has. One per line, the remove button at the end
+   of its own row rather than floating beside the name. */
+.plain-list { list-style: none; margin: 0 0 1rem; padding: 0; }
+.plain-list li {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 0.75rem;
+  align-items: baseline;
+  padding: 0.625rem 0;
+  border-bottom: 1px solid var(--border);
+}
+.plain-list li:last-child { border-bottom: 0; }
+.plain-list .inline-form { margin-left: auto; }
+/* Green is state, never decoration: a tick beside something that is on. */
+.state-on { color: var(--success); font-weight: 600; }

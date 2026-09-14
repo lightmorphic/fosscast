@@ -50,8 +50,12 @@ episode pages, its players and its feed.
   for a one-time link), so there is no SMTP to configure, nothing to be
   filed as spam, and no reset token sitting in a file.
 - **Admin auth**: scrypt, HMAC-signed HttpOnly cookies, per-IP login
-  rate limiting, environment-bootstrapped first account. Flat JSON
-  files in the data dir (users, shows, episodes, settings), no
+  rate limiting. The first account is claimed in the browser against a
+  setup code that only ever exists in the container's log, so an
+  unclaimed instance cannot be taken by whoever finds it first.
+  Passkeys (WebAuthn, verified in `lib/passkeys.js` with no dependency)
+  and TOTP two-factor (`lib/totp.js`) sit beside the password. Flat
+  JSON files in the data dir (users, shows, episodes, settings), no
   database, same as FOSSStudio.
 
 ## Integration contract with FOSSStudio
