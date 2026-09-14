@@ -178,15 +178,27 @@ module.exports = function create() {
         which is no use to anybody but you.</p>`)}
 
       ${section('login', 'How does the login work, and what if I am locked out?', `
-        <p><b>The first time.</b> An instance nobody has claimed prints
-        a six-digit code in its own log and asks for it before letting
-        anybody set a password. Being able to read that log is the proof
-        that the machine is yours - otherwise the first stranger to find
-        the address would own your podcast. On the server:</p>
+        <p><b>The first time.</b> An instance nobody has claimed asks
+        you to set an email and a password, and nothing else - so long
+        as you open it on the machine FOSSCast is running on, in the
+        first half hour after it started. Being there is the proof that
+        the machine is yours, and the address it goes on comes from the
+        connection itself rather than from anything a request can claim
+        about itself.</p>
+        <p>From another machine, or later than that, it asks for a
+        six-digit code as well. Otherwise the first stranger to find the
+        address would own your podcast. FOSSCast prints the code in its
+        own log:</p>
         <p class="cmd"><code>docker compose logs app</code></p>
         <p>The code is held in memory only, never written to disk, and
-        changes every time FOSSCast restarts. Lost it? Restart and read
-        the new one.</p>
+        changes every time FOSSCast restarts. Lost it, or come to the
+        machine too late? Restart it: that prints a new code and opens
+        the half hour again.</p>
+        <p><b>And that is the only sign-up.</b> Once somebody owns the
+        instance the setup page is gone and the address refuses
+        everybody, from the machine itself as much as from anywhere
+        else. There is no second account to make and no way to make
+        one.</p>
         <p><b>The password.</b> At least twelve characters, and not one
         of the ones everybody guesses. There are no rules about capitals
         and symbols: those produce <code>Password1!</code>, which is

@@ -4,13 +4,20 @@
 # docker-compose.yml and run:
 #
 #   docker compose up -d
+#
+# Then open http://127.0.0.1:3100 in a browser on that machine and set
+# your own email and password - and add a passkey and a second factor in
+# the same minute if you want them. There is nothing to look up: being
+# on the machine is the proof that the machine is yours.
+#
+# From another machine, or more than half an hour after it started, it
+# asks for a code as well, which FOSSCast prints in its own log and
+# keeps nowhere else:
+#
 #   docker compose logs app
 #
-# The log prints a six-digit setup code. Open the site in a browser, give
-# it that code, and you set your own email and password there - and add a
-# passkey and a second factor in the same minute if you want them. The
-# code is only ever in that log, which is how FOSSCast knows the person
-# claiming it is the person who owns the machine.
+# That is the only sign-up there is. Once somebody owns the instance the
+# setup page is gone and no second account can be made from anywhere.
 #
 # Your domain, uploads and everything else are settings inside
 # FOSSCast, on its Settings and Account pages. None of them belong

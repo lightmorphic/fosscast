@@ -122,13 +122,20 @@ Point your domain's DNS at the machine, paste this into
 # docker-compose.yml and run:
 #
 #   docker compose up -d
+#
+# Then open http://127.0.0.1:3100 in a browser on that machine and set
+# your own email and password - and add a passkey and a second factor in
+# the same minute if you want them. There is nothing to look up: being
+# on the machine is the proof that the machine is yours.
+#
+# From another machine, or more than half an hour after it started, it
+# asks for a code as well, which FOSSCast prints in its own log and
+# keeps nowhere else:
+#
 #   docker compose logs app
 #
-# The log prints a six-digit setup code. Open the site in a browser, give
-# it that code, and you set your own email and password there - and add a
-# passkey and a second factor in the same minute if you want them. The
-# code is only ever in that log, which is how FOSSCast knows the person
-# claiming it is the person who owns the machine.
+# That is the only sign-up there is. Once somebody owns the instance the
+# setup page is gone and no second account can be made from anywhere.
 #
 # Your domain, uploads and everything else are settings inside
 # FOSSCast, on its Settings and Account pages. None of them belong
@@ -339,12 +346,23 @@ internal, member-only or staging instances rather than a public podcast.
 ### Managing your instance
 
 The dashboard lives at `/admin`. The first time you open it, nobody
-owns the instance yet, so it asks for the setup code FOSSCast printed in
-its log (`docker compose logs app`) and you choose your own email and
-password there - and add a passkey and a second factor in the same
-minute if you want them. The code is only in that log and changes on
-every restart, which is what stops a stranger claiming your instance
-before you get to it.
+owns the instance yet, so it asks you to choose an email and a password
+- and to add a passkey and a second factor in the same minute if you
+want them.
+
+Opened from the machine FOSSCast is running on, in the first half hour
+after it starts, that is all it asks. Being there is the proof that the
+machine is yours, and the address is taken from the connection itself,
+never from a header that anybody could write. From another machine, or
+later than that, it asks as well for a code that FOSSCast prints in its
+own log (`docker compose logs app`), holds in memory only, and changes
+on every restart. Either way, that is what stops a stranger claiming
+your instance before you get to it.
+
+It is also the only sign-up there is. Once the instance has an owner the
+setup page is gone and the address refuses everybody, from the machine
+itself as much as from anywhere else. Further accounts are not a thing
+FOSSCast has: one instance, one podcast, one owner.
 
 Everything else about the instance - its domain, whether audio may be
 uploaded here - is on the Settings page rather than in a compose file,

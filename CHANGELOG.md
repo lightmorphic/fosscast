@@ -24,12 +24,31 @@ All notable changes to FOSSCast are documented here.
   there.
 
 - **The login is set in FOSSCast, not in a compose file.** `ADMIN_EMAIL`
-  and `ADMIN_PASSWORD` are gone from the install. The first run prints a
-  six-digit setup code in the container's log and nowhere else, and the
-  page asks for it before it will let anybody claim the instance: being
-  able to run `docker compose logs app` is the proof that the machine is
-  yours. The code lives in memory, changes on every restart, and is spent
-  the moment an account exists.
+  and `ADMIN_PASSWORD` are gone from the install. Open a fresh instance
+  in a browser on the machine it is running on and it asks for an email
+  and a password, and nothing else: being there is the proof that the
+  machine is yours, so there is no code to go and look up.
+
+  From another machine it asks for a six-digit code that the first run
+  prints in the container's log and nowhere else - being able to run
+  `docker compose logs app` is the same proof, arrived at the long way.
+  The code lives in memory, changes on every restart, and is spent the
+  moment an account exists.
+
+  What counts as the machine itself is decided from the socket's own
+  address and never from `X-Forwarded-For` or any of its relatives,
+  which anybody can write into a request by hand. A reverse proxy sitting
+  on that same machine dials FOSSCast from where a browser on it would,
+  so two further things are asked of a request before the code is
+  waived - no forwarding header of any kind, and a Host header naming
+  loopback rather than a site - and, because a bare `proxy_pass` gives
+  away neither, the no-code door is only open for the first half hour
+  after the process starts. After that the code is asked for from the
+  machine as much as from anywhere; restarting opens it again with a new
+  code.
+
+  Either way it is the one and only sign-up. Once the instance has an
+  owner the setup page is gone and the address refuses everybody.
 
   The password rule is enforced rather than advised: twelve characters or
   more, and the openers (`password123`, `letmein`, `qwerty…`) are refused

@@ -50,9 +50,12 @@ episode pages, its players and its feed.
   for a one-time link), so there is no SMTP to configure, nothing to be
   filed as spam, and no reset token sitting in a file.
 - **Admin auth**: scrypt, HMAC-signed HttpOnly cookies, per-IP login
-  rate limiting. The first account is claimed in the browser against a
-  setup code that only ever exists in the container's log, so an
-  unclaimed instance cannot be taken by whoever finds it first.
+  rate limiting. The one and only account is claimed in the browser -
+  from the machine FOSSCast runs on within half an hour of it starting
+  (`lib/local.js`: the address is the socket's, never a header's), and
+  from anywhere else against a setup code that exists only in the
+  container's log. Either way an unclaimed instance cannot be taken by
+  whoever finds it first, and a claimed one has no second sign-up.
   Passkeys (WebAuthn, verified in `lib/passkeys.js` with no dependency)
   and TOTP two-factor (`lib/totp.js`) sit beside the password. Flat
   JSON files in the data dir (users, shows, episodes, settings), no

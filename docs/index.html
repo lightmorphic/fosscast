@@ -470,12 +470,16 @@
       Paste this into <code>docker-compose.yml</code> and run
       <code>docker compose up -d</code>. The certificate arrives on its
       own.</p>
-      <p>There is no login in this file. FOSSCast prints a setup code
-      when it starts - <code>docker compose logs app</code> - and the
-      first person to open the site gives it that code and chooses their
-      own password, with a passkey and a second factor offered in the
-      same minute. The code is only in that log, so only somebody who can
-      reach the machine can claim it.</p>
+      <p>There is no login in this file. Open
+      <code>http://127.0.0.1:3100</code> in a browser on that machine and
+      set your own email and password, with a passkey and a second factor
+      offered in the same minute. Nothing to look up: being on the
+      machine is the proof that the machine is yours. From another
+      machine, or more than half an hour after it started, it asks as
+      well for a code that FOSSCast prints in its own log -
+      <code>docker compose logs app</code> - and keeps nowhere else. That
+      is the only sign-up there is: once somebody owns the instance, no
+      second account can be made from anywhere.</p>
       <p class="install-notes">No checkout, no build step, no
       <code>.env</code>, no Caddyfile. The bundled Caddy is commented
       out: take the hashes off it for a certificate of your own, or leave
