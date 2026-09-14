@@ -51,8 +51,8 @@ chown -R 1000:1000 "$BASE/data"
 if [ ! -f "$BASE/.env" ]; then
   # Two lines, and both of them are Docker's business: which name the
   # proxy answers on and which host port the app is published at. There
-  # is no login here and no studio key: FOSSCast makes its own secrets
-  # on first start and the login is set in the browser.
+  # is no login here: FOSSCast makes its own secrets on first start and
+  # the login is set in the browser.
   echo "== First run: writing .env =="
   {
     echo "DOMAIN=$DOMAIN"

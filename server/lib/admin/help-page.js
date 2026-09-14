@@ -229,18 +229,6 @@ module.exports = function create() {
         the Account page; a passkey you remove stops working at
         once.</p>`)}
 
-      ${section('studio', 'What is the studio key?', `
-        <p>It lets a studio - FOSSStudio, or anything else that speaks
-        the same two requests - push a finished recording straight in
-        here rather than you downloading a file and uploading it again.
-        Copy it from the Account page into the studio's settings.</p>
-        <p>Anyone holding it can publish here, so treat it like a
-        password. Episodes arrive as drafts for you to look over before
-        they go anywhere, and generating a new key stops the old one
-        working immediately.</p>
-        <p>An instance that never wants that door open can shut it on
-        the Settings page, and then the key is not offered at all.</p>`)}
-
       ${section('backups', 'What do I need to back up?', `
         <p>One folder: the data volume. Everything FOSSCast knows is in
         it - your podcast, your episodes, your settings, your counters,

@@ -2,12 +2,11 @@
 // The dashboard and the account page: the two screens that are about
 // the person using this rather than about the podcast itself.
 
-const { esc, adminPage, ICONS, isEmbedded, BRAND } = require('../html');
-const config = require('../config');
+const { esc, adminPage, isEmbedded, BRAND } = require('../html');
 const setup = require('../setup');
 const totp = require('../totp');
 
-module.exports = function create({ settings, shows, episodes, stats, passkeyScript }) {
+module.exports = function create({ shows, episodes, stats, passkeyScript }) {
   function dashboard(user) {
     const show = shows()[0];
     const episodeList = episodes();
@@ -137,34 +136,7 @@ module.exports = function create({ settings, shows, episodes, stats, passkeyScri
           button.disabled = false;
         });
       })();
-      </script>`}
-
-      ${config.studioPublishing() ? `<section class="panel narrow">
-        <h2>Studio publishing</h2>
-        <p class="hint">The key FOSSStudio, or any other studio,
-        uses to publish a finished recording straight into this instance.
-        It was generated when the instance started; copy it into the
-        studio's settings. Anyone holding it can publish here, so treat it
-        like a password.
-        <a class="hint-link" href="/help#studio">What this key is</a></p>
-        <label for="studio-token">Studio key</label>
-        <div class="key-field">
-          <input id="studio-token" type="password" value="${esc(settings().studioToken || '')}" readonly>
-          <button class="btn-icon btn-reveal" type="button" data-for="studio-token" title="Show or hide" aria-label="Show or hide the key">
-            <span class="icon-a">${ICONS.eye}</span><span class="icon-b">${ICONS.eyeOff}</span>
-          </button>
-          <button class="btn-icon btn-copy" type="button" data-for="studio-token" title="Copy" aria-label="Copy the key">
-            <span class="icon-a">${ICONS.copy}</span><span class="icon-b">${ICONS.tick}</span>
-          </button>
-        </div>
-        <p class="hint">Episodes arrive as drafts for you to look over
-        before they go out. See <a href="https://github.com/lightmorphic/fosscast/blob/main/docs/studio-integration.md" target="_blank" rel="noopener">the studio integration notes</a>.</p>
-        <form method="post" action="/admin/account/studio-key">
-          <button class="btn-secondary btn-confirm" type="submit">Generate a new key</button>
-        </form>
-        <p class="hint">A new key stops the old one working at once, so
-        any studio using it needs the new one.</p>
-      </section>` : ''}`,
+      </script>`}`,
     });
   }
 

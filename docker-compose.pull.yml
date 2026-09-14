@@ -12,8 +12,8 @@
 # code is only ever in that log, which is how FOSSCast knows the person
 # claiming it is the person who owns the machine.
 #
-# Your domain, uploads, the studio key and everything else are settings
-# inside FOSSCast, on its Settings and Account pages. None of them belong
+# Your domain, uploads and everything else are settings inside
+# FOSSCast, on its Settings and Account pages. None of them belong
 # in a compose file: this file says what Docker needs, and nothing more.
 #
 # The bundled Caddy at the foot is commented out. Take the hashes off and

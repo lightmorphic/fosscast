@@ -1,12 +1,10 @@
 'use strict';
-// FOSSCast server: the public site, the media and feed routes, the
-// admin area and the publish API, in one process. Zero runtime npm
-// dependencies.
+// FOSSCast server: the public site, the media and feed routes and the
+// admin area, in one process. Zero runtime npm dependencies.
 
 const http = require('http');
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 
 const { Store } = require('./lib/store');
 const { createAdminRouter } = require('./lib/admin');
@@ -90,28 +88,9 @@ function clientIp(req) {
 }
 
 // Demo instances are read-only everywhere, not just in the dashboard:
-// no uploads and no publishing, so there is nothing for a visitor to
-// spoil for the next one.
+// nothing can be uploaded, so there is nothing for a visitor to spoil
+// for the next one.
 const DEMO = process.env.DEMO_MODE === '1';
-
-// Publishing from a studio can be turned off for an instance that does
-// not want the door open at all - one whose audio lives somewhere else,
-// or that simply never records that way. On by default: an instance
-// that says nothing keeps the feature it always had. It is a switch on
-// the Settings page, so it is read at the moment it is needed rather
-// than held in a constant somebody has to restart to change.
-
-// The studio's own key: FOSSStudio (or any other studio) sends it to
-// publish a finished recording. Nothing else uses it. Lengths are
-// compared first because timingSafeEqual throws on a mismatch, and the
-// length of a token is not the secret.
-function studioAuthed(req) {
-  if (!config.studioPublishing()) return false;
-  const token = (admin.settings().studioToken || '').trim();
-  const given = String(req.headers.authorization || '').replace(/^Bearer\s+/i, '').trim();
-  if (!token || !given || given.length !== token.length) return false;
-  return crypto.timingSafeEqual(Buffer.from(given), Buffer.from(token));
-}
 
 // decodeURIComponent throws on a malformed escape - "%" on its own is
 // enough - and an exception in a request handler takes the whole
@@ -235,54 +214,6 @@ function route(req, res) {
       console.error('admin error:', err.message);
       if (!res.headersSent) send(res, 500, 'server error');
     });
-    return;
-  }
-
-  // Publisher API: token-authenticated, used by studios to push
-  // episodes. Two steps: PUT the media, then POST the episode.
-  if (p === '/api/v1/media' && req.method === 'PUT') {
-    if (DEMO) return sendJson(res, 403, { error: 'demo instance is read-only' });
-    if (!studioAuthed(req)) return sendJson(res, 401, { error: 'bad token' });
-    const show = store.load('shows', [])[0];
-    if (!show) return sendJson(res, 409, { error: 'no show configured yet' });
-    media.saveUpload(req, MEDIA_DIR, show.slug, url.searchParams.get('filename') || 'upload')
-      .then((result) => sendJson(res, 200, result))
-      .catch((err) => sendJson(res, 400, { error: err.message }));
-    return;
-  }
-  if (p === '/api/v1/episodes' && req.method === 'POST') {
-    if (DEMO) return sendJson(res, 403, { error: 'demo instance is read-only' });
-    if (!studioAuthed(req)) return sendJson(res, 401, { error: 'bad token' });
-    readBody(req).then((raw) => {
-      let body;
-      try { body = JSON.parse(raw.toString() || '{}'); } catch {
-        return sendJson(res, 400, { error: 'bad json' });
-      }
-      const show = store.load('shows', [])[0];
-      if (!show) return sendJson(res, 409, { error: 'no show configured yet' });
-      const title = String(body.title || '').trim().slice(0, 200);
-      const mediaUrl = String(body.mediaUrl || '').trim().slice(0, 1000);
-      const validUrl = /^https?:\/\//.test(mediaUrl) || /^\/media\/[^/]+\/[^/]+$/.test(mediaUrl);
-      if (!title || !validUrl) return sendJson(res, 400, { error: 'title and mediaUrl required' });
-      const list = store.load('episodes', []);
-      const episode = {
-        id: crypto.randomUUID(),
-        showId: show.id,
-        title,
-        date: /^\d{4}-\d{2}-\d{2}$/.test(body.date) ? body.date : new Date().toISOString().slice(0, 10),
-        mediaUrl,
-        description: String(body.description || '').trim().slice(0, 4000),
-        episode: Number(body.episode) || null,
-        season: Number(body.season) || null,
-        type: ['full', 'trailer', 'bonus'].includes(body.type) ? body.type : 'full',
-        draft: body.draft !== false, // arrives as a draft unless told otherwise
-        createdAt: new Date().toISOString(),
-      };
-      list.push(episode);
-      store.save('episodes', list);
-      admin.measureEpisode(episode.id);
-      sendJson(res, 200, { ok: true, id: episode.id, draft: episode.draft, editUrl: `https://${siteDomain()}/admin/episodes/${episode.id}` });
-    }).catch(() => sendJson(res, 400, { error: 'bad request' }));
     return;
   }
 

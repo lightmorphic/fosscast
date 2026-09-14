@@ -30,7 +30,6 @@ const { siteDomain, setSiteDomain, cleanDomain } = require('./domain');
 const FIELDS = {
   domain: ['DOMAIN', '', 'text'],
   mediaUploads: ['MEDIA_UPLOADS', true, 'switch'],
-  studioPublishing: ['STUDIO_PUBLISHING', true, 'switch'],
   contactPath: ['CONTACT_PATH', '', 'text'],
   maillistEmbed: ['MAILLIST_EMBED', '', 'text'],
   frameAncestors: ['FRAME_ANCESTORS', '', 'text'],
@@ -95,7 +94,6 @@ function set(name, value) {
 
 // Named readers, because a caller should not have to remember a string.
 const mediaUploads = () => get('mediaUploads') !== false;
-const studioPublishing = () => get('studioPublishing') !== false;
 // Both of these name a path on this same site, never somewhere else:
 // anything that does not start with a single slash is ignored rather
 // than argued with, so a setting can never turn into an off-site fetch.
@@ -109,5 +107,5 @@ const frameAncestors = () => String(get('frameAncestors') || '').trim();
 
 module.exports = {
   FIELDS, adopt, get, set, siteDomain,
-  mediaUploads, studioPublishing, contactPath, maillistEmbed, frameAncestors,
+  mediaUploads, contactPath, maillistEmbed, frameAncestors,
 };

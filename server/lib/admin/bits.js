@@ -7,23 +7,19 @@
 const { esc, ICONS } = require('../html');
 const config = require('../config');
 
-// Publishing from a studio is on unless the instance turns it off. The
-// card on the account page is the only way to reach the key, so it goes
-// with it.
-//
 // Some instances hold no audio at all: the episodes live on the
 // podcaster's own storage and the feed points there. Offering an upload
 // box on such an instance is offering something that cannot work, so
 // uploads have a switch of their own; the address box, which every
 // instance has, becomes the way in.
 //
-// Both are settings rather than constants: a switch you have to restart
-// a container to flip is not a switch. The screens call these each time
+// It is a setting rather than a constant: a switch you have to restart
+// a container to flip is not a switch. The screens call it each time
 // they draw.
 
 // A public demo hands its login to strangers, so demo mode makes the
-// whole instance read-only: nothing can be changed, uploaded, posted
-// or published, and there is nothing for anyone to spoil for the next
+// whole instance read-only: nothing can be changed, uploaded or
+// posted, and there is nothing for anyone to spoil for the next
 // visitor.
 const DEMO = process.env.DEMO_MODE === '1';
 

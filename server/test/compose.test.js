@@ -19,7 +19,7 @@ test("the website's compose block is the compose file", () => {
 
 test('the compose file asks nobody for a login', () => {
   const compose = fs.readFileSync(path.join(ROOT, 'docker-compose.pull.yml'), 'utf8');
-  for (const gone of ['ADMIN_EMAIL', 'ADMIN_PASSWORD', 'PUBLISHER_TOKEN', 'FOSSSTUDIO_TOKEN']) {
+  for (const gone of ['ADMIN_EMAIL', 'ADMIN_PASSWORD']) {
     assert.ok(!compose.includes(gone), `${gone} is a setting now, not a line in a compose file`);
   }
   // The domain is named once, in the commented-out proxy, because a

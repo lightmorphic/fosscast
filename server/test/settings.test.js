@@ -99,7 +99,6 @@ test('a saved setting takes effect at once, with no restart', async () => {
     live: '1',
     domain: 'https://new.example/ignored/path',
     mediaUploads: '1',
-    studioPublishing: '1',
     contactPath: 'https://evil.example/contact',   // refused: not this site
     maillistEmbed: '',
     frameAncestors: '',

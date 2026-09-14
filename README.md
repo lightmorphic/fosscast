@@ -19,13 +19,12 @@ A self-hosted home for a podcast: every published episode on its own
 page, playable in the browser and subscribable by RSS in any podcast
 app.
 
-FOSSCast is the audience-facing companion to
-[FOSSStudio](https://github.com/lightmorphic/fossstudio), the
-self-hosted studio episodes are recorded in: guests join by a link with
-no account and no download, each is recorded on their own track, and one
-click publishes the finished recording straight in here. The two are
-separate apps that talk through one small, stable interface (the publish
-API), and neither needs the other to run.
+Lightmorphic also publishes
+[FOSSStudio](https://github.com/lightmorphic/fossstudio), a self-hosted
+studio for recording episodes: guests join by a link with no account and
+no download, and each is recorded on their own track. It is a separate
+app with its own repository, and neither it nor FOSSCast has anything to
+do with the other.
 
 ## Free, and staying free
 
@@ -73,8 +72,6 @@ software, and you never will.
   out in the feed so apps can put a face to a voice.
 - **Directory-grade feeds**: full iTunes namespace plus Podcasting 2.0
   transcripts, chapters, people and funding tags.
-- **Publish API**: a studio pushes finished recordings straight in as
-  draft episodes.
 - **Help inside the app**: a page of answers at `/help`, behind the
   login, with no outside calls at all - so it works on a box with no
   internet and describes the version you installed. Every setting that
@@ -101,7 +98,7 @@ These are not on the list and are not coming:
   CMS and does not send email to your audience.
 - **A recording studio.** That is
   [FOSSStudio](https://github.com/lightmorphic/fossstudio), a separate
-  app. FOSSCast accepts what it publishes and nothing more.
+  app. You add a finished file here; FOSSCast does not record one.
 - **Listener accounts, or an app of our own.** People subscribe in
   whatever podcast app they already use.
 - **More than one podcast per instance.** Run a second instance.
@@ -133,8 +130,8 @@ Point your domain's DNS at the machine, paste this into
 # code is only ever in that log, which is how FOSSCast knows the person
 # claiming it is the person who owns the machine.
 #
-# Your domain, uploads, the studio key and everything else are settings
-# inside FOSSCast, on its Settings and Account pages. None of them belong
+# Your domain, uploads and everything else are settings inside
+# FOSSCast, on its Settings and Account pages. None of them belong
 # in a compose file: this file says what Docker needs, and nothing more.
 #
 # The bundled Caddy at the foot is commented out. Take the hashes off and
@@ -350,8 +347,8 @@ every restart, which is what stops a stranger claiming your instance
 before you get to it.
 
 Everything else about the instance - its domain, whether audio may be
-uploaded here, whether a studio may publish here - is on the Settings
-page rather than in a compose file, and takes effect without a restart.
+uploaded here - is on the Settings page rather than in a compose file,
+and takes effect without a restart.
 
 From the dashboard you create your podcast and publish episodes (media
 by upload or by address: this machine, your own storage, anywhere that

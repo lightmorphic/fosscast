@@ -1,9 +1,8 @@
 'use strict';
 // FOSSCast must install and run on its own, forever.
 //
-// It has hooks for other things - a studio that publishes into it, the
-// Internet Archive, an analytics prefix - and every one of them is
-// opt-in. None may become a dependency, and nothing here may
+// It has hooks for other things - the Internet Archive, an analytics
+// prefix - and every one of them is opt-in. None may become a dependency, and nothing here may
 // require, contact, or even mention a paid service. A podcaster who
 // pastes the compose file and nothing else must get a working podcast.
 //

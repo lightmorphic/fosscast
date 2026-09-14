@@ -100,24 +100,10 @@ function createAdminRouter(ctx) {
 
   function settings() {
     const value = store.load('settings', () => ({}));
-    // Persist on first creation, so the cookie secret and the studio
-    // token stay stable across restarts rather than logging everyone
-    // out and rotating the token on every deploy.
+    // Persist on first creation, so the cookie secret stays stable
+    // across restarts rather than logging everyone out on every deploy.
     let changed = false;
     if (!value.secret) { value.secret = crypto.randomBytes(32).toString('hex'); changed = true; }
-    // Instances set up before the rename keep the token they already
-    // have: it is in a studio's configuration somewhere, and silently
-    // issuing a new one would break publishing without saying so.
-    if (!value.studioToken && value.publisherToken) {
-      value.studioToken = value.publisherToken;
-      delete value.publisherToken;
-      changed = true;
-    }
-    if (!value.studioToken) {
-      const fromEnv = (process.env.FOSSSTUDIO_TOKEN || process.env.PUBLISHER_TOKEN || '').trim();
-      value.studioToken = fromEnv || crypto.randomBytes(32).toString('hex');
-      changed = true;
-    }
     if (changed) store.save('settings', value);
     return value;
   }
@@ -140,7 +126,7 @@ function createAdminRouter(ctx) {
   const { helpPage } = helpScreen();
   const { claimPage, protectPage, PASSKEY_SCRIPT } = setupScreen({ brandName: BRAND });
   const { dashboard, accountPage } = accountScreens({
-    settings, shows, episodes, stats, passkeyScript: PASSKEY_SCRIPT,
+    shows, episodes, stats, passkeyScript: PASSKEY_SCRIPT,
   });
 
   // ADMIN_EMAIL and ADMIN_PASSWORD are true every time the app starts,
@@ -783,16 +769,6 @@ function createAdminRouter(ctx) {
       return true;
     }
     if (p === '/admin/account' && req.method === 'GET') { html(res, accountPage(user)); return true; }
-    // Switched off, this falls through to the page-not-found below.
-    // Returning unhandled from here would leave the request unanswered.
-    if (p === '/admin/account/studio-key' && req.method === 'POST' && config.studioPublishing()) {
-      const value = settings();
-      value.studioToken = crypto.randomBytes(32).toString('hex');
-      store.save('settings', value);
-      html(res, accountPage(user, 'New studio key generated. The old one no longer works.'));
-      return true;
-    }
-
     if (p === '/admin/podcast/create' && req.method === 'POST') {
       const form = await formBody(req, readBody);
       const name = String(form.get('name') || '').trim().slice(0, 120);

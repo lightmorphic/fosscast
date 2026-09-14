@@ -10,27 +10,24 @@ does not have to rediscover them.
 
 ## What FOSSCast is
 
-The public, audience-facing companion to FOSSStudio. FOSSStudio is the
-private studio episodes are recorded in; FOSSCast is where audiences find and
-play them. Separate repo, separate stack, separate deploys, on
-purpose. They integrate through one small, defined interface and must
-never be merged.
+Podcast hosting you run yourself. Lightmorphic also publishes
+FOSSStudio, a self-hosted studio for recording episodes: a separate
+product with its own repository, stack and deploys, and no code, data
+or interface in common with this one.
 
-Functionally FOSSCast is podcast hosting: the podcast's website, its
+Functionally FOSSCast is: the podcast's website, its
 episode pages, its players and its feed.
 
 ## Core decisions
 
-- **Stack**: one plain Node app (server-rendered pages, publish API)
-  with zero runtime npm dependencies. Plain CSS, Manrope, Lightmorphic
+- **Stack**: one plain Node app, server-rendered pages, zero runtime
+  npm dependencies. Plain CSS, Manrope, Lightmorphic
   style, deep orange accent. No framework, no build step, no CDN, no
   trackers.
 - **Media can live anywhere.** An episode's media is an address:
   either a file uploaded to FOSSCast's own storage or a file somewhere
-  else that serves byte ranges, which is what players need. The publish
-  API accepts both, and the counting door is this server either way.
-- **Publishers** are studio hosts holding a FOSSCast token
-  (`FOSSSTUDIO_TOKEN`). No shared auth beyond that one key.
+  else that serves byte ranges, which is what players need. The counting
+  door is this server either way.
 - **Instances stack.** Several FOSSCast instances can share one
   machine: each is its own compose project with its own data dir,
   domain and port (`HTTP_PORT`), behind one shared reverse proxy. Or
@@ -45,10 +42,9 @@ episode pages, its players and its feed.
   beside the original. A feature that would need the box to do media
   work is answered with the browser doing it, or not at all.
 
-- **Nothing is emailed.** (The help page at `/help` is part of this:
-  it ships with the code and fetches nothing, because a self-hosted box
-  may have no internet and a website describes whatever is current
-  rather than what somebody installed.)
+- **The help page ships with the code.** `/help` fetches nothing: a
+  self-hosted box may have no internet, and a website describes whatever
+  is current rather than what somebody installed.
 - **Nothing is emailed.** Getting back in after a lost password is a
   command on the machine (`reset-password.js`, or `admin-login-link.js`
   for a one-time link), so there is no SMTP to configure, nothing to be
@@ -60,13 +56,5 @@ episode pages, its players and its feed.
   Passkeys (WebAuthn, verified in `lib/passkeys.js` with no dependency)
   and TOTP two-factor (`lib/totp.js`) sit beside the password. Flat
   JSON files in the data dir (users, shows, episodes, settings), no
-  database, same as FOSSStudio.
-
-## Integration contract with FOSSStudio
-
-1. **Episodes**: FOSSCast exposes `POST /api/v1/episodes` (studio
-   token; title, date, description, media by upload or by address).
-   A studio's "Publish to FOSSCast" button is the only
-   episode-publishing code it ever needs, so this API stays stable and
-   small. Episodes arrive as drafts.
+  database.
 

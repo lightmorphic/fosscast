@@ -4,6 +4,5 @@
 User-agent: *
 Allow: /
 Disallow: /ARCHITECTURE.md
-Disallow: /studio-integration.md
 
 Sitemap: https://fosscast.org/sitemap.xml

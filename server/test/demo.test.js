@@ -98,15 +98,6 @@ test('uploads are refused, so no stranger can put files on the server', async ()
   assert.strictEqual(res.status, 403);
 });
 
-test('the publish API is closed too', async () => {
-  const res = await fetch(`${BASE}/api/v1/episodes`, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ title: 'Sneaky', mediaUrl: 'https://x.example/a.mp3' }),
-  });
-  assert.strictEqual(res.status, 403);
-});
-
 test('the public site still reads normally', async () => {
   assert.strictEqual((await fetch(`${BASE}/`)).status, 200);
   assert.strictEqual((await fetch(`${BASE}/shows/demo-show`)).status, 200);

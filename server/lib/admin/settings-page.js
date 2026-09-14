@@ -50,15 +50,6 @@ module.exports = function create() {
           the address of a file you keep somewhere else, and no upload box
           is drawn. The counting door works either way.
           <a class="hint-link" href="/help#files">Where files live</a></p>
-
-          <label class="switch-label">
-            <input type="checkbox" name="studioPublishing" value="1" class="switch-input"${config.studioPublishing() ? ' checked' : ''}>
-            <span class="switch" aria-hidden="true"></span>
-            <span>Let a studio publish into this instance</span>
-          </label>
-          <p class="hint">FOSSStudio, or anything else holding the studio
-          key, can push a finished recording here as a draft. Off, that
-          door is shut and the key on the Account page is not offered.</p>
         </section>
 
         <section class="panel" id="sec-elsewhere">
@@ -102,7 +93,6 @@ module.exports = function create() {
   function applySettingsForm(form) {
     config.set('domain', require('../domain').cleanDomain(form.get('domain')).slice(0, 200));
     config.set('mediaUploads', form.get('mediaUploads') === '1');
-    config.set('studioPublishing', form.get('studioPublishing') === '1');
     for (const name of ['contactPath', 'maillistEmbed', 'frameAncestors']) {
       config.set(name, String(form.get(name) || '').trim().slice(0, 300));
     }

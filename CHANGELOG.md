@@ -63,8 +63,7 @@ All notable changes to FOSSCast are documented here.
   into `lib/admin/`: it has never existed in this repository, and the
   reason is that an instance's own decisions were environment variables
   in a compose file. They are settings now - the site's domain, whether
-  audio may be uploaded here, whether a studio may publish here, a
-  contact path, a mailing-list box, and the one origin allowed to frame
+  audio may be uploaded here, a contact path, a mailing-list box, and the one origin allowed to frame
   the dashboard - on their own page with its own menu item, saving as you
   type and taking effect without a restart.
 
@@ -138,10 +137,6 @@ What is here:
   across with their GUIDs intact, so the directories see the same
   podcast and nobody's app re-downloads the back catalog. Old feed
   addresses keep working through aliases. Nothing holds you here.
-
-- **A studio can publish straight in.** A token-authenticated API takes
-  a finished recording and its details and files it as a draft for you
-  to look over. FOSSStudio speaks it; so can anything else.
 
 - **Your site, your color.** A Look tab sets the accent color, a
   tagline and a footer line, with the real front page beside it as a
