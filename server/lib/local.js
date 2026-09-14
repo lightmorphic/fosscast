@@ -43,6 +43,13 @@
 //      site's name through, and a request arriving at the proxy asking
 //      for localhost does not match the site and never reaches us.
 //
+// One thing this lets in on purpose. `ssh -L 3100:127.0.0.1:3100 box`
+// and then http://localhost:3100 in the browser at home arrives from
+// sshd on the machine, asking for localhost, with no forwarding header
+// - so it is treated as being there, and it is. Somebody who can open
+// an SSH tunnel to the box could read the log through the same
+// connection; asking them to do it as well would prove nothing.
+//
 // Where those two cannot settle it - a proxy configured to forward
 // nothing and rewrite the Host to its upstream - the answer is the
 // strict one and the code is asked for. That is the deliberate

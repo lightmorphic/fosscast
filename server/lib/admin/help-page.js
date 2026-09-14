@@ -185,6 +185,11 @@ module.exports = function create() {
         the machine is yours, and the address it goes on comes from the
         connection itself rather than from anything a request can claim
         about itself.</p>
+        <p>Working on the machine over SSH? A tunnel counts as being
+        there - <code>ssh -L 3100:127.0.0.1:3100 yourbox</code>, then
+        <code>http://localhost:3100</code> in the browser in front of
+        you. Anybody who can open that tunnel could read the log through
+        it, so asking for the code as well would prove nothing.</p>
         <p>From another machine, or later than that, it asks for a
         six-digit code as well. Otherwise the first stranger to find the
         address would own your podcast. FOSSCast prints the code in its
