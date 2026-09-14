@@ -129,7 +129,7 @@ module.exports = function create({ brandName }) {
           <input id="code" name="code" inputmode="numeric" autocomplete="off"
             spellcheck="false" placeholder="000-000" required maxlength="7">`}
 
-          <h2>Your login</h2>
+          ${local ? '' : '<h2>Your login</h2>'}
           <label for="email">Email</label>
           <input id="email" name="email" type="email" autocomplete="username"
             value="${esc(email)}" required maxlength="200">
