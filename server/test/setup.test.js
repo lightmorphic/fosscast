@@ -3,10 +3,14 @@
 //
 // The instance is started with nothing at all in the environment - no
 // ADMIN_EMAIL, no ADMIN_PASSWORD, no DOMAIN - which is what the install
-// instructions now produce. What is checked is that nobody but the
-// person who can read the log may claim it, that the password rule is
-// enforced rather than advised, that the code cannot be used twice, and
-// that two-factor stops a login that has the right password.
+// instructions now produce. What is checked is that the password rule
+// is enforced rather than advised, that an instance can only be claimed
+// once, and that two-factor stops a login that has the right password.
+//
+// These requests come from loopback, which is to say from the machine
+// FOSSCast is running on, so no code is asked for and the page does not
+// mention one. Who has to type the code, and what happens to somebody
+// from off the machine who says they are on it, is local-setup.test.js.
 //
 // The passkey road is not here: it needs a browser with an
 // authenticator in it, and a fetch cannot sign anything. It is driven
@@ -81,6 +85,7 @@ after(() => {
 
 test('an unclaimed instance sends everybody to setup, and prints a code', async () => {
   assert.match(log, /Nobody owns this FOSSCast yet/);
+  assert.match(log, /From another machine it asks for this code/, 'the log says who needs it');
   assert.match(log, /never written to disk/);
   assert.ok(/^\d{3}-\d{3}$/.test(code), 'the code is six digits');
   assert.ok(!fs.readdirSync(DATA).includes('setup.json'), 'and it is not on disk');
@@ -93,21 +98,16 @@ test('an unclaimed instance sends everybody to setup, and prints a code', async 
     const res = await fetch(`${BASE}${where}`, { redirect: 'manual' });
     assert.strictEqual(res.headers.get('location'), '/admin/setup', `${where} leads to setup`);
   }
+  // Opened from the machine itself, which is where these requests come
+  // from, the code is neither asked for nor spoken of.
   const page = await (await fetch(`${BASE}/admin/setup`)).text();
-  assert.ok(page.includes('docker compose logs app'), 'the page says where the code is');
-});
-
-test('the wrong code claims nothing', async () => {
-  const res = await post('/admin/setup', {
-    code: '000-000', email: 'thief@example.test', password: PASSWORD, again: PASSWORD,
-  });
-  assert.strictEqual(res.status, 403);
-  assert.ok(!fs.existsSync(path.join(DATA, 'users.json')), 'no account was made');
+  assert.ok(!page.includes('name="code"'), 'there is nothing to type');
+  assert.ok(!page.includes('docker compose logs'), 'and no field to explain');
 });
 
 test('a password on the list is refused by name, not by rule', async () => {
   const res = await post('/admin/setup', {
-    code, email: 'owner@example.test', password: 'password123', again: 'password123',
+    email: 'owner@example.test', password: 'password123', again: 'password123',
   });
   assert.strictEqual(res.status, 400);
   const page = await res.text();
@@ -118,7 +118,7 @@ test('a password on the list is refused by name, not by rule', async () => {
 
 test('a short password is told how short, and what would pass', async () => {
   const res = await post('/admin/setup', {
-    code, email: 'owner@example.test', password: 'sixteen', again: 'sixteen',
+    email: 'owner@example.test', password: 'sixteen', again: 'sixteen',
   });
   assert.strictEqual(res.status, 400);
   const page = await res.text();
@@ -126,9 +126,9 @@ test('a short password is told how short, and what would pass', async () => {
   assert.ok(page.includes('four or five ordinary words'), 'and says what would do');
 });
 
-test('the right code with a good password claims the instance', async () => {
+test('a good password claims the instance', async () => {
   const res = await post('/admin/setup', {
-    code, email: 'Owner@Example.test', password: PASSWORD, again: PASSWORD,
+    email: 'Owner@Example.test', password: PASSWORD, again: PASSWORD,
   });
   assert.strictEqual(res.status, 303);
   assert.strictEqual(res.headers.get('location'), '/admin/setup/protect');
@@ -142,7 +142,7 @@ test('the right code with a good password claims the instance', async () => {
   assert.strictEqual(user.totpEnabled, false, 'but it does nothing yet');
 });
 
-test('the code is spent: nobody can claim it a second time', async () => {
+test('it is over: nobody can claim the instance a second time', async () => {
   const res = await post('/admin/setup', {
     code, email: 'thief@example.test', password: PASSWORD, again: PASSWORD,
   });
