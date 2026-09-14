@@ -94,6 +94,7 @@ module.exports = function create({ brandName }) {
   // so the code is not asked for - and it is not mentioned either.
   // Explaining a field somebody does not have to fill in is a field
   // somebody still has to read.
+  //
   // `late` is somebody on the machine itself who has come to it hours
   // after it started. They were told in the log they would not need a
   // code, so they are told here why they do.
