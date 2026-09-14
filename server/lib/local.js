@@ -1,13 +1,14 @@
 'use strict';
-// Is this request coming from the machine FOSSCast is running on?
+// Did this request come from the machine FOSSCast is running on?
 //
-// It is asked once, on the first run, and the answer decides whether the
-// setup code is needed. Reaching an instance nobody owns yet from the
-// box itself already proves you own the box, which is the only thing the
-// code was ever proving. From anywhere else the code still applies.
-//
-// The answer must be worth something, so every part of it comes from
-// somewhere a stranger cannot write.
+// Nothing turns on the answer. It decides no permission and gates no
+// screen: the first person to open an unclaimed instance claims it,
+// from wherever they are (lib/setup.js says why, and what that costs).
+// What this is for is the line in the log that records where a claim
+// came from, and that line is the only evidence there would be if
+// somebody else reached an unclaimed instance before its owner. So it
+// has to be true, and every part of it comes from somewhere a stranger
+// cannot write.
 //
 // 1. The address comes from the socket. X-Forwarded-For, X-Real-IP and
 //    the rest are written by whoever is in front and anybody can put
@@ -22,8 +23,7 @@
 //    as 172.17.0.1. Measured, not assumed. That address is therefore
 //    taken as the machine itself - but only in a container, where the
 //    gateway is the host. Running without one, the default gateway is
-//    the building's router and would let half a network claim the
-//    instance, so it is ignored.
+//    the building's router and half a network would be called local.
 //
 //    Nothing else arrives that way. A request from another machine keeps
 //    its own address through Docker's forwarding (a LAN client shows as
@@ -31,31 +31,14 @@
 //    reached from off the box at all.
 //
 // 3. A reverse proxy on the same machine dials FOSSCast from that same
-//    place, so its address alone would make every request in the world
-//    look local. That is the hole worth caring about, and it is closed
-//    by two further conditions, both of which a proxy fails:
-//
-//    - no forwarding header of any kind is present. A proxy adds them;
-//      a stranger can add them too, and adding one only ever makes the
-//      answer stricter, never looser.
-//    - the Host header names loopback. Somebody at a browser on the box
-//      types localhost or 127.0.0.1; a proxy serving a site passes the
-//      site's name through, and a request arriving at the proxy asking
-//      for localhost does not match the site and never reaches us.
-//
-// One thing this lets in on purpose. `ssh -L 3100:127.0.0.1:3100 box`
-// and then http://localhost:3100 in the browser at home arrives from
-// sshd on the machine, asking for localhost, with no forwarding header
-// - so it is treated as being there, and it is. Somebody who can open
-// an SSH tunnel to the box could read the log through the same
-// connection; asking them to do it as well would prove nothing.
-//
-// Where those two cannot settle it - a proxy configured to forward
-// nothing and rewrite the Host to its upstream - the answer is the
-// strict one and the code is asked for. That is the deliberate
-// direction of every doubt here: an install that wrongly asks for a
-// code costs somebody one `docker compose logs app`, and an install
-// that wrongly skips it can be taken by a stranger.
+//    place, so its address alone would call every request in the world
+//    local. Two further conditions sort that out: no forwarding header
+//    of any kind, and a Host header naming loopback rather than a site.
+//    A bare nginx proxy_pass gives away neither and would still be
+//    called local - which is why nothing may depend on this for
+//    permission. For a log line it is honest enough, and it errs
+//    towards saying "another machine", which is the reading that would
+//    make somebody look.
 
 const fs = require('fs');
 
