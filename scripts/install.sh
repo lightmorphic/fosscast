@@ -5,10 +5,13 @@
 # Run ON the server, from the directory this repo was copied into:
 #   bash scripts/install.sh <domain> [options]
 #
-# It sets up no login. FOSSCast prints a setup code when it starts and
-# this script shows it to you at the end; the first person to open the
-# site in a browser gives it that code and chooses their own password
-# there. A password written into a file on the server is not a password.
+# It sets up no login. The first person to open the site in a browser
+# chooses their own password there. A password written into a file on
+# the server is not a password.
+#
+# Opening it on the machine itself needs nothing else, but this script
+# is run over SSH and the browser is somewhere else, so it reads the
+# setup code out of the log and shows it at the end.
 #
 # Options:
 #   --port N          app port on the host      (default 3100)
@@ -120,6 +123,8 @@ if [ "$NEW_INSTALL" = 1 ]; then
   echo
   echo "Nobody owns it yet. Open https://$DOMAIN/admin and it will ask"
   echo "for a setup code, then let you choose your own login."
+  echo "(From a browser on this machine it asks for no code at all,"
+  echo "for the first half hour after it starts.)"
   if [ -n "$CODE" ]; then
     echo
     echo "Setup code: $CODE"
