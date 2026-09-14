@@ -129,7 +129,7 @@ function problem(password, email = '') {
 // words long, so six of them is about fifty-one bits, which no amount
 // of guessing at a rate-limited login will ever reach.
 
-const WORDS = ('anchor apple arbour arrow autumn badger bakery ballad barley basket beacon beetle '
+const WORDS = ('anchor apple arbor arrow autumn badger bakery ballad barley basket beacon beetle '
   + 'bellow birch biscuit blanket bramble breeze bridge bristle bronze bucket bugle burrow button '
   + 'cabin cactus canvas caramel cargo carrot castle cavern cedar cellar chapel cherry chimney cinder '
   + 'cistern clover cobble compass copper coral cotton cricket crimson crumpet crystal cupboard curtain '
@@ -137,7 +137,7 @@ const WORDS = ('anchor apple arbour arrow autumn badger bakery ballad barley bas
   + 'dumpling dusk eagle ember engine fable falcon fathom feather fennel ferry fiddle filbert flagon '
   + 'flannel flask flint flutter forest fountain foxglove fragment frigate fritter frost furnace gables '
   + 'gallery gannet garden garnet gather gazebo ginger girder glacier glimmer granite gravel grotto '
-  + 'gully gusset hamlet hammock harbour harvest hazel heather hedgerow heron hollow honey hornet '
+  + 'gully gusset hamlet hammock harbor harvest hazel heather hedgerow heron hollow honey hornet '
   + 'hurdle iceberg icicle inkwell ironing island jackdaw jasmine jetty jigsaw juniper kestrel kettle '
   + 'kindling lantern lattice lavender ledger lemon lentil lichen lighthouse lilac linen lintel lobster '
   + 'locket lodger lupin lychee magnet mallard mallet mantle maple marble marigold marrow meadow medley '
@@ -155,9 +155,9 @@ const WORDS = ('anchor apple arbour arrow autumn badger bakery ballad barley bas
   + 'sultana summit sunbeam swallow sycamore syrup tabby tackle tadpole tallow tandem tankard tapestry '
   + 'tarragon teapot tempest tendril terrace thicket thimble thistle thorn threshold thunder tinder '
   + 'toadstool toboggan toffee topaz torrent tortoise trailer trellis trifle trinket trolley trumpet '
-  + 'tulip tumbler turnip turret turtle tussock umbrella vanilla velvet verandah vinegar violet vulture '
+  + 'tulip tumbler turnip turret turtle tussock umbrella vanilla velvet veranda vinegar violet vulture '
   + 'waffle wagon walnut warbler warren wattle weasel weather whistle wicker widget willow window '
-  + 'winnow wisteria wombat woodland wrapper wren yarrow yeoman yoghurt zephyr').split(/\s+/);
+  + 'winnow wisteria wombat woodland wrapper wren yarrow yeoman yogurt zephyr').split(/\s+/);
 
 function suggest(count = 6) {
   const picked = [];

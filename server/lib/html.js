@@ -160,7 +160,7 @@ document.addEventListener('click', function (e) {
 `;
 }
 
-// The tiny bit of client behaviour the admin needs: two-click delete
+// The tiny bit of client behavior the admin needs: two-click delete
 // confirmation, reveal/copy for secrets. No framework, no build step.
 const ADMIN_SCRIPT = `
 // A chart is drawn in its own units and then stretched sideways to
@@ -192,13 +192,13 @@ document.addEventListener('change', (e) => {
   const file = input.files[0];
   const status = document.getElementById(input.dataset.status);
   const target = document.getElementById(input.dataset.target);
-  // Show the picked image straight away, before the upload even finishes.
+  // Show the picked image right away, before the upload even finishes.
   if (input.dataset.preview && file.type.indexOf('image/') === 0) {
     const preview = document.getElementById(input.dataset.preview);
     if (preview) { preview.src = URL.createObjectURL(file); preview.style.display = 'block'; }
   }
   // A refusal explains what to change about the file, which is no use
-  // whispered in grey under the picker: it gets a red panel and a
+  // whispered in gray under the picker: it gets a red panel and a
   // warning sign, so it cannot be mistaken for the progress line.
   const say = (text, failed) => {
     status.textContent = '';
@@ -459,7 +459,7 @@ function webCopy(file, maxSide) {
   });
 })();
 
-// The Look page: the accent colour, the podcaster's own words, and a
+// The Look page: the accent color, the podcaster's own words, and a
 // preview that is the real page rendered by the server from what has
 // just been saved - so it cannot drift from the result.
 (function look() {

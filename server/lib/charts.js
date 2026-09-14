@@ -4,7 +4,7 @@
 // the counting behind it, and it renders before a single byte of
 // JavaScript would have arrived.
 //
-// Colours come from the stylesheet's own tokens, so a chart follows the
+// Colors come from the stylesheet's own tokens, so a chart follows the
 // theme - light, dark, and whatever accent the podcaster picked.
 
 const { esc } = require('./html');

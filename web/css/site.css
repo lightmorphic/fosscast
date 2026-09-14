@@ -116,7 +116,7 @@ body {
   flex-direction: column;
 }
 
-/* Links take the show's own colour, not the browser's blue, and wear a
+/* Links take the show's own color, not the browser's blue, and wear a
    quiet underline set away from the text that fills in on hover. The
    old default - blue with a hard underline through the descenders -
    belonged to a different decade. */
@@ -129,7 +129,7 @@ a {
   border-radius: 0.2rem;
   transition: color 0.15s ease, text-decoration-color 0.15s ease;
 }
-/* Hover fills the underline in rather than changing the colour: the
+/* Hover fills the underline in rather than changing the color: the
    text stays at its readable shade the whole time. */
 a:hover { text-decoration-color: currentColor; }
 /* Links that are already a control - buttons, cards, nav, anything with
@@ -324,7 +324,7 @@ code {
 
 /* The quieter half of the same button: same shape, same size, the
    accent as an outline instead of a fill. There is one button shape on
-   the site and one colour behind it, whatever the Look page sets. */
+   the site and one color behind it, whatever the Look page sets. */
 .btn-secondary {
   display: inline-block;
   margin-top: 1.25rem;
@@ -392,7 +392,7 @@ input[type="file"] { padding: 0.5rem; }
 .field-row { display: flex; gap: 1rem; flex-wrap: wrap; }
 .field-row > div { flex: 1; min-width: 8rem; }
 /* A setting that is on or off is drawn as a switch, whatever markup it
-   arrives in. The tick box is still the control underneath - it posts,
+   arrives in. The checkbox is still the control underneath - it posts,
    it autosaves, it works from a keyboard, a screen reader calls it a
    checkbox - only the drawing changes. Done here as well as in the
    markup so a checkbox added later cannot quietly look like the old
@@ -855,7 +855,7 @@ body.embedded .wrap { padding-top: 0.5rem; }
   grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
 }
 .host-grid > .host-card { max-width: 34rem; }
-/* A single host, centred, rather than one card and a large hole. */
+/* A single host, centered, rather than one card and a large hole. */
 .host-grid > .host-card:only-child { justify-self: center; }
 /* Every card lays out the same whatever the length of the write-up: the
    photo and the name start at the top, so a two-line bio and a
@@ -1174,7 +1174,7 @@ details.panel[open] > summary { margin-bottom: 0.75rem; }
 
 /* ---------- Stats ---------- */
 /* A categorical palette that holds up on both backgrounds: charts are
-   drawn as SVG on the server and take their colours from here, so they
+   drawn as SVG on the server and take their colors from here, so they
    follow the theme like everything else. */
 :root {
   --c1: #ff7a45; --c2: #3b82f6; --c3: #10b981; --c4: #a855f7;
@@ -1267,7 +1267,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .subsection > label:first-child { margin-top: 0; }
 
 /* A refused upload says what to change about the file. That is worth
-   reading, so it does not get the same grey as a progress line. */
+   reading, so it does not get the same gray as a progress line. */
 .upload-failed {
   display: flex;
   align-items: flex-start;
@@ -1385,7 +1385,7 @@ form h2:first-child { margin-top: 0; }
   user-select: all;
 }
 /* A quiet break between the password form and the passkey button on the
-   login page. Not a coloured rule down the side of anything. */
+   login page. Not a colored rule down the side of anything. */
 .rule {
   border: 0;
   border-top: 1px solid var(--border);

@@ -89,7 +89,7 @@ function countryFor(headers) {
 
 // Machines that fetch a feed or a file without anybody listening:
 // search crawlers, link unfurlers, uptime checks, and the scripted
-// clients that come with them. They were labelled and then counted,
+// clients that come with them. They were labeled and then counted,
 // which is how a show with four downloads reported two hundred and
 // fifty subscribers.
 const MACHINES = /bot\b|bot\/|crawler|spider|facebookexternalhit|slurp|bingpreview|headless|monitor|uptime|preview|scrapy|curl|wget|python-requests|libwww|Go-http|okhttp|axios|node-fetch|PostmanRuntime/i;
@@ -171,7 +171,7 @@ class Stats {
     bump(data.byLanguage, languageFor((context.headers || {})['accept-language']));
 
     // How old the episode was when it was downloaded, bucketed: it shows
-    // how long a back catalogue keeps earning.
+    // how long a back catalog keeps earning.
     if (context.published) {
       const age = Math.floor((now - new Date(`${context.published}T00:00:00Z`)) / 86400000);
       if (age >= 0) {

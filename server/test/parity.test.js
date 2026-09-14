@@ -47,7 +47,7 @@ test('draft and future episodes are hidden from the public', () => {
   assert.deepStrictEqual(visible(eps).map((e) => e.title), ['ok', 'today']);
 });
 
-test('media serving honours byte ranges and blocks traversal', async () => {
+test('media serving honors byte ranges and blocks traversal', async () => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'fosscast-media-'));
   fs.mkdirSync(path.join(dir, 'show'));
   fs.writeFileSync(path.join(dir, 'show', 'a.mp3'), '0123456789');

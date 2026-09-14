@@ -6,7 +6,7 @@
 // The instance is started with the old environment variables still set,
 // because that is what somebody upgrading actually has. What is checked
 // is that they are adopted once, that the page then owns them, and that
-// a saved change reaches the feed straight away.
+// a saved change reaches the feed right away.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
 const { spawn } = require('node:child_process');
@@ -78,7 +78,7 @@ test('what was in the environment is adopted once, and said out loud', () => {
   assert.match(log, /come out of your compose file/);
 });
 
-test('the settings the environment set are honoured', async () => {
+test('the settings the environment set are honored', async () => {
   const page = await (await fetch(`${BASE}/admin/episodes`, { headers: { cookie } })).text();
   assert.ok(!page.includes('mediaFile'), 'no upload box while uploads are off');
   const feed = await (await fetch(`${BASE}/shows/old-podcast/feed.xml`)).text();

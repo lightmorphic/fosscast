@@ -2,6 +2,6 @@
 
 If this is reporting a bug or an idea rather than a finished fix, an issue
 is actually the most helpful way to get it to me — it's quicker to read
-and easier for me to act on straight away.
+and easier for me to act on right away.
 
 Pull requests are still very welcome, of course!

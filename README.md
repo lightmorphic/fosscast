@@ -6,7 +6,7 @@
 >
 > We want people to install it, break it and tell us what happened.
 > That is what a beta is for. What we are not ready for is being the
-> only copy of somebody's back catalogue. Run it beside your existing
+> only copy of somebody's back catalog. Run it beside your existing
 > host, not instead of it, and keep your own backups of anything you
 > upload.
 >
@@ -38,7 +38,7 @@ If you would rather not run a server, the people who write FOSSCast
 also host it: **[Castmorphic](https://castmorphic.com)** runs this same
 software for you, with more built on top of it, and paying for that is
 what funds the work here. It is an alternative to self-hosting, not a
-better version of it. You will not find an advert for it inside the
+better version of it. You will not find an ad for it inside the
 software, and you never will.
 
 ## What it does
@@ -51,9 +51,9 @@ software, and you never will.
   audio and video players, artwork and a banner, and an RSS feed any
   podcast app can subscribe to. Media files can live on FOSSCast's own
   storage or anywhere else that serves a file over HTTP.
-- **Their site, their colour**: a Look tab sets the accent colour, a
+- **Their site, their color**: a Look tab sets the accent color, a
   tagline and a footer line, with a live preview of the real page. Every
-  other shade the site needs is worked out from the one colour, and link
+  other shade the site needs is worked out from the one color, and link
   text is walked darker or lighter until it clears 4.5:1.
 - **Statistics without surveillance**: a page of charts -- months, days,
   apps, countries, platforms, languages, when people listen, how long an
@@ -369,7 +369,7 @@ you need the old feed's address to keep working while they catch up:
 1. **Import the old feed** in the dashboard. Episode GUIDs and the
    podcast's `podcast:guid` come across, so directories see the same
    podcast rather than a new one, and nobody's app re-downloads the
-   back catalogue.
+   back catalog.
 2. **On the old host**, add `<itunes:new-feed-url>` to the old feed
    pointing at the new one, and 301-redirect the old feed URL to the
    new one. Leave both in place for at least a year: apps re-check on
@@ -473,11 +473,11 @@ framework, no build step, no CDN, no trackers.
   `CONTRIBUTING.md` explains why in full, and says what changes after
   the beta.
 
-## Licence
+## License
 
 Free software under the [GNU AGPL v3](LICENSE).
 
 `NOTICE.md` records who wrote what: FOSSCast is Lightmorphic's own work
 throughout, and the only third-party material in the repository is the
-Manrope typeface (SIL Open Font Licence 1.1, text in
+Manrope typeface (SIL Open Font License 1.1, text in
 `web/fonts/OFL.txt`). There are no runtime npm dependencies at all.

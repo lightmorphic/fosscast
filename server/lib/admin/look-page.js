@@ -1,5 +1,5 @@
 'use strict';
-// The Look page: the accent colour of the public site, and the two
+// The Look page: the accent color of the public site, and the two
 // lines of the podcaster's own words that go under its name.
 
 const { esc, adminPage } = require('../html');
@@ -8,7 +8,7 @@ const themes = require('../theme');
 module.exports = function create() {
   // ---------- Look ----------
 
-  // The public site belongs to the podcaster, so its accent colour and
+  // The public site belongs to the podcaster, so its accent color and
   // the two lines of words under its name are theirs to set. The
   // preview beside the form is the real front page, rendered by the
   // server from what has just been saved - no guessing, and nothing to
@@ -20,17 +20,17 @@ module.exports = function create() {
       active: 'look',
       body: `<h1 class="page-title">Look</h1>
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
-      <p class="hint">Your site, your colour. Every change saves itself and
+      <p class="hint">Your site, your color. Every change saves itself and
       appears in the preview as you go.</p>
 
       <div class="look-layout">
       <form method="post" action="/admin/look" id="look-form">
         <section class="panel" id="sec-colour">
-          <h2>Colour</h2>
+          <h2>Color</h2>
           <div class="inline-fields">
             <label class="inline-label" for="accent-hex">Hex</label>
             <input id="accent-hex" name="accent" class="hex-field" maxlength="7" value="${esc(t.accent)}">
-            <input id="accent-pick" type="color" class="color-chip" value="${esc(t.accent)}" aria-label="Pick a colour">
+            <input id="accent-pick" type="color" class="color-chip" value="${esc(t.accent)}" aria-label="Pick a color">
           </div>
           <p class="hint">Every other shade -- hovers, tags, links, light and
           dark -- is worked out from this one.</p>

@@ -211,8 +211,8 @@ test('funding services show as buttons and as feed funding links', async () => {
   assert.ok(admin.includes('Where listeners can support you'));
 });
 
-test('the look: the accent colour and words of your own', async () => {
-  // On the default colour, the public page carries no style block at all.
+test('the look: the accent color and words of your own', async () => {
+  // On the default color, the public page carries no style block at all.
   let page = await (await fetch(`${BASE}/shows/test-show`)).text();
   assert.ok(!page.includes('<style>'), 'the default costs nothing');
 
@@ -224,16 +224,16 @@ test('the look: the accent colour and words of your own', async () => {
   assert.strictEqual(res.status, 200);
 
   page = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(page.includes('--accent-light: #e91e63'), 'the chosen colour leads the palette');
+  assert.ok(page.includes('--accent-light: #e91e63'), 'the chosen color leads the palette');
   assert.ok(page.includes('--accent-dark:'), 'and a dark-mode shade is derived from it');
   assert.ok(page.includes('--link-light:'), 'links get a shade that clears 4.5:1');
   assert.ok(page.includes('Two nerds, one microphone'));
   assert.ok(page.includes('(c) 2026 Test Show'));
 
-  // The colour reaches every page of the site, not just the front one.
+  // The color reaches every page of the site, not just the front one.
   assert.ok((await (await fetch(`${BASE}/hosts`)).text()).includes('--accent-light: #e91e63'));
 
-  // Anything that is not a colour falls back to the default rather than
+  // Anything that is not a color falls back to the default rather than
   // landing in the page.
   res = await fetch(`${BASE}/admin/look`, form({
     accent: '</style><script>alert(1)</script>',
@@ -264,12 +264,12 @@ test('the look: the accent colour and words of your own', async () => {
   page = await (await fetch(`${BASE}/shows/test-show`)).text();
   assert.ok(page.includes('--accent-light: #16a34a'), 'and it really is saved');
 
-  // Links take a shade of the chosen colour that is actually readable:
+  // Links take a shade of the chosen color that is actually readable:
   // the accent itself is often too light against white for body text.
   assert.ok(page.includes('--link-light:'), 'links get their own shade');
   assert.ok(page.includes('--link-dark:'));
 
-  // A card summarises the whole write-up, not its opening line: a host
+  // A card summarizes the whole write-up, not its opening line: a host
   // who says hello in their first paragraph should not get a one-line
   // card beside four-line ones.
   const greeter = (await (await fetch(`${BASE}/admin/hosts`, form({
@@ -321,7 +321,7 @@ test('editing saves itself: podcast details, a host and an episode', async () =>
   assert.strictEqual(res.status, 204);
   assert.ok((await (await fetch(`${BASE}/shows/test-show`)).text()).includes('Edited in place.'));
 
-  // Without the marker the old behaviour stands, so a browser with no
+  // Without the marker the old behavior stands, so a browser with no
   // JavaScript still gets its redirect.
   res = await fetch(`${BASE}/admin/shows/test-show/settings`, form({
     name: 'Test Show', description: 'Edited in place.', language: 'en',

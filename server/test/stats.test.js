@@ -15,7 +15,7 @@ function fakeStore() {
   };
 }
 
-test('apps are recognised by the name they give', () => {
+test('apps are recognized by the name they give', () => {
   assert.strictEqual(appFor('AppleCoreMedia/1.0.0.21G93 (iPhone; U; CPU OS 17_6)'), 'Apple Podcasts');
   assert.strictEqual(appFor('Overcast/3.0 (+http://overcast.fm/)'), 'Overcast');
   assert.strictEqual(appFor('AntennaPod/3.4.0'), 'AntennaPod');

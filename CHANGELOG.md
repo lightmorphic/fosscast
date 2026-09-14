@@ -136,16 +136,16 @@ What is here:
 
 - **Arriving and leaving.** Paste your old feed and the episodes come
   across with their GUIDs intact, so the directories see the same
-  podcast and nobody's app re-downloads the back catalogue. Old feed
+  podcast and nobody's app re-downloads the back catalog. Old feed
   addresses keep working through aliases. Nothing holds you here.
 
 - **A studio can publish straight in.** A token-authenticated API takes
   a finished recording and its details and files it as a draft for you
   to look over. FOSSStudio speaks it; so can anything else.
 
-- **Your site, your colour.** A Look tab sets the accent colour, a
+- **Your site, your color.** A Look tab sets the accent color, a
   tagline and a footer line, with the real front page beside it as a
-  preview. Every other shade is worked out from the one colour, and link
+  preview. Every other shade is worked out from the one color, and link
   text is walked darker or lighter until it clears 4.5:1 against the
   page.
 
@@ -158,7 +158,7 @@ What it is built from:
   font - no framework, no build step, no CDN, no trackers, nothing
   phoning home.
 
-- The licence is the **GNU AGPL v3**: the GPL asks for changes to be
+- The license is the **GNU AGPL v3**: the GPL asks for changes to be
   shared when the software is handed to someone, and the AGPL asks for
   them when it is run for someone over a network as well. This project
   is the free edition of a hosted service, so that is the case that

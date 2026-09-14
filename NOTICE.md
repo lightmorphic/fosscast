@@ -9,7 +9,7 @@ for this project. No code has been merged from anyone outside the
 company, and `CONTRIBUTING.md` explains why that is deliberate.
 
 The project is released to the public under the GNU Affero General
-Public Licence v3 (`LICENSE`). Because Lightmorphic owns the copyright
+Public License v3 (`LICENSE`). Because Lightmorphic owns the copyright
 in the whole of it, Lightmorphic can also release the same code under
 other terms, and does: the hosted service at
 [castmorphic.com](https://castmorphic.com) runs it. That is the owner's
@@ -27,7 +27,7 @@ repository that Lightmorphic did **not** write.
 * **What:** the typeface the pages are set in.
 * **Where:** `web/fonts/Manrope.woff2`
 * **Whose:** Mikhail Sharanda.
-* **Licence:** SIL Open Font Licence 1.1. The full text ships beside
+* **License:** SIL Open Font License 1.1. The full text ships beside
   the font at `web/fonts/OFL.txt`.
 * **From:** <https://github.com/sharanda/manrope>
 
@@ -43,11 +43,11 @@ is no build step, no bundler, no framework and no CDN.
 
 ## Things the software runs inside, but does not contain
 
-These are separate programs under their own licences. FOSSCast is
+These are separate programs under their own licenses. FOSSCast is
 distributed alongside them in the published container image, not
 combined with them.
 
-| What | Whose | Licence |
+| What | Whose | License |
 |---|---|---|
 | Node.js (`node:22-alpine` base image) | OpenJS Foundation | MIT |
 | Alpine Linux (base image) | Alpine Linux | mixed, mostly MIT/BSD |
@@ -64,7 +64,7 @@ They stand for other companies' brands. The copyright in the drawings
 is Lightmorphic's; the trademarks are their owners'. They are used to
 label a link to that service, which is what trademark law calls
 nominative use. If you fork FOSSCast and use it for something else,
-that is your judgement to make, not a right the AGPL gives you.
+that is your judgment to make, not a right the AGPL gives you.
 
 The Lightmorphic logo files (`web/img/lightmorphic-mark.*`,
 `web/img/lightmorphic-dark-tb-250x50-sq.webp`) are Lightmorphic's

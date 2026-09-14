@@ -486,7 +486,7 @@ function createAdminRouter(ctx) {
       // A shell that sends somebody here was showing them a particular
       // page, and landing them on the dashboard instead loses the thing
       // they clicked. `next` says where they were going. Only a local
-      // admin path is honoured: anything else - another host, a
+      // admin path is honored: anything else - another host, a
       // protocol-relative address, a path outside /admin - is ignored
       // rather than argued with, so this can never become an open
       // redirect wearing a session cookie.
@@ -672,7 +672,7 @@ function createAdminRouter(ctx) {
     if (p === '/admin/podcast/edit' && req.method === 'GET') { redirect(res, '/admin/podcast'); return true; }
     // Old links keep working.
     if (req.method === 'GET' && /^\/admin\/shows(\/[a-z0-9-]+)?$/.test(p)) { redirect(res, '/admin/episodes'); return true; }
-    // Look: the public site's accent colour and the podcaster's own words.
+    // Look: the public site's accent color and the podcaster's own words.
     if (p === '/admin/look' && req.method === 'GET') {
       const show = shows()[0];
       if (!show) { redirect(res, '/admin/podcast'); return true; }

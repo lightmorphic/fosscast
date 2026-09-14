@@ -52,7 +52,7 @@ function escape(text) {
 
 function span(cls, text) { return `<span class="${cls}">${escape(text)}</span>`; }
 
-// One line of YAML: the anchor and alias in their own colour, a trailing
+// One line of YAML: the anchor and alias in their own color, a trailing
 // comment in another, and the rest as it is.
 function body(line) {
   if (!line.trim()) return '';

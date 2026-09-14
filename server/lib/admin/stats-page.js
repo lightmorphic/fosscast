@@ -187,7 +187,7 @@ module.exports = function create({ stats, shows, episodes }) {
         <section class="panel" id="sec-age">
           <h2>How long an episode keeps earning</h2>
           <p class="hint">How old an episode was when it was downloaded.
-          A long tail means your back catalogue is still working.</p>
+          A long tail means your back catalog is still working.</p>
           ${charts.barsAcross(ages, { label: 'Downloads by age of episode at the time', colour: 'var(--c6)' })}
         </section>
       </div>

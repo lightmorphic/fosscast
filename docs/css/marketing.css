@@ -1,7 +1,7 @@
 /* fosscast.org
    -----------------------------------------------------------------
    The page opens on the thing the software makes: a real show page,
-   drawn in HTML, restyling itself. Colour, background, cards, corners,
+   drawn in HTML, restyling itself. Color, background, cards, corners,
    layout, all changing on their own for a few seconds and then handed
    over to the visitor with the same controls the software gives them.
    What you watch is what you get, because it is the same mechanism.
@@ -38,7 +38,7 @@
   --rule: rgba(255, 255, 255, 0.10); --file-bg: #101014;
 }
 
-/* The beta strip. Grey panel, a mark, no painted colour: the words do
+/* The beta strip. Gray panel, a mark, no painted color: the words do
    the work. First thing on the page, above the wordmark, because a
    visitor deciding whether to trust this with a podcast needs it before
    anything else we have to say. */
@@ -85,7 +85,7 @@ main > section:last-child { border-bottom: 0; }
   overflow: hidden;
   position: relative;
 }
-/* A slow wash of the show's current colour behind everything, so the
+/* A slow wash of the show's current color behind everything, so the
    whole stage shifts as the miniature restyles itself. */
 .stage::before {
   content: "";
@@ -590,7 +590,7 @@ html { scroll-behavior: smooth; }
 }
 
 /* Laid out like FOSSStudio's: the sister-project card across the top,
-   then the maker on the left and the licence on the right. */
+   then the maker on the left and the license on the right. */
 .foot {
   flex-direction: row;
   flex-wrap: wrap;

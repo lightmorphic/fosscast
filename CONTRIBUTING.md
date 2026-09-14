@@ -22,7 +22,7 @@ which is how the hosted service that funds the work is possible. A
 patch from someone else would belong to that person, so from the moment
 it was merged that one sentence would stop being true for that patch.
 
-That is the whole of it. It is not a judgement on anyone's code, and it
+That is the whole of it. It is not a judgment on anyone's code, and it
 is not about quality. Please do not spend an evening on a pull request
 for this project: pull requests will be closed with a link to this
 file.
@@ -37,7 +37,7 @@ two things will happen here, and this file will say which:
 
 1. **A contributor agreement.** A short document you sign once, saying
    the code is yours to give and that Lightmorphic may use it under any
-   licence. Pull requests open after that, from anyone who has signed.
+   license. Pull requests open after that, from anyone who has signed.
 2. **Contributions under the AGPL alone, with no relicensing.** Pull
    requests open to everybody with nothing to sign, and Lightmorphic
    gives up the right to put merged code into anything but the AGPL
@@ -56,7 +56,7 @@ do send us code, by sending it you agree to the following:
 > You confirm the code is yours to give, that you wrote it, and that no
 > employer or other party has a claim on it. You give Lightmorphic an
 > unrestricted, permanent, worldwide, royalty-free right to use, modify
-> and distribute that code, in any part of FOSSCast, under any licence,
+> and distribute that code, in any part of FOSSCast, under any license,
 > including in proprietary and commercial versions. You keep your own
 > copyright and may use your code however you like elsewhere. You are
 > not entitled to payment for it.
@@ -65,5 +65,5 @@ If you are not willing to grant that, do not send code. Send a bug
 report describing the problem instead, and it will be just as useful.
 
 *This is a plain-language statement of intent, not legal advice. If a
-contribution ever matters enough to argue about, get a solicitor to
+contribution ever matters enough to argue about, get a lawyer to
 look at it.*

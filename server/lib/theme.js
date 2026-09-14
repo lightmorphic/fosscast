@@ -1,12 +1,12 @@
 'use strict';
-// The look of the public site: one accent colour, and two lines of the
+// The look of the public site: one accent color, and two lines of the
 // podcaster's own words. The stylesheet already speaks in tokens, so
 // this only has to redefine the accent tokens - no second stylesheet,
-// no build step, and a show that has not chosen a colour emits nothing
+// no build step, and a show that has not chosen a color emits nothing
 // at all.
 //
 // Everything here is a value the operator typed, so everything here is
-// validated: a colour must parse as a colour or the default stands.
+// validated: a color must parse as a color or the default stands.
 
 const DEFAULTS = { accent: '#ff5721', tagline: '', footer: '' };
 
@@ -22,10 +22,10 @@ function toRgb(hex) {
   return [(n >> 16) & 255, (n >> 8) & 255, n & 255];
 }
 
-// Blend one colour towards another. Every shade the site needs - the
+// Blend one color towards another. Every shade the site needs - the
 // hover, the soft container pair, a readable link - is the chosen
-// colour moved some distance towards black or towards white, which is
-// why this is the only colour arithmetic here.
+// color moved some distance towards black or towards white, which is
+// why this is the only color arithmetic here.
 function mix(hex, towards, amount) {
   const a = toRgb(hex);
   const b = toRgb(towards);
@@ -60,8 +60,8 @@ function linkShade(hex, page) {
   return towards;
 }
 
-// One chosen colour becomes the whole accent family. The two "dark"
-// entries are the same colour lifted when it is too dark to see against
+// One chosen color becomes the whole accent family. The two "dark"
+// entries are the same color lifted when it is too dark to see against
 // a near-black page at all.
 function accentVars(hex) {
   const light = luminance(hex) > 0.7 ? mix(hex, '#000000', 0.25) : hex;
@@ -90,8 +90,8 @@ function normalise(input = {}) {
   };
 }
 
-// The accent as one style element. A show still on the default colour
-// pays nothing: the stylesheet's own palette is already that colour.
+// The accent as one style element. A show still on the default color
+// pays nothing: the stylesheet's own palette is already that color.
 function styleTag(theme) {
   const t = normalise(theme);
   if (t.accent === DEFAULTS.accent) return '';

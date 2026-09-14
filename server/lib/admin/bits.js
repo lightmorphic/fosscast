@@ -119,7 +119,7 @@ function html(res, page, status = 200) {
     'Content-Security-Policy': `frame-ancestors ${ancestors || "'none'"}`,
     // X-Frame-Options cannot say "this origin only", so when an
     // ancestor is allowed the CSP directive speaks alone. Every
-    // browser that honours X-Frame-Options honours frame-ancestors.
+    // browser that honors X-Frame-Options honors frame-ancestors.
     ...(ancestors ? {} : { 'X-Frame-Options': 'DENY' }),
   });
   res.end(page);

@@ -112,7 +112,7 @@ function showArtWeb(show) { return show.artworkWeb || show.artwork || ''; }
 function showBannerWeb(show) { return show.bannerWeb || show.banner || ''; }
 
 // Where people can subscribe. RSS always works; the rest appear once
-// the show has a listing on them, since those need a catalogue URL the
+// the show has a listing on them, since those need a catalog URL the
 // platform issues after you submit the feed. Icons are drawn inline:
 // nothing is fetched from anyone.
 const APPS = [
@@ -363,7 +363,7 @@ function initials(name) {
 
 // The first line of a write-up is not a summary of it: "Hello, and
 // welcome." is a greeting, and a card showing only that beside cards
-// showing four lines looks broken. So the card summarises the whole
+// showing four lines looks broken. So the card summarizes the whole
 // piece - paragraphs run together, cut at a word - and every host gets
 // the same amount of it.
 function summarise(text, limit = 150) {

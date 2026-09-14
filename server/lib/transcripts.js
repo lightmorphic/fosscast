@@ -66,7 +66,7 @@ function vttClock(seconds) {
 const CUE = /^\s*(?:(\d+):)?(\d{1,2}):(\d{2})(?:[.,](\d{1,3}))?\s*-->\s*(?:(\d+):)?(\d{1,2}):(\d{2})(?:[.,](\d{1,3}))?/;
 
 // WebVTT and SubRip differ in ways that do not matter here - a comma
-// instead of a full stop, a number on its own above each cue - so one
+// instead of a period, a number on its own above each cue - so one
 // reader handles both rather than two readers handling one each.
 function parseCues(text) {
   const cues = [];

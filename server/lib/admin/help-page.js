@@ -149,7 +149,7 @@ module.exports = function create() {
         <p><b>Import the episodes.</b> Paste your existing feed's
         address into Import on the Podcast page. Every episode comes
         across with its details and, crucially, the identifier each one
-        already has - so nobody's app re-downloads your back catalogue
+        already has - so nobody's app re-downloads your back catalog
         and shouts at them about ninety new episodes. The audio stays
         where it is until you choose to move it.</p>
         <p><b>Bring the feed's identity.</b> The

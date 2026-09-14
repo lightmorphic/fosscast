@@ -1,5 +1,5 @@
 'use strict';
-// Publisher API + stats behaviour against the real server.
+// Publisher API + stats behavior against the real server.
 const { test, before, after } = require('node:test');
 const assert = require('node:assert');
 const { spawn } = require('node:child_process');
