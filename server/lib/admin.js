@@ -34,6 +34,7 @@ const podcastScreens = require('./admin/podcast-page');
 const accountScreens = require('./admin/account-pages');
 const settingsScreen = require('./admin/settings-page');
 const setupScreen = require('./admin/setup-page');
+const helpScreen = require('./admin/help-page');
 const setup = require('./setup');
 const passkeys = require('./passkeys');
 const totp = require('./totp');
@@ -136,6 +137,7 @@ function createAdminRouter(ctx) {
   } = hostScreens({ store, shows });
   const { podcastPage, createPodcastPage } = podcastScreens({ episodes, settings });
   const { settingsPage, applySettingsForm } = settingsScreen();
+  const { helpPage } = helpScreen();
   const { claimPage, protectPage, PASSKEY_SCRIPT } = setupScreen({ brandName: BRAND });
   const { dashboard, accountPage } = accountScreens({
     settings, shows, episodes, stats, passkeyScript: PASSKEY_SCRIPT,
@@ -318,7 +320,11 @@ function createAdminRouter(ctx) {
 
   async function route(req, res, url) {
     const p = modernPath(req.method, url.pathname);
-    if (!p.startsWith('/admin')) return false;
+    // /help is the one page outside /admin that this router answers.
+    // It is a screen like any other - behind the login, drawn in the
+    // same shell - and it has the short address because every link to
+    // it is a link somebody may want to type.
+    if (!p.startsWith('/admin') && p !== '/help') return false;
     const domain = siteDomain();
 
     // ---- the first run ----------------------------------------------
@@ -765,6 +771,7 @@ function createAdminRouter(ctx) {
     }
 
     if (p === '/admin/stats' && req.method === 'GET') { html(res, statsPage()); return true; }
+    if (p === '/help' && req.method === 'GET') { html(res, helpPage()); return true; }
     if (p === '/admin/settings' && req.method === 'GET') { html(res, settingsPage()); return true; }
     if (p === '/admin/settings' && req.method === 'POST') {
       const form = await formBody(req, readBody);

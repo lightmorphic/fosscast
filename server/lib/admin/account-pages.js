@@ -145,7 +145,8 @@ module.exports = function create({ settings, shows, episodes, stats, passkeyScri
         uses to publish a finished recording straight into this instance.
         It was generated when the instance started; copy it into the
         studio's settings. Anyone holding it can publish here, so treat it
-        like a password.</p>
+        like a password.
+        <a class="hint-link" href="/help#studio">What this key is</a></p>
         <label for="studio-token">Studio key</label>
         <div class="key-field">
           <input id="studio-token" type="password" value="${esc(settings().studioToken || '')}" readonly>

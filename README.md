@@ -75,6 +75,10 @@ software, and you never will.
   transcripts, chapters, people and funding tags.
 - **Publish API**: a studio pushes finished recordings straight in as
   draft episodes.
+- **Help inside the app**: a page of answers at `/help`, behind the
+  login, with no outside calls at all - so it works on a box with no
+  internet and describes the version you installed. Every setting that
+  needs explaining links straight to its own section.
 - **A login you set yourself**: no password in a compose file. The first
   run asks for a code that only exists in the container's log, then
   makes you choose a password it will argue with you about, and offers a

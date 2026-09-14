@@ -1406,3 +1406,25 @@ form h2:first-child { margin-top: 0; }
 .plain-list .inline-form { margin-left: auto; }
 /* Green is state, never decoration: a tick beside something that is on. */
 .state-on { color: var(--success); font-weight: 600; }
+
+/* ---------- Help ---------- */
+/* Answers, not a manual: each question is its own panel so the eye can
+   find the one it wants without reading the page. No table of contents -
+   the headings are the contents, and a list of links to headings a
+   screen away is furniture pretending to be a product. */
+.help-section {
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 1.5rem 1.75rem;
+  margin-bottom: 1.25rem;
+  max-width: 46rem;
+}
+.help-section h2 { margin: 0 0 0.75rem; font-size: 1.0625rem; }
+.help-section p { margin: 0 0 0.875rem; max-width: 40rem; line-height: 1.6; }
+.help-section p:last-child { margin-bottom: 0; }
+/* A command to type, set apart from the sentence that asked for it. */
+.help-section .cmd { font-family: ui-monospace, monospace; font-size: 0.875rem; }
+/* The anchor a deep link lands on: without this the heading sits under
+   nothing and you cannot tell you arrived. */
+.help-section { scroll-margin-top: 1.5rem; }

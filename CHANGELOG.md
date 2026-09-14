@@ -4,6 +4,25 @@ All notable changes to FOSSCast are documented here.
 
 ## Unreleased
 
+- **Help inside FOSSCast, at `/help`.** Behind the login, shipped with
+  the code, and it makes no request to any other machine - a self-hosted
+  box may have no internet at all, and a page on a website describes
+  whatever is current rather than the version somebody installed.
+
+  It is written as answers to the questions people ask, each section
+  opening with the question in the words somebody would use: why a
+  podcast is not showing in Apple, where audio files should live, what
+  the counting door is, what a download number does and does not mean,
+  why the hosts go in the feed, how to move a podcast here from another
+  host, what to do when the Feed check complains, and how the login,
+  the setup code and passkeys work when you are locked out. There is no
+  table of contents: the questions are the contents.
+
+  Every setting that needs explaining now carries a small plain link
+  straight to its own section - `/help#feed`, not the top of the page -
+  and a test fails if any of those links points at a section that is not
+  there.
+
 - **The login is set in FOSSCast, not in a compose file.** `ADMIN_EMAIL`
   and `ADMIN_PASSWORD` are gone from the install. The first run prints a
   six-digit setup code in the container's log and nowhere else, and the

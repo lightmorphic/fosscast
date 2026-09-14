@@ -45,6 +45,10 @@ episode pages, its players and its feed.
   beside the original. A feature that would need the box to do media
   work is answered with the browser doing it, or not at all.
 
+- **Nothing is emailed.** (The help page at `/help` is part of this:
+  it ships with the code and fetches nothing, because a self-hosted box
+  may have no internet and a website describes whatever is current
+  rather than what somebody installed.)
 - **Nothing is emailed.** Getting back in after a lost password is a
   command on the machine (`reset-password.js`, or `admin-login-link.js`
   for a one-time link), so there is no SMTP to configure, nothing to be

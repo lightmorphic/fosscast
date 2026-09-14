@@ -42,7 +42,8 @@ module.exports = function create({ episodes, settings }) {
         <p class="hint">Paste a podcast's RSS address and every episode comes
         in with its details, keeping the identifiers that stop listeners
         re-downloading anything. The audio stays where it is until you move
-        it yourself.</p>
+        it yourself.
+        <a class="hint-link" href="/help#importing">Moving from another host</a></p>
         <form method="post" action="/admin/podcast/import">
           <label for="feedUrl">Feed address</label>
           <input id="feedUrl" name="feedUrl" type="url" required maxlength="1000" placeholder="https://example.com/feed.xml">
@@ -76,7 +77,8 @@ module.exports = function create({ episodes, settings }) {
       <section class="panel pane pane-feed" id="sec-feed">
         <h2>Feed check</h2>
         <p class="hint">What Apple, Spotify and the rest look for before
-        they accept a podcast. ${failed.length ? `<strong>${failed.length} still to sort out.</strong>` : 'All good.'}</p>
+        they accept a podcast. ${failed.length ? `<strong>${failed.length} still to sort out.</strong>` : 'All good.'}
+        <a class="hint-link" href="/help#feed">What these mean</a></p>
         <ul class="checks">
           ${checks.map(([label, ok, fix]) => `<li class="${ok ? 'check-ok' : 'check-bad'}">
             <span aria-hidden="true">${ok ? '&#10003;' : '!'}</span>
@@ -123,7 +125,8 @@ module.exports = function create({ episodes, settings }) {
           and use it to verify you own the podcast: Spotify and Apple both
           reject a feed without one. It is published in the feed, so use an
           address you are happy to make public. It does not have to be the
-          address you log in with.</p>
+          address you log in with.
+          <a class="hint-link" href="/help#directories">Why a feed gets refused</a></p>
           <label class="switch-label">
             <input type="checkbox" name="explicit" value="1" class="switch-input"${show.explicit ? ' checked' : ''}>
             <span class="switch" aria-hidden="true"></span>
@@ -192,7 +195,8 @@ module.exports = function create({ episodes, settings }) {
           <input id="smediaprefix" name="mediaPrefix" maxlength="300" value="${esc(show.mediaPrefix || '')}" placeholder="https://op3.dev/e/">
           <p class="hint">Several can be chained by pasting them one after
           another, longest-lived first. Leave it empty and nobody but this
-          server ever sees a download.</p>
+          server ever sees a download.
+          <a class="hint-link" href="/help#prefix">What a prefix costs</a></p>
           ${show.mediaPrefix ? `<p class="hint">Your enclosures now read
           <code>${esc(prefixed(`https://${siteDomain('example.org')}/d/EPISODE.mp3`, show.mediaPrefix))}</code></p>
           <p class="hint">This does send your listeners through somebody

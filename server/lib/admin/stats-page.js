@@ -91,7 +91,8 @@ module.exports = function create({ stats, shows, episodes }) {
       <p class="hint">One download per listener per episode per day, no
       cookies, nothing stored about any individual: every number here is
       a counter, and none of them can be joined back to a person.
-      ${show ? `Episodes hosted elsewhere are not counted - only files served by this instance.` : ''}</p>
+      ${show ? `Episodes hosted elsewhere are not counted - only files served by this instance.` : ''}
+      <a class="hint-link" href="/help#numbers">What a download is, and is not</a></p>
 
       ${nothingYet ? `<section class="panel"><p class="hint">Nothing to
       show yet. Numbers appear here as soon as somebody downloads an

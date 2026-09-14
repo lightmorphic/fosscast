@@ -133,7 +133,8 @@ module.exports = function create({ store, shows }) {
       <p class="hint">Everyone who appears on ${esc(show.name)}. Each one gets
       a card on <a href="/hosts">the hosts page</a> and a page of their own,
       and they travel in the feed as well, so apps can name who is on the
-      podcast. Drag-free ordering: the arrows set the order they appear in.</p>
+      podcast. Drag-free ordering: the arrows set the order they appear in.
+      <a class="hint-link" href="/help#hosts">Why they go in the feed</a></p>
 
       ${list.length ? `<section class="host-rows">${cards}</section>`
         : `<section class="panel"><p class="hint">No hosts yet. Add the first

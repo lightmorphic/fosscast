@@ -230,7 +230,7 @@ function route(req, res) {
     return media.serveMedia(req, res, MEDIA_DIR, p);
   }
 
-  if (p.startsWith('/admin')) {
+  if (p.startsWith('/admin') || p === '/help') {
     admin.handle(req, res, url).catch((err) => {
       console.error('admin error:', err.message);
       if (!res.headersSent) send(res, 500, 'server error');

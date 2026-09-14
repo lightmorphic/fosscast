@@ -114,7 +114,7 @@ function publicPage({ title, description, body, image, icon, nav = [], theme = n
 <meta property="og:description" content="${esc(description || '')}">
 ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
-<link rel="stylesheet" href="/css/site.css?v=0.17.0">
+<link rel="stylesheet" href="/css/site.css?v=0.18.0">
 ${look ? require('./theme').styleTag(look) : ''}
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
@@ -617,12 +617,17 @@ const NEEDS_PODCAST = new Set(['hosts', 'episodes', 'look', 'stats']);
 function adminPage({ title, body, active = '', authed = true, embedded = isEmbedded(), hasPodcast = true }) {
   const nav = authed && !embedded
     ? `<nav class="admin-nav">
-        ${[['', 'Dashboard'], ['podcast', 'Podcast'], ['hosts', 'Hosts'], ['episodes', 'Episodes'], ['look', 'Look'], ['stats', 'Stats'], ['settings', 'Settings'], ['account', 'Account']]
+        ${[['', 'Dashboard'], ['podcast', 'Podcast'], ['hosts', 'Hosts'], ['episodes', 'Episodes'], ['look', 'Look'], ['stats', 'Stats'], ['settings', 'Settings'], ['account', 'Account'], ['../help', 'Help']]
           .map(([slug, label]) => {
             if (!hasPodcast && NEEDS_PODCAST.has(slug)) {
               return `<span class="admin-link waiting" aria-disabled="true" title="Create your podcast first">${label}</span>`;
             }
-            return `<a class="admin-link${active === (slug || 'dashboard') || (active === '' && slug === '') ? ' current' : ''}" href="/admin${slug ? '/' + slug : ''}">${label}</a>`;
+            // Help is the one page outside /admin, so it is the one
+            // entry that names its own address rather than a tail.
+            const href = slug === '../help' ? '/help' : `/admin${slug ? '/' + slug : ''}`;
+            const here = slug === '../help' ? active === 'help'
+              : active === (slug || 'dashboard') || (active === '' && slug === '');
+            return `<a class="admin-link${here ? ' current' : ''}" href="${href}">${label}</a>`;
           })
           .join('')}
         <button class="btn-icon theme-toggle" type="button" id="theme-toggle" title="Light or dark" aria-label="Switch between light and dark">
@@ -642,7 +647,7 @@ function adminPage({ title, body, active = '', authed = true, embedded = isEmbed
 <title>${esc(title)} - ${esc(BRAND)} admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.17.0">
+<link rel="stylesheet" href="/css/site.css?v=0.18.0">
 <script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin${embedded ? ' embedded' : ''}">

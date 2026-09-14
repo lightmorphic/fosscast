@@ -72,7 +72,8 @@ module.exports = function create({ episodes, mediaDir }) {
           <label for="mediaUrl">${config.mediaUploads() ? 'Or the address of the audio' : 'The address of the audio'}</label>
           <p class="hint">Where the file actually lives - your
           own storage, anywhere a listener's app can reach. MP3 is the one
-          every app plays.</p>
+          every app plays.
+          <a class="hint-link" href="/help#files">Where files live</a></p>
           <input id="mediaUrl" name="mediaUrl" maxlength="1000" placeholder="https://files.example.com/ep12.mp3">
           <label for="epArt">Episode cover art (optional)</label>
           <p class="hint">Square, <strong>3000 x 3000</strong> pixels. Leave it
