@@ -20,20 +20,6 @@ const LM_MARK = fs.existsSync(path.join(WEB_DIR, 'img', 'lightmorphic-mark.gif')
 const BRAND_MARK = (process.env.BRAND_MARK || '').trim() || LM_MARK;
 
 
-// The light/dark button, wired the same way on the public site and in
-// the admin. It was written out twice and drifted only in the name of
-// its own variable.
-const THEME_TOGGLE_JS = `var toggle = document.getElementById('theme-toggle');
-if (toggle) toggle.addEventListener('click', function () {
-  var root = document.documentElement;
-  var now = root.getAttribute('data-theme');
-  if (!now) now = matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-  var next = now === 'dark' ? 'light' : 'dark';
-  root.setAttribute('data-theme', next);
-  try { localStorage.setItem('fosscast-theme', next); } catch (e) {}
-});`;
-
-
 function esc(value) {
   return String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -116,15 +102,10 @@ ${image ? `<meta property="og:image" content="${esc(image)}">
 <meta name="twitter:card" content="summary_large_image">` : ''}
 <link rel="stylesheet" href="/css/site.css?v=0.18.0">
 ${look ? require('./theme').styleTag(look) : ''}
-<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body>
 <header class="top top-minimal${nav.length ? ' top-nav' : ''}">
   ${siteMenu(nav)}
-  <button class="btn-icon theme-toggle" type="button" id="theme-toggle" title="Light or dark" aria-label="Switch between light and dark">
-    <span class="icon-light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg></span>
-    <span class="icon-dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.8 6.8 0 0 0 9.5 9.5z"/></svg></span>
-  </button>
 </header>
 <main class="wrap">
 ${body}
@@ -143,7 +124,6 @@ ${PAGE_EMBED ? `<script src="${esc(PAGE_EMBED)}" defer></script>` : ''}
 <script>
 
 
-${THEME_TOGGLE_JS}
 document.addEventListener('click', function (e) {
   var copy = e.target.closest('[data-copy-feed]');
   if (!copy) return;
@@ -184,7 +164,6 @@ addEventListener('load', fitChartText);
 
 
 
-${THEME_TOGGLE_JS}
 
 document.addEventListener('change', (e) => {
   const input = e.target.closest('input[type=file][data-upload]');
@@ -630,10 +609,6 @@ function adminPage({ title, body, active = '', authed = true, embedded = isEmbed
             return `<a class="admin-link${here ? ' current' : ''}" href="${href}">${label}</a>`;
           })
           .join('')}
-        <button class="btn-icon theme-toggle" type="button" id="theme-toggle" title="Light or dark" aria-label="Switch between light and dark">
-      <span class="icon-light"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="12" cy="12" r="4.2"/><path d="M12 2v2M12 20v2M2 12h2M20 12h2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M19.1 4.9l-1.4 1.4M6.3 17.7l-1.4 1.4"/></svg></span>
-      <span class="icon-dark"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M20 13.5A8.5 8.5 0 1 1 10.5 4a6.8 6.8 0 0 0 9.5 9.5z"/></svg></span>
-    </button>
         <form method="post" action="/admin/logout" class="logout-form">
           <button class="btn-icon" type="submit" title="Log out" aria-label="Log out">${ICONS.logout}</button>
         </form>
@@ -648,7 +623,6 @@ function adminPage({ title, body, active = '', authed = true, embedded = isEmbed
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
 <link rel="stylesheet" href="/css/site.css?v=0.18.0">
-<script>(function(){try{var t=localStorage.getItem('fosscast-theme');if(t)document.documentElement.setAttribute('data-theme',t);}catch(e){}})();</script>
 </head>
 <body class="admin${embedded ? ' embedded' : ''}">
 ${process.env.DEMO_MODE === '1' ? '<div class="demo-bar">Demo instance: you can look around, but nothing can be changed.</div>' : ''}

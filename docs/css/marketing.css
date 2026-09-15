@@ -14,11 +14,13 @@
 */
 
 :root {
-  --accent-text: #c7441a;
-  --success-text: #2c6a2e;
-  --comment: #5b6f7c;
-  --rule: rgba(24, 24, 40, 0.10);
-  --file-bg: #fbfbfc;
+  /* Dark, and only dark: one set of colors, no toggle, and nothing read
+     from the visitor's system setting. */
+  --accent-text: #ff7f55;
+  --success-text: #4bae4f;
+  --comment: #93a7b3;
+  --rule: rgba(255, 255, 255, 0.10);
+  --file-bg: #101014;
   --ink: #0a0a0d;
   --ink-2: #14141a;
   --on-ink: #f6f5f3;
@@ -27,17 +29,6 @@
           Consolas, "DejaVu Sans Mono", monospace;
   --measure: 62ch;
 }
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --accent-text: #ff7f55; --success-text: #4bae4f; --comment: #93a7b3;
-    --rule: rgba(255, 255, 255, 0.10); --file-bg: #101014;
-  }
-}
-:root[data-theme="dark"] {
-  --accent-text: #ff7f55; --success-text: #4bae4f; --comment: #93a7b3;
-  --rule: rgba(255, 255, 255, 0.10); --file-bg: #101014;
-}
-
 /* The beta strip. Gray panel, a mark, no painted color: the words do
    the work. First thing on the page, above the wordmark, because a
    visitor deciding whether to trust this with a podcast needs it before

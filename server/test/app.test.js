@@ -224,14 +224,14 @@ test('the look: the accent color and words of your own', async () => {
   assert.strictEqual(res.status, 200);
 
   page = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(page.includes('--accent-light: #e91e63'), 'the chosen color leads the palette');
-  assert.ok(page.includes('--accent-dark:'), 'and a dark-mode shade is derived from it');
-  assert.ok(page.includes('--link-light:'), 'links get a shade that clears 4.5:1');
+  assert.ok(page.includes('--accent: #e91e63'), 'the chosen color leads the palette');
+  assert.ok(page.includes('--accent-hover:'), 'and the rest of the family is derived from it');
+  assert.ok(page.includes('--link:'), 'links get a shade that clears 4.5:1 on the dark page');
   assert.ok(page.includes('Two nerds, one microphone'));
   assert.ok(page.includes('(c) 2026 Test Show'));
 
   // The color reaches every page of the site, not just the front one.
-  assert.ok((await (await fetch(`${BASE}/hosts`)).text()).includes('--accent-light: #e91e63'));
+  assert.ok((await (await fetch(`${BASE}/hosts`)).text()).includes('--accent: #e91e63'));
 
   // Anything that is not a color falls back to the default rather than
   // landing in the page.
@@ -259,15 +259,14 @@ test('the look: the accent color and words of your own', async () => {
   const live = await (await fetch(`${BASE}/admin/look`, form({
     accent: '#16a34a', live: '1',
   }))).text();
-  assert.ok(live.includes('--accent-light: #16a34a'), 'the answer is the front page itself');
+  assert.ok(live.includes('--accent: #16a34a'), 'the answer is the front page itself');
   assert.ok(!live.includes('look-form'), 'not the admin page');
   page = await (await fetch(`${BASE}/shows/test-show`)).text();
-  assert.ok(page.includes('--accent-light: #16a34a'), 'and it really is saved');
+  assert.ok(page.includes('--accent: #16a34a'), 'and it really is saved');
 
   // Links take a shade of the chosen color that is actually readable:
-  // the accent itself is often too light against white for body text.
-  assert.ok(page.includes('--link-light:'), 'links get their own shade');
-  assert.ok(page.includes('--link-dark:'));
+  // a bright accent on a near-black page is often not, for body text.
+  assert.ok(page.includes('--link:'), 'links get their own shade');
 
   // A card summarizes the whole write-up, not its opening line: a host
   // who says hello in their first paragraph should not get a one-line

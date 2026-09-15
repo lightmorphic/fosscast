@@ -47,37 +47,30 @@ function contrast(a, b) {
   return (Math.max(l1, l2) + 0.05) / (Math.min(l1, l2) + 0.05);
 }
 
-// Link text has to be readable, and a bright accent on white rarely is:
-// deep orange manages 3.2:1 where body text wants 4.5:1. So links get
-// their own shade, the accent walked towards black on a light page and
-// towards white on a dark one until it clears the bar.
-function linkShade(hex, page) {
-  const towards = page === '#ffffff' ? '#000000' : '#ffffff';
+// Link text has to be readable, and a bright accent on a near-black page
+// is not always: the accent is walked towards white until it clears
+// 4.5:1, which is what body text wants.
+const PAGE = '#0b0b0e';
+function linkShade(hex) {
   for (let amount = 0; amount <= 0.9; amount += 0.05) {
-    const candidate = mix(hex, towards, amount);
-    if (contrast(candidate, page) >= 4.5) return candidate;
+    const candidate = mix(hex, '#ffffff', amount);
+    if (contrast(candidate, PAGE) >= 4.5) return candidate;
   }
-  return towards;
+  return '#ffffff';
 }
 
-// One chosen color becomes the whole accent family. The two "dark"
-// entries are the same color lifted when it is too dark to see against
-// a near-black page at all.
+// One chosen color becomes the whole accent family, for the one ground
+// there is. A color too dark to see against a near-black page is lifted
+// until it can be.
 function accentVars(hex) {
-  const light = luminance(hex) > 0.7 ? mix(hex, '#000000', 0.25) : hex;
-  const dark = luminance(hex) < 0.09 ? mix(hex, '#ffffff', 0.4) : hex;
+  const accent = luminance(hex) < 0.09 ? mix(hex, '#ffffff', 0.4) : hex;
   return {
-    '--link-light': linkShade(hex, '#ffffff'),
-    '--link-dark': linkShade(hex, '#0b0b0e'),
-    '--accent-light': light,
-    '--accent-hover-light': mix(light, '#000000', 0.12),
-    '--accent-container-light': mix(light, '#ffffff', 0.88),
-    '--on-accent-container-light': mix(light, '#000000', 0.65),
-    '--accent-dark': dark,
-    '--accent-hover-dark': mix(dark, '#ffffff', 0.12),
-    '--accent-container-dark': mix(dark, '#000000', 0.72),
-    '--on-accent-container-dark': mix(dark, '#ffffff', 0.55),
-    '--on-accent': luminance(light) > 0.45 ? '#101014' : '#ffffff',
+    '--link': linkShade(hex),
+    '--accent': accent,
+    '--accent-hover': mix(accent, '#ffffff', 0.12),
+    '--accent-container': mix(accent, '#000000', 0.72),
+    '--on-accent-container': mix(accent, '#ffffff', 0.55),
+    '--on-accent': luminance(accent) > 0.45 ? '#101014' : '#ffffff',
   };
 }
 

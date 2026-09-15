@@ -7,99 +7,36 @@
   font-display: swap;
 }
 
-/* ---------- Core tokens ---------- */
+/* ---------- Core tokens ----------
+   Dark, and only dark (Charlie, 15 September 2026: "There should be no
+   light and dark, just dark mode"). There is no toggle, no stored
+   preference and no reading of the visitor's system setting: one set of
+   colors, so what a podcaster sets up is what their listener sees. */
 :root {
-  color-scheme: light dark;
-  --bg: #ffffff;  --fg: #09090b;
-  --panel: #ffffff;  --panel-border: rgba(24, 24, 40, 0.10);
-  --border: #e4e4e7;  --muted: #f4f4f5;  --muted-fg: #6f6f78;
-  --shadow-panel: 0 1px 2px rgba(24,24,40,.05), 0 8px 24px -16px rgba(24,24,40,.18);
+  color-scheme: dark;
+  --bg: #09090b;  --fg: #fafafa;
+  --panel: #1b1d29;  --panel-border: rgba(255,255,255,.09);
+  --border: #27272a;  --muted: #1c1c1f;  --muted-fg: #a1a1aa;
+  --shadow-panel: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px -16px rgba(0,0,0,.6);
 
   --brand-navy: #111827;
-  --danger: #cc372d;   --danger-bg: #fef2f1;
-  --success: #38813a;  --success-bg: #f2f9f3;
-  --warning: #8f6c03;  --warning-bg: #fffbee;
-  --info: #1b74bc;     --info-bg: #f0f8fe;
+  --danger: #f34236;   --danger-bg: #350f0c;
+  --success: #4bae4f;  --success-bg: #102611;
+  --warning: #ffc006;  --warning-bg: #382a01;
+  --info: #2295f1;     --info-bg: #072135;
 
   --radius: 0.875rem;
   --panel-radius: 1.375rem;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --bg: #09090b;  --fg: #fafafa;
-    --panel: #1b1d29;  --panel-border: rgba(255,255,255,.09);
-    --border: #27272a;  --muted: #1c1c1f;  --muted-fg: #a1a1aa;
-    --shadow-panel: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px -16px rgba(0,0,0,.6);
-    --danger: #f34236;   --danger-bg: #350f0c;
-    --success: #4bae4f;  --success-bg: #102611;
-    --warning: #ffc006;  --warning-bg: #382a01;
-    --info: #2295f1;     --info-bg: #072135;
-  }
-}
-
-:root[data-theme="light"] {
-  --bg: #ffffff;  --fg: #09090b;
-  --panel: #ffffff;  --panel-border: rgba(24, 24, 40, 0.10);
-  --border: #e4e4e7;  --muted: #f4f4f5;  --muted-fg: #6f6f78;
-  --shadow-panel: 0 1px 2px rgba(24,24,40,.05), 0 8px 24px -16px rgba(24,24,40,.18);
-  --danger: #cc372d;   --danger-bg: #fef2f1;
-  --success: #38813a;  --success-bg: #f2f9f3;
-  --warning: #8f6c03;  --warning-bg: #fffbee;
-  --info: #1b74bc;     --info-bg: #f0f8fe;
-}
-
-:root[data-theme="dark"] {
-  --bg: #09090b;  --fg: #fafafa;
-  --panel: #1b1d29;  --panel-border: rgba(255,255,255,.09);
-  --border: #27272a;  --muted: #1c1c1f;  --muted-fg: #a1a1aa;
-  --shadow-panel: 0 1px 2px rgba(0,0,0,.35), 0 8px 24px -16px rgba(0,0,0,.6);
-  --danger: #f34236;   --danger-bg: #350f0c;
-  --success: #4bae4f;  --success-bg: #102611;
-  --warning: #ffc006;  --warning-bg: #382a01;
-  --info: #2295f1;     --info-bg: #072135;
-}
-
-/* ---------- Accent: deep orange, both themes ---------- */
+/* ---------- Accent: deep orange ---------- */
 :root[data-accent="deep_orange"] {
-  /* Link text needs 4.5:1 against the page, which the accent itself does
-     not reach on white, so links get their own shade of it. */
-  --link-light: #c4400f; --link-dark: #ff8f68;
-  --accent-light: #ff5721; --accent-hover-light: #e04d1d;
-  --accent-container-light: #ffebe4; --on-accent-container-light: #61210d;
-  --accent-dark: #ff5721; --accent-hover-dark: #ff6b3c;
-  --accent-container-dark: #4d1a0a; --on-accent-container-dark: #ffb39b;
+  --link: #ff8f68;
+  --accent: #ff5721;
+  --accent-hover: #ff6b3c;
+  --accent-container: #4d1a0a;
+  --on-accent-container: #ffb39b;
   --on-accent: #471809;
-}
-:root[data-accent] {
-  --link: var(--link-light);
-  --accent: var(--accent-light);
-  --accent-hover: var(--accent-hover-light);
-  --accent-container: var(--accent-container-light);
-  --on-accent-container: var(--on-accent-container-light);
-}
-@media (prefers-color-scheme: dark) {
-  :root[data-accent] {
-    --link: var(--link-dark);
-    --accent: var(--accent-dark);
-    --accent-hover: var(--accent-hover-dark);
-    --accent-container: var(--accent-container-dark);
-    --on-accent-container: var(--on-accent-container-dark);
-  }
-}
-:root[data-theme="light"][data-accent] {
-  --link: var(--link-light);
-  --accent: var(--accent-light);
-  --accent-hover: var(--accent-hover-light);
-  --accent-container: var(--accent-container-light);
-  --on-accent-container: var(--on-accent-container-light);
-}
-:root[data-theme="dark"][data-accent] {
-  --link: var(--link-dark);
-  --accent: var(--accent-dark);
-  --accent-hover: var(--accent-hover-dark);
-  --accent-container: var(--accent-container-dark);
-  --on-accent-container: var(--on-accent-container-dark);
 }
 
 /* ---------- Base ---------- */
@@ -562,18 +499,6 @@ body.embedded .wrap { padding-top: 0.5rem; }
 }
 .link-button:hover { color: var(--fg); }
 
-
-/* ---------- Theme toggle ---------- */
-.theme-toggle .icon-dark { display: none; }
-.theme-toggle .icon-light { display: block; line-height: 0; }
-@media (prefers-color-scheme: dark) {
-  .theme-toggle .icon-light { display: none; }
-  .theme-toggle .icon-dark { display: block; line-height: 0; }
-}
-:root[data-theme="dark"] .theme-toggle .icon-light { display: none; }
-:root[data-theme="dark"] .theme-toggle .icon-dark { display: block; line-height: 0; }
-:root[data-theme="light"] .theme-toggle .icon-light { display: block; line-height: 0; }
-:root[data-theme="light"] .theme-toggle .icon-dark { display: none; }
 
 /* ---------- Show banner and artwork ---------- */
 /* The banner is one of the blocks in the column, so it takes the
@@ -1173,20 +1098,9 @@ details.panel[open] > summary { margin-bottom: 0.75rem; }
 .panel[id] { scroll-margin-top: 1.5rem; }
 
 /* ---------- Stats ---------- */
-/* A categorical palette that holds up on both backgrounds: charts are
-   drawn as SVG on the server and take their colors from here, so they
-   follow the theme like everything else. */
+/* A categorical palette for the dark ground: charts are drawn as SVG on
+   the server and take their colors from here. */
 :root {
-  --c1: #ff7a45; --c2: #3b82f6; --c3: #10b981; --c4: #a855f7;
-  --c5: #f59e0b; --c6: #06b6d4; --c7: #ec4899; --c8: #84cc16;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) {
-    --c1: #ff9066; --c2: #60a5fa; --c3: #34d399; --c4: #c084fc;
-    --c5: #fbbf24; --c6: #22d3ee; --c7: #f472b6; --c8: #a3e635;
-  }
-}
-:root[data-theme="dark"] {
   --c1: #ff9066; --c2: #60a5fa; --c3: #34d399; --c4: #c084fc;
   --c5: #fbbf24; --c6: #22d3ee; --c7: #f472b6; --c8: #a3e635;
 }
