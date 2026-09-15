@@ -594,26 +594,51 @@ document.addEventListener('click', (e) => {
 const NEEDS_PODCAST = new Set(['hosts', 'episodes', 'look', 'stats']);
 
 function adminPage({ title, body, active = '', authed = true, embedded = isEmbedded(), hasPodcast = true }) {
-  const nav = authed && !embedded
-    ? `<nav class="admin-nav">
-        ${[['', 'Dashboard'], ['podcast', 'Podcast'], ['hosts', 'Hosts'], ['episodes', 'Episodes'], ['look', 'Look'], ['stats', 'Stats'], ['settings', 'Settings'], ['account', 'Account'], ['../help', 'Help']]
-          .map(([slug, label]) => {
-            if (!hasPodcast && NEEDS_PODCAST.has(slug)) {
-              return `<span class="admin-link waiting" aria-disabled="true" title="Create your podcast first">${label}</span>`;
-            }
-            // Help is the one page outside /admin, so it is the one
-            // entry that names its own address rather than a tail.
-            const href = slug === '../help' ? '/help' : `/admin${slug ? '/' + slug : ''}`;
-            const here = slug === '../help' ? active === 'help'
-              : active === (slug || 'dashboard') || (active === '' && slug === '');
-            return `<a class="admin-link${here ? ' current' : ''}" href="${href}">${label}</a>`;
-          })
-          .join('')}
-        <form method="post" action="/admin/logout" class="logout-form">
-          <button class="btn-icon" type="submit" title="Log out" aria-label="Log out">${ICONS.logout}</button>
-        </form>
-      </nav>`
+  // The menu is a column down the left, the same shape the studio uses:
+  // the pages of the product grouped by quiet headings, then Account and
+  // Help pushed to the foot of the card. A row of tabs across the top
+  // ran out of room the moment there were nine of them, and a page's
+  // own name had nowhere to sit.
+  const GROUPS = [
+    [null, [['', 'Dashboard']]],
+    ['The podcast', [['podcast', 'Podcast'], ['hosts', 'Hosts'], ['episodes', 'Episodes']]],
+    ['Presentation', [['look', 'Look']]],
+    ['The server', [['stats', 'Stats'], ['settings', 'Settings']]],
+  ];
+  const FOOT = [['account', 'Account'], ['../help', 'Help']];
+
+  const item = ([slug, label]) => {
+    if (!hasPodcast && NEEDS_PODCAST.has(slug)) {
+      return `<span class="admin-link waiting" aria-disabled="true" title="Create your podcast first">${label}</span>`;
+    }
+    // Help is the one page outside /admin, so it is the one entry that
+    // names its own address rather than a tail.
+    const href = slug === '../help' ? '/help' : `/admin${slug ? '/' + slug : ''}`;
+    const here = slug === '../help' ? active === 'help'
+      : active === (slug || 'dashboard') || (active === '' && slug === '');
+    return `<a class="admin-link${here ? ' current' : ''}" href="${href}"${here ? ' aria-current="page"' : ''}>${label}</a>`;
+  };
+
+  const sidebar = authed && !embedded
+    ? `<aside class="sidebar">
+  <a class="wordmark" href="/admin" aria-label="${esc(BRAND)} admin">
+    ${BRANDED ? '' : '<svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'}
+    <span>${esc(BRAND)} <span class="admin-tag">admin</span></span>
+  </a>
+  <nav class="mainmenu" aria-label="Main">
+    ${GROUPS.map(([head, items]) =>
+      (head ? `<p class="menu-head">${head}</p>` : '') + items.map(item).join('')).join('')}
+    <div class="menu-foot">
+      <hr>
+      ${FOOT.map(item).join('')}
+      <form method="post" action="/admin/logout" class="logout-form">
+        <button class="admin-link logout" type="submit">Log out</button>
+      </form>
+    </div>
+  </nav>
+</aside>`
     : '';
+
   return `<!doctype html>
 <html lang="en" data-accent="deep_orange">
 <head>
@@ -622,20 +647,18 @@ function adminPage({ title, body, active = '', authed = true, embedded = isEmbed
 <title>${esc(title)} - ${esc(BRAND)} admin</title>
 <meta name="robots" content="noindex">
 <link rel="icon" href="/img/favicon.svg" type="image/svg+xml">
-<link rel="stylesheet" href="/css/site.css?v=0.18.0">
+<link rel="stylesheet" href="/css/site.css?v=0.19.0">
 </head>
 <body class="admin${embedded ? ' embedded' : ''}">
 ${process.env.DEMO_MODE === '1' ? '<div class="demo-bar">Demo instance: you can look around, but nothing can be changed.</div>' : ''}
-${embedded ? '' : `<header class="top">
-  <a class="wordmark" href="/admin" aria-label="${esc(BRAND)} admin">
-    ${BRANDED ? '' : '<svg class="mark" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="3.2" fill="currentColor"/><path d="M6.3 17.7a8 8 0 0 1 0-11.4M17.7 6.3a8 8 0 0 1 0 11.4" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>'}
-    <span>${esc(BRAND)} <span class="admin-tag">admin</span></span>
-  </a>
-  ${nav}
-</header>`}
-<main class="wrap">
+${sidebar ? `<div class="shell">
+${sidebar}
+<main class="workspace" id="content">
 ${body}
 </main>
+</div>` : `<main class="wrap">
+${body}
+</main>`}
 <script>${ADMIN_SCRIPT}</script>
 </body>
 </html>

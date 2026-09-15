@@ -106,7 +106,7 @@ p { max-width: 65ch; }
   text-decoration: none;
 }
 .wordmark .mark { width: 1.5rem; height: 1.5rem; color: var(--accent); }
-.top-nav, .admin-nav { display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap; }
+.top-nav { display: flex; align-items: center; gap: 0.25rem; flex-wrap: wrap; }
 .top-link, .admin-link {
   color: var(--muted-fg);
   text-decoration: none;
@@ -123,7 +123,103 @@ p { max-width: 65ch; }
    on it. */
 .admin-link.waiting { color: var(--muted-fg); opacity: 0.55; cursor: default; }
 .admin-link.waiting:hover { color: var(--muted-fg); background: none; }
-.logout-form { margin-left: 0.5rem; display: flex; }
+.logout-form { display: flex; }
+
+/* ---------- The dashboard shell: one full-height menu card | the work ----
+   The same shape as the studio's. The window is the shell; the menu and
+   the workspace each scroll themselves, so the menu stays where it was
+   left rather than scrolling away with the page. The pair is centered,
+   because pinned to the left edge the whole product looks shoved into a
+   corner with an empty half beside it. */
+.shell {
+  display: flex;
+  gap: 1.25rem;
+  height: 100vh;
+  height: 100dvh;
+  overflow: hidden;
+  padding: 1.25rem;
+  max-width: 90rem;
+  margin: 0 auto;
+}
+/* A card that floats with a gap around it, not a slab pinned to the
+   edge, and still the full height of the window: a card that stops
+   where its contents stop looks unfinished. */
+.sidebar {
+  flex: 0 0 13rem;
+  width: 13rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow-y: auto;
+  padding: 1.4rem 1rem 1.25rem;
+  background: var(--panel);
+  border: 1px solid var(--panel-border);
+  border-radius: var(--panel-radius);
+  box-shadow: var(--shadow-panel);
+}
+.sidebar .wordmark { margin-bottom: 1.4rem; flex: 0 0 auto; }
+.workspace {
+  flex: 1 1 auto;
+  min-width: 0;
+  height: 100%;
+  overflow-y: auto;
+  /* The shell already holds the gap; the work only needs room at the
+     foot so the last panel is not flush against the window. */
+  padding: 0 0.25rem 3rem;
+}
+.workspace > * + * { margin-top: 1.5rem; }
+
+/* The menu: a flat list of pages under quiet headings. A heading is a
+   label, never a button - there is nothing behind it to open. */
+.mainmenu { display: flex; flex-direction: column; gap: 2px; flex: 1 1 auto; }
+.menu-head {
+  margin: 1.1rem 0 0.3rem;
+  padding: 0 0.7rem;
+  font-size: 0.68rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+  opacity: 0.75;
+}
+.mainmenu .admin-link { padding: 0.42rem 0.7rem; }
+/* Account, Help and the way out: pushed to the bottom by whatever space
+   the pages above them leave, so the card is full length whether there
+   are three items or thirty. */
+.menu-foot { margin-top: auto; padding-top: 1.25rem; display: flex; flex-direction: column; gap: 2px; }
+.menu-foot hr { border: 0; border-top: 1px solid var(--border); margin: 0.7rem 0.2rem 0.5rem; }
+.admin-link.logout {
+  font: inherit;
+  font-weight: 600;
+  font-size: 0.9375rem;
+  text-align: left;
+  width: 100%;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+/* A phone has no room for a column beside the work, and a menu the
+   height of a phone screen would be the whole screen. Below this the
+   shell goes back to ordinary document flow and the menu wraps into
+   rows, the group headings taking a line of their own so the grouping
+   survives. */
+@media (max-width: 52rem) {
+  .shell { display: block; height: auto; overflow: visible; padding: 1rem; }
+  .sidebar {
+    width: auto;
+    height: auto;
+    overflow: visible;
+    margin-bottom: 1rem;
+    padding: 1rem;
+  }
+  .mainmenu { flex-direction: row; flex-wrap: wrap; gap: 0.25rem; }
+  .menu-head { width: 100%; margin: 0.6rem 0 0.1rem; }
+  .menu-foot { margin-top: 0.6rem; padding-top: 0; flex-direction: row; flex-wrap: wrap; }
+  .menu-foot hr { display: none; }
+  .admin-link.logout { width: auto; }
+  .workspace { height: auto; overflow: visible; padding: 0 0 2rem; }
+}
 .admin-tag {
   font-size: 0.6875rem;
   font-weight: 700;

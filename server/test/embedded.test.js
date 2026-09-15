@@ -86,8 +86,8 @@ test('FRAME_ANCESTORS names who may frame the admin, and only then', async () =>
 test('a plain request wears the full chrome', async () => {
   const cookie = await login(`http://127.0.0.1:${PORT}`);
   const page = await (await fetch(`http://127.0.0.1:${PORT}/admin`, { headers: { cookie } })).text();
-  assert.ok(page.includes('<header class="top">'));
-  assert.ok(page.includes('class="admin-nav"'));
+  assert.ok(page.includes('<aside class="sidebar">'));
+  assert.ok(page.includes('class="mainmenu"'));
   assert.ok(!page.includes('body class="admin embedded"'));
 });
 
@@ -96,8 +96,8 @@ test('X-Embedded drops the top bar and leaves the content', async () => {
   const page = await (await fetch(`http://127.0.0.1:${PORT}/admin`, {
     headers: { cookie, 'X-Embedded': '1' },
   })).text();
-  assert.ok(!page.includes('<header class="top">'));
-  assert.ok(!page.includes('class="admin-nav"'));
+  assert.ok(!page.includes('<aside class="sidebar">'));
+  assert.ok(!page.includes('class="mainmenu"'));
   assert.ok(page.includes('body class="admin embedded"'));
   // The page itself survives; only what wrapped it is gone.
   assert.ok(page.includes('<main class="wrap">'));

@@ -150,7 +150,9 @@ test('every deep link in the dashboard lands on a section that exists', async ()
 });
 
 test('Help is in the menu, and knows when it is the page you are on', () => {
-  assert.match(page, /<a class="admin-link current" href="\/help">Help<\/a>/);
-  const dashboard = /<a class="admin-link[^"]*" href="\/help">Help<\/a>/;
+  // The current page carries aria-current as well as the class, so a
+  // screen reader is told which one it is on and not only shown.
+  assert.match(page, /<a class="admin-link current" href="\/help" aria-current="page">Help<\/a>/);
+  const dashboard = /<a class="admin-link[^"]*" href="\/help"[^>]*>Help<\/a>/;
   assert.match(page, dashboard);
 });
