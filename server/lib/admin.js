@@ -27,6 +27,7 @@ const {
   redirect, html, sendJson, noContent, formBody,
 } = require('./admin/bits');
 const statsScreen = require('./admin/stats-page');
+const backupScreen = require('./admin/backup-page');
 const episodeScreens = require('./admin/episode-pages');
 const lookScreen = require('./admin/look-page');
 const hostScreens = require('./admin/host-pages');
@@ -116,6 +117,7 @@ function createAdminRouter(ctx) {
   // The screens. Each one is handed only what it reads, so a page can be
   // opened and understood without the router beside it.
   const { statsPage } = statsScreen({ stats, shows, episodes });
+  const { backupPage } = backupScreen();
   const { episodesPage, episodeEditPage } = episodeScreens({ episodes, mediaDir });
   const { lookPage } = lookScreen();
   const {
@@ -772,6 +774,7 @@ function createAdminRouter(ctx) {
     }
 
     if (p === '/admin/stats' && req.method === 'GET') { html(res, statsPage()); return true; }
+    if (p === '/admin/backup' && req.method === 'GET') { html(res, backupPage()); return true; }
     if (p === '/help' && req.method === 'GET') { html(res, helpPage()); return true; }
     if (p === '/admin/settings' && req.method === 'GET') { html(res, settingsPage()); return true; }
     if (p === '/admin/settings' && req.method === 'POST') {

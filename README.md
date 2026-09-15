@@ -484,6 +484,20 @@ The app is plain Node with zero runtime npm dependencies. The web
 assets are plain CSS and inline SVG, one self-hosted variable font, no
 framework, no build step, no CDN, no trackers.
 
+## Moving it, and backing it up
+
+The dashboard's **Backup** page hands you one file with the whole
+instance in it: the podcast, its hosts and episodes, the settings, the
+download counts and every upload. It is an ordinary `.tar.gz`, so
+`tar tzf` shows you what is in a backup without this program's help.
+
+Putting one back replaces everything on that server with what is in the
+file, which is why restoring a copy and moving a podcast to another
+machine are the same job. The file carries the login too - the password
+hash, the second factor and any passkeys - because that is what makes it
+a move rather than a copy of the words. Keep it where you would keep a
+password.
+
 ## Reporting a problem
 
 - **Something broken, something confusing, something missing:** open an

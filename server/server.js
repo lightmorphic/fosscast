@@ -10,6 +10,7 @@ const { Store } = require('./lib/store');
 const { createAdminRouter } = require('./lib/admin');
 const { Stats } = require('./lib/stats');
 const media = require('./lib/media');
+const backup = require('./lib/backup');
 const publicSite = require('./lib/public');
 const feedAliases = require('./lib/feedaliases');
 const transcripts = require('./lib/transcripts');
@@ -132,6 +133,40 @@ const server = http.createServer((req, res) => {
 function route(req, res) {
   const url = new URL(req.url, 'http://localhost');
   const p = url.pathname;
+
+  // The whole instance, out and back in. Both are guarded the same way
+  // as an upload: signed in, and refused outright on a demo box.
+  if (req.method === 'GET' && p === '/admin/api/export') {
+    if (!admin.currentUser(req)) return sendJson(res, 401, { error: 'not signed in' });
+    let body;
+    try { body = backup.exportAll(DATA_DIR); }
+    catch (err) { return sendJson(res, 500, { error: err.message }); }
+    const stamp = new Date().toISOString().slice(0, 10);
+    res.writeHead(200, {
+      'content-type': 'application/gzip',
+      'content-length': body.length,
+      'content-disposition': `attachment; filename="fosscast-${stamp}.tar.gz"`,
+    });
+    res.end(body);
+    return;
+  }
+
+  if (req.method === 'PUT' && p === '/admin/api/import') {
+    if (DEMO) return sendJson(res, 403, { error: 'demo instance is read-only' });
+    if (!admin.currentUser(req)) return sendJson(res, 401, { error: 'not signed in' });
+    // An instance with uploaded audio in it is large; the limit is the
+    // size of a whole podcast rather than the size of a form.
+    readBody(req, 2048 * 1024 * 1024)
+      .then((body) => {
+        const result = backup.importAll(DATA_DIR, body);
+        // Everything on disk has just been replaced, so the copy this
+        // process is holding is the stale one.
+        store.reload();
+        sendJson(res, 200, result);
+      })
+      .catch((err) => sendJson(res, 400, { error: err.message }));
+    return;
+  }
 
   if (req.method === 'PUT' && p === '/admin/api/upload') {
     if (DEMO) return sendJson(res, 403, { error: 'demo instance is read-only' });

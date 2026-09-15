@@ -603,7 +603,7 @@ function adminPage({ title, body, active = '', authed = true, embedded = isEmbed
     [null, [['', 'Dashboard']]],
     ['The podcast', [['podcast', 'Podcast'], ['hosts', 'Hosts'], ['episodes', 'Episodes']]],
     ['Presentation', [['look', 'Look']]],
-    ['The server', [['stats', 'Stats'], ['settings', 'Settings']]],
+    ['The server', [['stats', 'Stats'], ['settings', 'Settings'], ['backup', 'Backup']]],
   ];
   const FOOT = [['account', 'Account'], ['../help', 'Help']];
 

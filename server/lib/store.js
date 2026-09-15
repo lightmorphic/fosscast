@@ -28,6 +28,13 @@ class Store {
     return value;
   }
 
+  // Everything on disk has been replaced underneath us - an import -
+  // so the memory copy is now the stale one. Without this the next read
+  // answers from the old instance and the next write puts it back.
+  reload() {
+    this.cache.clear();
+  }
+
   save(name, value) {
     this.cache.set(name, value);
     const tmp = this.file(name) + '.tmp';
