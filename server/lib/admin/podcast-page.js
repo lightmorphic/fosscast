@@ -19,23 +19,25 @@ module.exports = function create({ episodes, settings }) {
     const items = episodes().filter((e) => e.showId === show.id);
     const checks = feedChecks(show, items);
     const failed = checks.filter(([, ok]) => !ok);
+    // The podcast's own pages, in a column beside the main menu rather
+    // than a row of tabs across the top of the work.
+    const sections = [['basics', 'Basics'], ['feed', 'Feed'], ['artwork', 'Artwork'],
+      ['listen', 'Where to listen'], ['social', 'Social'], ['support', 'Support'],
+      ['analytics', 'Analytics']];
+    const here = sections.some(([id]) => id === want) ? want : sections[0][0];
     return adminPage({
       title: 'Podcast',
       active: 'podcast',
+      subnav: {
+        label: 'Podcast',
+        items: sections.map(([id, label]) => [`/admin/podcast?s=${id}`, label, id === here]),
+      },
       body: `<h1 class="page-title">Podcast</h1>
       ${notice ? `<p class="form-ok">${esc(notice)}</p>` : ''}
       <p class="hint">${esc(show.name)} &middot; <a href="/shows/${esc(show.slug)}">public page</a>
       &middot; <a href="/shows/${esc(show.slug)}/feed.xml">RSS feed</a>
       &middot; <a href="/admin/episodes">episodes</a></p>
-      ${(() => {
-        const tabs = [["basics", "Basics"], ["feed", "Feed"], ["artwork", "Artwork"], ["listen", "Where to listen"], ["social", "Social"], ["support", "Support"], ["analytics", "Analytics"]];
-        const here = tabs.some(([id]) => id === want) ? want : tabs[0][0];
-        return `<style>.pane{display:none}.pane-${here}{display:block}</style>
-        <nav class="tabs" aria-label="Podcast settings">
-          ${tabs.map(([id, label]) => `<a class="tab${id === here ? ' current' : ''}"
-            href="/admin/podcast?s=${id}">${esc(label)}</a>`).join('')}
-        </nav>`;
-      })()}
+      <style>.pane{display:none}.pane-${here}{display:block}</style>
 
       <section class="panel pane pane-feed" id="sec-import">
         <h2>Import from an existing feed</h2>

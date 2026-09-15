@@ -593,7 +593,7 @@ document.addEventListener('click', (e) => {
 // you point at them.
 const NEEDS_PODCAST = new Set(['hosts', 'episodes', 'look', 'stats']);
 
-function adminPage({ title, body, active = '', authed = true, embedded = isEmbedded(), hasPodcast = true }) {
+function adminPage({ title, body, active = '', authed = true, embedded = isEmbedded(), hasPodcast = true, subnav = null }) {
   // The menu is a column down the left, the same shape the studio uses:
   // the pages of the product grouped by quiet headings, then Account and
   // Help pushed to the foot of the card. A row of tabs across the top
@@ -639,6 +639,18 @@ function adminPage({ title, body, active = '', authed = true, embedded = isEmbed
 </aside>`
     : '';
 
+  // A section's own pages, in a column of their own between the menu and
+  // the work. It is always in the same place and always the same width,
+  // so the menu beside it never moves and neither does anything else;
+  // the work simply has more room on a page that has no section.
+  const section = subnav && subnav.items && subnav.items.length && authed && !embedded
+    ? `<nav class="subnav" aria-label="${esc(subnav.label || 'Section')}">
+  <p class="subnav-title">${esc(subnav.label || '')}</p>
+  ${subnav.items.map(([href, label, here]) =>
+    `<a class="subnav-link${here ? ' current' : ''}" href="${esc(href)}"${here ? ' aria-current="page"' : ''}>${esc(label)}</a>`).join('')}
+</nav>`
+    : '';
+
   return `<!doctype html>
 <html lang="en" data-accent="deep_orange">
 <head>
@@ -653,6 +665,7 @@ function adminPage({ title, body, active = '', authed = true, embedded = isEmbed
 ${process.env.DEMO_MODE === '1' ? '<div class="demo-bar">Demo instance: you can look around, but nothing can be changed.</div>' : ''}
 ${sidebar ? `<div class="shell">
 ${sidebar}
+${section}
 <main class="workspace" id="content">
 ${body}
 </main>
