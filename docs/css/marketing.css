@@ -591,33 +591,86 @@ html { scroll-behavior: smooth; }
 
 /* Laid out like FOSSStudio's: the sister-project card across the top,
    then the maker on the left and the license on the right. */
+/* The footer, the same three bands as talk.lightmorphic.com and
+   fossstudio.org: what this is on the left, the sponsor's seal in the
+   middle, the pages on the right; then the code links; then the legal
+   line. */
 .foot {
+  display: flex;
+  /* site.css sets this column for the app's own footer; the marketing
+     page's is a row, and leaving it out stacked the three parts. */
   flex-direction: row;
+  align-items: flex-start;
   flex-wrap: wrap;
-  gap: 1.25rem;
+  /* 64rem is a narrower column than the studio's, so the three parts
+     get a tighter gap and the words are allowed to give way first. */
+  gap: 2rem 2.5rem;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
   max-width: 64rem;
   margin: 3rem auto 0;
   width: 100%;
 }
-.sister {
-  flex-basis: 100%;
-  order: -1;
-  margin: 0;
-  padding: 1rem 1.25rem;
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  background: var(--panel);
-  text-align: center;
-  font-size: 0.875rem;
-  color: var(--muted-fg);
-  max-width: none;
+/* The brand side carries the weight: the name, and a line saying what
+   this is. Without it the row is a word at one edge and a list at the
+   other with nothing in between. */
+.foot-brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1rem;
+  flex: 1 1 20rem;
+  min-width: 0;
+  max-width: 42ch;
 }
-.sister b { color: var(--fg); font-weight: 600; }
-.sister a { font-weight: 700; }
-@media (max-width: 40rem) {
-  .foot { justify-content: center; text-align: center; }
+.foot-lockup {
+  display: inline-flex;
+  align-items: center;
+  font-size: 1.0625rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: var(--fg);
+  text-decoration: none;
+  padding: 0.35rem 0;
+}
+.foot-lockup b { color: var(--accent); }
+.foot-lockup:hover { color: var(--accent); }
+.foot-tagline { margin: 0; color: var(--muted-fg); font-size: 0.875rem; line-height: 1.65; }
+.foot-tagline b { color: var(--fg); font-weight: 600; }
+.foot-tagline a { font-weight: 700; }
+.foot-nav { display: flex; flex-direction: column; }
+.foot-nav-title {
+  margin: 0 0 0.6rem;
+  padding-bottom: 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+  border-bottom: 1px solid var(--border);
+}
+/* Column-major: the list reads downwards and then across, the way a
+   menu is read, rather than left to right along each row. */
+.foot-nav-links {
+  display: grid;
+  grid-auto-flow: column;
+  grid-template-rows: repeat(3, auto);
+  column-gap: 3rem;
+}
+/* 0.7rem either side of a 22px line clears the 44px a touch target
+   wants. */
+.foot-nav a {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.7rem 0;
+  color: var(--fg);
+  text-decoration: none;
+  font-weight: 600;
+  opacity: 0.8;
+}
+.foot-nav a:hover { opacity: 1; color: var(--accent); }
+@media (max-width: 46rem) {
+  .foot-nav-links { grid-auto-flow: row; grid-template-rows: none; }
 }
 
 
@@ -668,28 +721,21 @@ main:focus { outline: none; }
   .gh-links { margin-left: 0; justify-content: flex-start; gap: 0.25rem 1rem; }
 }
 
+/* The legal line: the company on the left, the five pages level with
+   the last line of the address on the right. */
 .sub-foot { margin-top: 1.5rem; padding-top: 1.25rem; border-top: 1px solid var(--border);
-  width: 100%; }
-.sub-foot p { margin: 0; font-size: 0.8125rem; color: var(--muted-fg); max-width: 62ch; }
-/* Who keeps this going, said a little larger than the small print around
-   it. It is the one line in the footer worth reading twice. */
-.sub-foot p.made-by { margin: 0.6rem 0 0; font-size: 0.9375rem; font-weight: 600;
-  color: var(--fg); }
-.sub-foot p.made-by a { color: var(--fg); text-decoration: underline; text-underline-offset: 2px; }
-.sub-foot p.made-by a:hover { color: var(--accent); }
-
-/* The date this page changed and the legal links share a line, the date
-   at the left and the links hard against the right. On a narrow screen
-   they stack instead, the links falling below and reading from the left
-   rather than being squeezed against the date. */
-.sub-foot-row { display: flex; flex-wrap: wrap; gap: 0.5rem 2rem;
-  align-items: baseline; justify-content: space-between; margin-top: 0.85rem; }
-.sub-foot p.updated { font-size: 0.8125rem; color: var(--muted-fg); }
-
-.sub-foot-links { display: flex; flex-wrap: wrap; gap: 0.25rem 1.25rem;
-  margin-left: auto; }
-.sub-foot-links a { font-size: 0.8125rem; color: var(--muted-fg); text-decoration: none; }
+  width: 100%;
+  display: flex; flex-wrap: wrap; gap: 1rem 2rem;
+  align-items: flex-end; justify-content: space-between; }
+.sub-foot p { margin: 0; font-size: 0.8125rem; color: var(--muted-fg); line-height: 1.6; max-width: 62ch; }
+.sub-foot-links { display: flex; flex-wrap: wrap; gap: 1.25rem;
+  margin-left: auto; justify-content: flex-end; }
+.sub-foot-links a { font-size: 0.8125rem; font-weight: 600; color: var(--muted-fg);
+  text-decoration: none; padding: 0.55rem 0; }
 .sub-foot-links a:hover { color: var(--fg); text-decoration: underline; }
+@media (max-width: 46rem) {
+  .sub-foot-links { margin-left: 0; justify-content: flex-start; gap: 1rem; }
+}
 
 /* The small print pages: one column, easy to read, nothing clever. */
 /* The small print pages have no sections to carry the page's margins,
@@ -715,3 +761,92 @@ main.legal .lede { color: var(--muted-fg); }
    heading should not leave one word alone on the last line. */
 html, body { touch-action: manipulation; }
 h1, h2, h3, .mkt-hero h1, main.legal h1 { text-wrap: balance; }
+
+/* ---------- The sponsor's seal ----------
+   The same struck medal as fossstudio.org, and for the same reason: a
+   line of small print saying who pays for this is read by nobody. The
+   three bars are Castmorphic's own mark, drawn here rather than
+   fetched, so the page still asks nothing of anybody else's server.
+   Their proportions are measured from Castmorphic's file: on a 192px
+   square the bars are 144, 60 and 144 wide, 37 tall, 16 apart, all
+   three starting at the same edge.
+   Everything inside is a share of --seal, so one number resizes it.
+   The two text arcs both travel left to right: a single path all the
+   way round leaves the name at the foot hanging upside down. */
+.seal {
+  --seal: 165px;
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: var(--seal); height: var(--seal);
+  flex: none;
+  align-self: center;
+  border-radius: 50%;
+  overflow: hidden;
+  background: conic-gradient(from 200deg, #1d2431, #10141c 25%, #26303f 50%, #0e1118 75%, #1d2431);
+  box-shadow:
+    0 20px 50px -18px rgba(0, 0, 0, 0.9),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.07);
+}
+/* The glint must start and end out of sight or the loop shows. Tilted
+   18 degrees the band covers about 0.82 of the seal across, so clearing
+   the face needs half of that plus half the seal - near enough 0.91. At
+   0.95 the reset happens where nobody can see it. Constant speed,
+   because an eased sweep visibly loiters at the turn. */
+.seal .glint {
+  position: absolute;
+  width: 30%; height: 174%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.16), transparent);
+  animation: seal-sweep 5s linear infinite;
+  pointer-events: none;
+  will-change: transform;
+}
+@keyframes seal-sweep {
+  from { transform: translateX(calc(var(--seal) * -0.95)) rotate(18deg); }
+  to   { transform: translateX(calc(var(--seal) * 0.95)) rotate(18deg); }
+}
+.seal .rim { position: absolute; inset: 4.7%; border-radius: 50%; border: 1px solid rgba(255, 90, 31, 0.8); }
+.seal .well {
+  position: absolute;
+  inset: 9.4%;
+  border-radius: 50%;
+  background: radial-gradient(100% 100% at 50% 0%, #161b24, #0b0e14);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.07);
+}
+.seal svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+.seal .ring-text {
+  font-family: var(--mono);
+  font-size: 14px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  fill: #adb8c7;
+}
+/* The name as Castmorphic writes it: Manrope, bold, one capital. */
+.seal .ring-name {
+  font-family: "Manrope", system-ui, sans-serif;
+  font-size: 27px;
+  font-weight: 800;
+  letter-spacing: -0.01em;
+  fill: #ff5a1f;
+}
+.seal .mark {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: calc(var(--seal) * 0.0321);
+  align-items: flex-start;
+  filter: drop-shadow(0 4px 12px rgba(255, 90, 31, 0.45));
+}
+.seal .mark i {
+  display: block;
+  height: calc(var(--seal) * 0.0719);
+  border-radius: 999px;
+  background: linear-gradient(90deg, #ff6a2c, #ff4d0f);
+}
+.seal .mark i:nth-child(1),
+.seal .mark i:nth-child(3) { width: calc(var(--seal) * 0.28); }
+.seal .mark i:nth-child(2) { width: calc(var(--seal) * 0.1167); }
+@media (prefers-reduced-motion: reduce) { .seal .glint { animation: none; } }
+/* Below 62rem the footer row wraps, and a circle between a paragraph
+   and a list is in the way rather than in the gap. */
+@media (max-width: 62rem) { .seal { display: none; } }
