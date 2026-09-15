@@ -266,36 +266,29 @@ function player(episode, show, domain) {
   return `<${tag} controls preload="none" src="${esc(src)}"></${tag}>`;
 }
 
+// The front door before a podcast exists.
+//
+// It used to be a marketing page: a slogan, three cards describing the
+// software, and a status line - "Being built in the open. First episodes
+// soon." - that nobody had set and that was not true of anybody's
+// install. Somebody who followed a link to a podcaster's domain read an
+// advert for FOSSCast written as though it were their show.
+//
+// So it says the one true thing and stops. The person who runs this is
+// told where to go; a visitor is told there is nothing here yet, which
+// is the whole of what a visitor needs.
 function landing() {
   return publicPage({
-    title: 'FOSSCast',
-    description: 'A home for an independent podcast: every published episode, playable in the browser and subscribable anywhere podcasts go.',
+    title: 'Nothing published yet',
+    description: 'This FOSSCast install has no podcast on it yet.',
     body: `
   <section class="panel hero">
-    <p class="status"><span aria-hidden="true">&#9679;</span> Being built in the open. First episodes soon.</p>
-    <h1>Your podcast, kept properly.</h1>
-    <p class="lede">FOSSCast is the public home of an independent podcast:
-    every published episode on its own page, playable here and
-    subscribable anywhere podcasts go, served from hardware you
-    control.</p>
-  </section>
-  <section class="grid">
-    <div class="panel wide">
-      <h2>A website worth linking to</h2>
-      <p>Every episode gets its own page with artwork, player, chapters
-      and transcript, and the feed points podcast apps straight at it.
-      Banners, cover art and light or dark, as the visitor prefers.</p>
-    </div>
-    <div class="panel">
-      <h2>Episodes</h2>
-      <p>Video and audio, held on this server or anywhere else that
-      serves a file.</p>
-    </div>
-    <div class="panel">
-      <h2>Subscribe anywhere</h2>
-      <p>RSS feeds any podcast app understands, transcripts and
-      chapters included.</p>
-    </div>
+    <h1>Nothing published here yet.</h1>
+    <p class="lede">This server is running FOSSCast, and no podcast has
+    been set up on it. When one is, this address is its website: every
+    episode on its own page, with a feed any podcast app can follow.</p>
+    <p class="hint">Whoever looks after this server can create the
+    podcast from <a href="/admin">the dashboard</a>.</p>
   </section>`,
   });
 }
