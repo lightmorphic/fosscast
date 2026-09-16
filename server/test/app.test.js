@@ -246,7 +246,7 @@ test('the look: the accent color and words of your own', async () => {
   // The footer is not optional: the mark stays, and the line beside it
   // is the show's own words when it has set any.
   assert.ok(page.includes('foot-brand'), 'the mark is there');
-  assert.ok(page.includes('foot-lm'), 'and the mark beside it');
+  assert.ok(page.includes('foot-cm'), 'and the sponsor mark beside it');
   assert.ok(page.includes('Made in a shed'), 'their own line stays');
   // The admin keeps its own branding regardless: that is our software,
   // not their website.

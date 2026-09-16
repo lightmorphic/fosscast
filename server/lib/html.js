@@ -1,23 +1,25 @@
 'use strict';
 // HTML helpers and the two page shells (public site and admin).
 
-const fs = require('fs');
 const path = require('path');
 
-// The Lightmorphic mark in the footer. Drop an animated GIF in as
-// web/img/lightmorphic-mark.gif and it is used instead of the still
-// one, no code change and no deploy-time flag: an <img> animates a GIF
-// by itself. Checked once at startup rather than per request.
-const WEB_DIR = path.resolve(process.env.WEB_DIR || path.join(__dirname, '..', '..', 'web'));
-const LM_MARK = fs.existsSync(path.join(WEB_DIR, 'img', 'lightmorphic-mark.gif'))
-  ? '/img/lightmorphic-mark.gif'
-  : '/img/lightmorphic-mark.webp';
+// The mark in the footer's right-hand corner. An operator running this
+// for other people puts their own there - a path, or a data URI so
+// nothing has to be fetched from anybody else. Unset, the corner
+// carries Castmorphic's, who pay for this being written.
+const BRAND_MARK = (process.env.BRAND_MARK || '').trim();
 
-// The mark in the footer's right-hand corner. An operator running
-// this for other people puts their own there - a path, or a data URI
-// so nothing has to be fetched from anybody else. Unset, it is
-// Lightmorphic's, as it has always been.
-const BRAND_MARK = (process.env.BRAND_MARK || '').trim() || LM_MARK;
+// Castmorphic's mark: three bars, the middle one short. Drawn here
+// rather than fetched, so a podcast's site asks nothing of anybody
+// else's server, and it takes its color from the page. The bars breathe
+// in and out like a level meter - the animation is in the stylesheet,
+// which is also where it is turned off for anyone who asked for less
+// movement.
+const CM_MARK = `<svg class="cm-mark" viewBox="0 0 24 24" aria-hidden="true">
+<rect class="bar" x="3" y="3" width="18" height="4.6" rx="2.3" fill="currentColor"/>
+<rect class="bar" x="3" y="9.7" width="7.5" height="4.6" rx="2.3" fill="currentColor"/>
+<rect class="bar" x="3" y="16.4" width="18" height="4.6" rx="2.3" fill="currentColor"/>
+</svg>`;
 
 
 function esc(value) {
@@ -116,9 +118,11 @@ ${body}
     <span>${esc(BRAND)}</span>
   </a>`}
   ${footer ? `<p class="foot-own">${esc(footer)}</p>` : ''}
-  <a class="foot-lm" href="${esc(BRANDED ? BRAND_URL : 'https://lightmorphic.com')}" target="_blank" rel="noopener noreferrer" aria-label="${esc(BRANDED ? BRAND : 'Lightmorphic')}">
-    <img src="${BRAND_MARK}" alt="${esc(BRANDED ? BRAND : 'Lightmorphic')}" width="32" height="32" loading="lazy">
-  </a>
+  ${BRANDED
+    ? (BRAND_MARK ? `<a class="foot-op" href="${esc(BRAND_URL)}" target="_blank" rel="noopener noreferrer" aria-label="${esc(BRAND)}">
+    <img src="${esc(BRAND_MARK)}" alt="${esc(BRAND)}" width="32" height="32" loading="lazy">
+  </a>` : '')
+    : `<a class="foot-cm" href="https://castmorphic.com" target="_blank" rel="noopener noreferrer" aria-label="Created and sponsored by Castmorphic">${CM_MARK}</a>`}
 </footer>
 ${PAGE_EMBED ? `<script src="${esc(PAGE_EMBED)}" defer></script>` : ''}
 <script>

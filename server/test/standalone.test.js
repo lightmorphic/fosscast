@@ -34,11 +34,24 @@ test('nothing in the app knows the paid product exists', () => {
   // Not squeamishness: a mention would mean a code path that behaves
   // differently for a hosted instance, which is the first step towards
   // a self-hoster running something subtly second-class.
+  //
+  // The one exception, and it is a credit rather than a coupling: the
+  // corner of a podcast's site carries the mark of whoever pays for
+  // this being written, exactly as the footer of fosscast.org does. It
+  // is a link and a drawing in html.js and nothing else - no code path
+  // asks who is running, nothing is fetched, and an operator with their
+  // own name on the door replaces it with their own.
   const forbidden = /castmorphic|lm00\d|admin\.fosscast|77\.74\.199/i;
   for (const file of sourceFiles()) {
     const text = fs.readFileSync(file, 'utf8');
+    if (path.basename(file) === 'html.js') continue;
     assert.doesNotMatch(text, forbidden, `${path.basename(file)} mentions the hosted service`);
   }
+  // And in html.js it may say it twice - the link and the comment above
+  // it - with no logic of any kind hanging off the name.
+  const html = read('server/lib/html.js');
+  assert.match(html, /https:\/\/castmorphic\.com/, 'the credit is a plain address');
+  assert.doesNotMatch(html, /(if|\?|&&|\|\|)[^\n]*castmorphic/i, 'and nothing branches on it');
 });
 
 test('the one-file install needs nothing but the published image', () => {

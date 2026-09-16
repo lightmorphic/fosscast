@@ -851,12 +851,36 @@ body.embedded .wrap { padding-top: 0.5rem; }
 .foot-brand .mark { width: 1.25rem; height: 1.25rem; color: var(--accent); }
 .foot-brand:hover { color: var(--fg); }
 .site-foot .foot-own { flex: 1; text-align: left; min-width: 10rem; }
-.foot-lm { display: inline-flex; line-height: 0; opacity: 0.85; }
-.foot-lm:hover { opacity: 1; }
-/* Shown at the size it was drawn, 32px, so the animation stays crisp.
-   No rounding: the artwork has a transparent background, so there are
-   no corners to hide. */
-.foot-lm img { display: block; width: 2rem; height: 2rem; }
+/* An operator who has put their own name on this puts their own mark
+   in the corner too. Shown at the size it was drawn, 32px, and not
+   rounded: whatever they supply is theirs to shape. */
+.foot-op { display: inline-flex; line-height: 0; opacity: 0.85; }
+.foot-op:hover { opacity: 1; }
+.foot-op img { display: block; width: 2rem; height: 2rem; }
+
+/* Castmorphic's mark, in the corner of every podcast's site. The three
+   bars breathe in and out on different beats, the short middle one
+   furthest, so it reads as sound going through rather than a logo that
+   happens to wobble. Slow, small, and no bar ever leaves its own line:
+   a footer is not the place for something that catches the eye every
+   two seconds. */
+.foot-cm { display: inline-flex; line-height: 0; color: var(--accent); opacity: 0.85; }
+.foot-cm:hover { opacity: 1; }
+.foot-cm .cm-mark { display: block; width: 2rem; height: 2rem; }
+.foot-cm .bar { transform-box: fill-box; transform-origin: left center; animation: cm-pulse 2.8s ease-in-out infinite; }
+.foot-cm .bar:nth-child(2) { animation-name: cm-pulse-level; animation-delay: -0.9s; }
+.foot-cm .bar:nth-child(3) { animation-delay: -1.8s; }
+@keyframes cm-pulse {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(0.9); }
+}
+@keyframes cm-pulse-level {
+  0%, 100% { transform: scaleX(1); }
+  50% { transform: scaleX(1.45); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .foot-cm .bar { animation: none; }
+}
 @media (max-width: 34rem) {
   .site-foot { justify-content: center; }
   .site-foot .foot-own { order: 3; flex-basis: 100%; }

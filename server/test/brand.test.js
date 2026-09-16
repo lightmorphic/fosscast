@@ -54,7 +54,7 @@ async function dashboard(port) {
 
 before(async () => {
   start(PLAIN);
-  start(BRANDED, { BRAND_NAME: BRAND, BRAND_URL: 'https://example.com' });
+  start(BRANDED, { BRAND_NAME: BRAND, BRAND_URL: 'https://example.com', BRAND_MARK: '/img/favicon.svg' });
   await until(async () => {
     for (const p of [PLAIN, BRANDED]) {
       const res = await fetch(`http://127.0.0.1:${p}/healthz`);
@@ -100,13 +100,19 @@ test('the public footer follows the brand too', async () => {
   assert.ok(plain.includes('https://fosscast.org'));
   assert.ok(plain.includes('<span>FOSSCast</span>'));
 
+  // Unbranded, the corner carries Castmorphic's mark, and it moves.
+  assert.ok(plain.includes('https://castmorphic.com'));
+  assert.ok(plain.includes('class="cm-mark"'));
+
   const branded = await (await fetch(`http://127.0.0.1:${BRANDED}/shows`)).text();
   // Renamed, the corner mark carries the operator's name and address,
-  // and FOSSCast's own roundel and address are nowhere on the page.
+  // and neither FOSSCast's roundel nor Castmorphic's mark is anywhere
+  // on the page: an operator's site names the operator.
   assert.ok(branded.includes('https://example.com'));
   assert.ok(branded.includes(`alt="${BRAND}"`));
   assert.ok(!branded.includes('https://fosscast.org'));
-  assert.ok(!branded.includes('https://lightmorphic.com'));
+  assert.ok(!branded.includes('https://castmorphic.com'));
+  assert.ok(!branded.includes('cm-mark'));
   assert.ok(!branded.includes('M6.3 17.7a8 8 0 0 1 0-11.4'));
 });
 
