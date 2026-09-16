@@ -643,17 +643,12 @@ function adminPage({ title, body, active = '', authed = true, embedded = isEmbed
   // the work. It is always in the same place and always the same width,
   // so the menu beside it never moves and neither does anything else;
   // the work simply has more room on a page that has no section.
-  // A page with no section still leaves the column empty rather than
-  // taking the room back: the work is the same width on every page, so
-  // nothing shuffles sideways as you move around the admin.
-  const section = !authed || embedded ? ''
-    : subnav && subnav.items && subnav.items.length
-      ? `<nav class="subnav" aria-label="${esc(subnav.label || 'Section')}">
+  const section = !authed || embedded || !subnav || !subnav.items || !subnav.items.length ? ''
+    : `<nav class="subnav" aria-label="${esc(subnav.label || 'Section')}">
   <p class="subnav-title">${esc(subnav.label || '')}</p>
   ${subnav.items.map(([href, label, here]) =>
     `<a class="subnav-link${here ? ' current' : ''}" href="${esc(href)}"${here ? ' aria-current="page"' : ''}>${esc(label)}</a>`).join('')}
-</nav>`
-      : '<div class="subnav-gap" aria-hidden="true"></div>';
+</nav>`;
 
   return `<!doctype html>
 <html lang="en" data-accent="deep_orange">

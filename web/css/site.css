@@ -143,7 +143,9 @@ p { max-width: 65ch; }
      slid sideways whenever a page happened to be wider or narrower -
      and it must not move at all. */
   width: 100%;
-  max-width: 90rem;
+  /* A standard page width. Wider than this and a line of text runs
+     too far for the eye to come back to the start of the next one. */
+  max-width: 78rem;
   margin: 0 auto;
   box-sizing: border-box;
 }
@@ -229,7 +231,6 @@ p { max-width: 65ch; }
   .menu-foot { margin-top: 0.6rem; padding-top: 0; flex-direction: row; flex-wrap: wrap; }
   .menu-foot hr { display: none; }
   .admin-link.logout { width: auto; }
-  .subnav-gap { display: none; }
   .subnav {
     width: auto;
     height: auto;
@@ -1369,8 +1370,7 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
    menu never moves and this is in the same place on every page that has
    one. The work takes what is left, which is why a page without a
    section is simply wider - nothing else about it changes. */
-.subnav,
-.subnav-gap {
+.subnav {
   flex: 0 0 13rem;
   width: 13rem;
   display: flex;
@@ -1403,8 +1403,6 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 }
 .subnav-link:hover { color: var(--fg); background: var(--muted); }
 .subnav-link.current { color: var(--on-accent-container); background: var(--accent-container); }
-/* The empty half of the deal: the same room, held open, showing nothing. */
-.subnav-gap { background: none; border: 0; box-shadow: none; padding: 0; }
 
 /* A form wide enough to use the room it is given: what the episode is
    on one side, where its audio and artwork come from on the other. */
