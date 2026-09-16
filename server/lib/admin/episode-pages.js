@@ -5,7 +5,7 @@
 const { esc, adminPage } = require('../html');
 const { siteDomain } = require('../domain');
 const transcripts = require('../transcripts');
-const { DEMO, formatDuration, formatChapters, deleteButton } = require('./bits');
+const { formatDuration, formatChapters, deleteButton } = require('./bits');
 const config = require('../config');
 
 module.exports = function create({ episodes, mediaDir }) {

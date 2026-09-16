@@ -67,3 +67,16 @@ report describing the problem instead, and it will be just as useful.
 *This is a plain-language statement of intent, not legal advice. If a
 contribution ever matters enough to argue about, get a lawyer to
 look at it.*
+
+## The linter
+
+There is an Oxlint setup at the root of the repository, with a small
+vendored plugin under `tools/oxlint/anti-slop/` that looks for the
+habits of machine-written code. It is a check on us, not a dependency
+of FOSSCast: the app itself still installs nothing and runs on plain
+Node.
+
+```bash
+npm install     # only for the linter
+npm run lint
+```
