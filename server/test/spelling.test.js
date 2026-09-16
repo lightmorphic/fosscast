@@ -259,7 +259,7 @@ const ALLOWED = [
   },
   {
     file: 'server/lib/public.js',
-    text: 'function summarise(text, limit = 150)',
+    text: 'function summarise(text, limit = 320)',
     why: 'a name in code; the comment above it says summarizes',
   },
   {

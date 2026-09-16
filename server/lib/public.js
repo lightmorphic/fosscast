@@ -359,7 +359,12 @@ function initials(name) {
 // showing four lines looks broken. So the card summarizes the whole
 // piece - paragraphs run together, cut at a word - and every host gets
 // the same amount of it.
-function summarise(text, limit = 150) {
+// The taste of a write-up that goes on the listing, before the page
+// itself. A hundred and fifty characters was cut for a card half a page
+// wide; stacked, a card holds three full lines, and a snip that stopped
+// after one and a half looked like the text had broken rather than been
+// trimmed.
+function summarise(text, limit = 320) {
   const flat = String(text || '').replace(/\s+/g, ' ').trim();
   if (flat.length <= limit) return { text: flat, more: false };
   const cut = flat.slice(0, limit);
