@@ -1488,22 +1488,99 @@ form h2:first-child { margin-top: 0; }
 
 /* ---------- Help ---------- */
 /* Answers, not a manual: each question is its own panel so the eye can
-   find the one it wants without reading the page. No table of contents -
-   the headings are the contents, and a list of links to headings a
-   screen away is furniture pretending to be a product. */
+   find the one it wants without reading the page. There are twelve of
+   them now, which is more than anybody scrolls through looking for the
+   one about robots, so the answers are listed in the column beside the
+   page and the search at the top narrows both at once. (This page used
+   to refuse a list of links on principle. Twelve answers is where the
+   principle stopped being right.) */
 .help-section {
   background: var(--panel);
   border: 1px solid var(--border);
   border-radius: var(--radius);
   padding: 1.5rem 1.75rem;
   margin-bottom: 1.25rem;
-  max-width: 46rem;
 }
 .help-section h2 { margin: 0 0 0.75rem; font-size: 1.0625rem; }
-.help-section p { margin: 0 0 0.875rem; max-width: 40rem; line-height: 1.6; }
+/* Long enough a line to stop the page looking like a column of
+   fragments, short enough that the eye finds the next one. */
+.help-section p { margin: 0 0 0.875rem; max-width: 46rem; line-height: 1.6; }
 .help-section p:last-child { margin-bottom: 0; }
 /* A command to type, set apart from the sentence that asked for it. */
 .help-section .cmd { font-family: ui-monospace, monospace; font-size: 0.875rem; }
 /* The anchor a deep link lands on: without this the heading sits under
    nothing and you cannot tell you arrived. */
 .help-section { scroll-margin-top: 1.5rem; }
+
+/* The search sits above everything and is the width of the work: it is
+   the first thing to reach for, not a box tucked in a corner. */
+.help-search { margin: 0 0 1.25rem; position: relative; }
+.help-search input {
+  width: 100%;
+  font-size: 1rem;
+  padding: 0.7rem 0.9rem;
+}
+.help-count {
+  margin: 0.4rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--muted-fg);
+  min-height: 1.2em;
+}
+.help-none {
+  margin: 0;
+  padding: 1.5rem 1.75rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  color: var(--muted-fg);
+}
+
+/* The drawings. One vocabulary across all of them: a box is a thing, a
+   filled box is this server, an arrow is a request going somewhere.
+   They sit above the words rather than beside them, so the sentence
+   after the picture is the picture explained. */
+.help-fig { margin: 0 0 1.25rem; max-width: 36rem; }
+.help-diagram { display: block; width: 100%; height: auto; }
+.help-fig figcaption {
+  margin-top: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--muted-fg);
+  line-height: 1.5;
+}
+.help-diagram .node rect {
+  fill: var(--muted);
+  stroke: var(--border);
+  stroke-width: 1;
+}
+.help-diagram .node.mine rect {
+  fill: var(--accent-container);
+  stroke: var(--accent);
+}
+.help-diagram .node .t {
+  fill: var(--fg);
+  font-size: 13px;
+  font-weight: 600;
+  text-anchor: middle;
+}
+.help-diagram .node.mine .t { fill: var(--on-accent-container); }
+.help-diagram .node .s {
+  fill: var(--muted-fg);
+  font-size: 11.5px;
+  text-anchor: middle;
+}
+.help-diagram .arrow line, .help-diagram .arrow polygon {
+  stroke: var(--muted-fg);
+  fill: var(--muted-fg);
+  stroke-width: 1.5;
+}
+.help-diagram .chip rect { fill: var(--panel); stroke: var(--border); }
+.help-diagram .chip text {
+  fill: var(--fg);
+  font-size: 12px;
+  text-anchor: middle;
+}
+.help-marks .mark circle { fill: none; stroke: var(--border); stroke-width: 1.5; }
+.help-marks .mark path { fill: none; stroke: var(--muted-fg); stroke-width: 2; stroke-linecap: round; }
+.help-marks .mark.yes circle { stroke: var(--accent); }
+.help-marks .mark.yes path { stroke: var(--accent); }
+.help-marks .mark text { fill: var(--fg); font-size: 13px; }

@@ -156,3 +156,29 @@ test('Help is in the menu, and knows when it is the page you are on', () => {
   const dashboard = /<a class="admin-link[^"]*" href="\/help"[^>]*>Help<\/a>/;
   assert.match(page, dashboard);
 });
+
+test('twelve answers are searchable and listed beside the page', () => {
+  // A column of every answer, in the order they are written, and a box
+  // that narrows the page. Both were added when the page passed a dozen
+  // sections: before that the headings really were the contents.
+  const ids = [...page.matchAll(/class="help-section" id="([^"]+)"/g)].map((m) => m[1]);
+  const links = [...page.matchAll(/class="subnav-link[^"]*" href="#([^"]+)"/g)].map((m) => m[1]);
+  assert.deepStrictEqual(links, ids, 'the column lists every answer, in order');
+
+  assert.match(page, /id="help-q"/, 'there is a search box');
+  assert.match(page, /class="help-count"/, 'and it says how many answers are left');
+  // The search reads the words of the answers, not only their
+  // headings: 'locked out' is in the sign-in answer and in no heading.
+  assert.match(page, /s\.textContent\.toLowerCase\(\)/);
+});
+
+test('the drawings are drawn here and say what they are', () => {
+  const figures = [...page.matchAll(/<figure class="help-fig">([\s\S]*?)<\/figure>/g)].map((m) => m[1]);
+  assert.ok(figures.length >= 5, `${figures.length} drawings`);
+  for (const fig of figures) {
+    assert.match(fig, /<svg /, 'a drawing, not an image fetched from somewhere');
+    assert.match(fig, /role="img" aria-label="[^"]+"/, 'named for a screen reader');
+    assert.match(fig, /<figcaption>[^<]+<\/figcaption>/, 'and captioned in words');
+  }
+  assert.ok(!/<img /.test(page), 'nothing on the page is a bitmap');
+});
