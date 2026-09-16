@@ -266,6 +266,14 @@ function webCopy(file, maxSide) {
     .filter(Boolean);
   if (sections.length < 5) return;
 
+  // The work is a .workspace inside the menu shell and a .wrap on the
+  // pages that have no menu. Finding neither is not a reason to throw:
+  // everything below this in the file - autosave included - would never
+  // run, and a page that quietly stops saving is far worse than a page
+  // with no rail down the side.
+  var column = document.querySelector('main.workspace, main.wrap');
+  if (!column) return;
+
   var rail = document.createElement('nav');
   rail.className = 'section-rail';
   rail.setAttribute('aria-label', 'Sections on this page');
@@ -279,7 +287,6 @@ function webCopy(file, maxSide) {
   // Beside the cards, not out at the edge of the window: the rail is
   // put against the right edge of the content column, and steps aside
   // entirely when there is no room for it there.
-  var column = document.querySelector('main.wrap');
   function place() {
     var box = column.getBoundingClientRect();
     // 12px off the column, 8px clear of the window edge; narrower than

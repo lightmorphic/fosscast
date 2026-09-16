@@ -75,3 +75,14 @@ test('nothing renders the old row of tabs any more', () => {
     assert.ok(!fs.readFileSync(f, 'utf8').includes('class="tabs"'), `${f} still has a tab row`);
   }
 });
+
+test('the page script survives a page that has no rail to put anywhere', () => {
+  // The section rail used to look only for main.wrap. In the menu shell
+  // the work is a main.workspace, so it read a property of null and
+  // threw - and everything after it in the same script, autosave first
+  // among them, never ran. The Podcast page looked normal and quietly
+  // saved nothing.
+  const html = fs.readFileSync(path.join(__dirname, '../lib/html.js'), 'utf8');
+  assert.match(html, /querySelector\('main\.workspace, main\.wrap'\)/, 'the rail must look for both');
+  assert.match(html, /if \(!column\) return;/, 'and give up quietly when it finds neither');
+});

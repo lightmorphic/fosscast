@@ -62,10 +62,13 @@ module.exports = function create({ episodes, settings }) {
         <form method="post" action="/admin/podcast/aliases" data-autosave>
           <label for="feedAliases">Old address</label>
           <input id="feedAliases" name="feedAliases" type="text" spellcheck="false"
-            placeholder="/@${esc(show.slug)}/feed.xml"
+            placeholder="https://old.example/@${esc(show.slug)}/feed.xml"
             value="${esc((show.feedAliases || []).join(', '))}">
-          <p class="hint">More than one? Separate them with commas. A whole web
-          address is fine - only the part after the domain is used.</p>
+          <p class="hint">Either shape does: the whole address as your old host
+          showed it to you, <code>https://old.example/feed.xml</code>, or
+          just the part after the domain, <code>/feed.xml</code>. Only the path
+          is kept, so the two come to the same thing. More than one? Separate
+          them with commas.</p>
           <p class="save-state" aria-live="polite"></p>
         </form>
         ${(show.feedAliases || []).length ? `<p class="hint">Answering now:
