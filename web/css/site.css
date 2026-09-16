@@ -176,9 +176,11 @@ p { max-width: 65ch; }
   min-width: 0;
   height: 100%;
   overflow-y: auto;
-  /* The shell already holds the gap; the work only needs room at the
-     foot so the last panel is not flush against the window. */
-  padding: 0 0.25rem 3rem;
+  /* The shell already holds the gap, and nothing is inset at the sides:
+     a card here starts exactly where the section column starts on a
+     page that has one, so the gaps are the same all the way across.
+     Only the foot needs room, so the last panel is not flush. */
+  padding: 0 0 3rem;
 }
 .workspace > * + * { margin-top: 1.5rem; }
 

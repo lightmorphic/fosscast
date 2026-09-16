@@ -60,6 +60,11 @@ test('the menu and the section are both a fixed width', () => {
   const shell = css.slice(css.indexOf('.shell {'), css.indexOf('}', css.indexOf('.shell {')));
   assert.match(shell, /width: 100%/, 'the shell must fill its width, not its contents');
   assert.match(shell, /max-width: 78rem/, 'and stop at a standard page width');
+  // Nothing inset at the sides of the work, so a card on a page with no
+  // section starts exactly where the section column starts on one that
+  // has: every gap across the row is the shell's own.
+  const work = css.slice(css.indexOf('.workspace {'), css.indexOf('}', css.indexOf('.workspace {')));
+  assert.match(work, /padding: 0 0 3rem/, 'the work must have no side padding');
 });
 
 test('nothing renders the old row of tabs any more', () => {
