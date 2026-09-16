@@ -911,19 +911,16 @@ body.embedded .wrap { padding-top: 0.5rem; }
 
 /* ---------- Hosts (public) ---------- */
 .hosts-hero h1 { margin: 0 0 0.25rem; }
+/* One host under the next, never side by side. Beside each other the
+   cards are half a page wide and a write-up of any length becomes a
+   long thin ribbon of text - which is what the FOSSNerds site looked
+   like. Down the page each host gets the whole width, the photo sits
+   beside the words, and a line of the bio is a line worth reading. */
 .host-grid {
   display: grid;
-  gap: 1.5rem;
-  /* auto-fit rather than auto-fill: two hosts share the row between
-     them instead of sitting in a third of it with an empty track
-     alongside. (The cap has to live on the card, not the track: a
-     minmax with a fixed maximum is measured at its maximum, which
-     collapses the whole grid to one column.) */
-  grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+  gap: 1.25rem;
+  grid-template-columns: minmax(0, 1fr);
 }
-.host-grid > .host-card { max-width: 34rem; }
-/* A single host, centered, rather than one card and a large hole. */
-.host-grid > .host-card:only-child { justify-self: center; }
 /* Every card lays out the same whatever the length of the write-up: the
    photo and the name start at the top, so a two-line bio and a
    six-line one still line up across a row. */
@@ -954,18 +951,18 @@ body.embedded .wrap { padding-top: 0.5rem; }
 .host-card-text { display: grid; gap: 0.125rem; min-width: 0; }
 .host-name { font-weight: 600; }
 .host-role { color: var(--accent); font-size: 0.875rem; }
-/* Exactly four lines: a long write-up is trimmed to them and a short
-   one still reserves them, so a row of cards lines up whatever their
-   hosts had to say for themselves. */
+/* Three lines of the write-up and then the page for the rest. No
+   reserved height any more: stacked, there is no row to line up with,
+   and a short bio should not leave a hole under it. */
 .host-snip {
   color: var(--muted-fg);
   font-size: 0.875rem;
   display: -webkit-box;
-  -webkit-line-clamp: 4;
-  line-clamp: 4;
+  -webkit-line-clamp: 3;
+  line-clamp: 3;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  min-height: calc(4 * 1.6em);
+  max-width: 52rem;
 }
 /* Who they are down one side, what they have to say filling the rest:
    a column of text half the width of its own card looked like a
