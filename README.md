@@ -1,119 +1,28 @@
-> ## Public beta. Not ready to be relied on.
->
-> **This is a public beta. It is not ready to be relied on. Data loss
-> and breaking changes are possible. Please do not put a real podcast on
-> it yet.**
->
-> We want people to install it, break it and tell us what happened.
-> That is what a beta is for. What we are not ready for is being the
-> only copy of somebody's back catalog. Run it beside your existing
-> host, not instead of it, and keep your own backups of anything you
-> upload.
->
-> Releases are marked as pre-release on GitHub. The current version is
-> `0.1.0`.
-
 # FOSSCast
 
-A self-hosted home for a podcast: every published episode on its own
-page, playable in the browser and subscribable by RSS in any podcast
-app.
+**A home for your podcast on your own server.** Every episode gets a page, a player and a feed that any podcast app can subscribe to, with honest download numbers and nothing tracking anybody. One file to install, and it is yours.
 
-Lightmorphic also publishes
-[FOSSStudio](https://github.com/lightmorphic/fossstudio), a self-hosted
-studio for recording episodes: guests join by a link with no account and
-no download, and each is recorded on their own track. It is a separate
-app with its own repository, and neither it nor FOSSCast has anything to
-do with the other.
+![The Cheese Podcast on FOSSCast: a banner, the artwork and description, the apps to listen in and the feed address](docs/shots/site.png)
 
-## Free, and staying free
+[fosscast.org](https://fosscast.org) &middot; [Install](#install) &middot; [What you get](#what-you-get) &middot; [AGPL-3.0](LICENSE)
 
-FOSSCast is free software under the AGPL, and it always will be. Copy
-the compose file below onto a machine you control and it is yours: no
-account, no key, no tier, nothing held back, nothing phoning home.
-Everything in this repository is everything there is.
+## Install
 
-If you would rather not run a server, the people who write FOSSCast
-also host it: **[Castmorphic](https://castmorphic.com)** runs this same
-software for you, with more built on top of it, and paying for that is
-what funds the work here. It is an alternative to self-hosting, not a
-better version of it. You will not find an ad for it inside the
-software, and you never will.
+One file, nothing in it to fill in. Save [`docker-compose.pull.yml`](docker-compose.pull.yml) as `docker-compose.yml` on a Linux server with Docker, point your domain at the machine, then:
 
-## What it does
+```bash
+docker compose up -d
+```
 
-<!-- Every claim below is something the current code does. If you find
-     one that isn't, that is a bug report we want. -->
+Open it in a browser. The first person to open a FOSSCast nobody owns claims it: you set an email and a password, and add a passkey and a second factor in the same minute if you want them. There is no code to find in a log and no second sign-up afterwards.
 
+Do that right away rather than tomorrow. Until it is claimed, anybody who can reach the address could claim it instead - on a home network that is a minute and nobody is looking, but a port open to the internet is a real window. Keep the port shut until you have claimed it, or set `REQUIRE_SETUP_CODE: "1"` and FOSSCast prints a code in its log and asks for it first.
 
-- **Episode website**: the podcast gets clean pages for its episodes,
-  audio and video players, artwork and a banner, and an RSS feed any
-  podcast app can subscribe to. Media files can live on FOSSCast's own
-  storage or anywhere else that serves a file over HTTP.
-- **Their site, their color**: a Look tab sets the accent color, a
-  tagline and a footer line, with a live preview of the real page. Every
-  other shade the site needs is worked out from the one color, and link
-  text is walked darker or lighter until it clears 4.5:1.
-- **Statistics without surveillance**: a page of charts -- months, days,
-  apps, countries, platforms, languages, when people listen, how long an
-  episode keeps earning -- all drawn on your own server from counters
-  that cannot be joined back to a person.
-- **Where to find you**: Matrix first, then Mastodon, PeerTube, Lemmy,
-  Bluesky and the big platforms -- eighteen in all, as buttons on your
-  page.
-- **Where to listen**: Apple Podcasts, Spotify, YouTube Music, Amazon
-  Music, Pocket Casts, Overcast and Podcast Index, as buttons on the
-  page once you have pasted each address in.
-- **Getting paid**: Patreon, Buy Me a Coffee, Ko-fi, Liberapay, GitHub
-  Sponsors, Open Collective and PayPal links become buttons on the podcast
-  page and `podcast:funding` tags in the feed.
-- **The people on it**: every host gets a photo, a role and a write-up,
-  a card on the site's Hosts page and a page of their own -- and goes
-  out in the feed so apps can put a face to a voice.
-- **Directory-grade feeds**: full iTunes namespace plus Podcasting 2.0
-  transcripts, chapters, people and funding tags.
-- **Help inside the app**: a page of answers at `/help`, behind the
-  login, with no outside calls at all - so it works on a box with no
-  internet and describes the version you installed. Every setting that
-  needs explaining links straight to its own section.
-- **A login you set yourself**: no password in a compose file. The first
-  run asks for a code that only exists in the container's log, then
-  makes you choose a password it will argue with you about, and offers a
-  passkey and a second factor in the same minute.
+The compose file has a Caddy block at the foot, commented out. Take the hashes off and it gets you an HTTPS certificate on its own; leave them and point your existing proxy at `127.0.0.1:3100`. Passkeys need HTTPS, so do one or the other.
 
-## What it does not do
-
-FOSSCast's scope is settled, not merely unfinished. One instance is one
-podcast: its feed, its site, its download counting, its media on the
-machine it runs on or on storage of your own, an import from whatever
-host you are leaving, and the details the directories ask for when you
-submit it.
-
-These are not on the list and are not coming:
-
-- **Members and paid subscriptions.** No login for listeners, no
-  paywall, no private feeds.
-- **Advertising.** No ad server, no dynamic insertion, no marketplace.
-- **A newsletter or a blog.** FOSSCast publishes episodes; it is not a
-  CMS and does not send email to your audience.
-- **A recording studio.** That is
-  [FOSSStudio](https://github.com/lightmorphic/fossstudio), a separate
-  app. You add a finished file here; FOSSCast does not record one.
-- **Listener accounts, or an app of our own.** People subscribe in
-  whatever podcast app they already use.
-- **More than one podcast per instance.** Run a second instance.
-
-Some of those exist in the hosted service. They are not being withheld
-from the free edition as a lever: they are a different product with a
-different shape, and putting them here would make the self-hosted app
-worse at the one job it has. If you want them and do not want to pay
-for them, the AGPL lets you fork this and build them yourself.
-
-## Self-hosting
-
-One file, one command, no checkout, and nothing in the file to fill in.
-Point your domain's DNS at the machine, paste this into
-`docker-compose.yml`, and run `docker compose up -d`:
+<details>
+<summary><b>The whole compose file, if you would rather read it here</b></summary>
+<br>
 
 ```yaml
 # FOSSCast, the whole thing, from a single file.
@@ -214,30 +123,46 @@ volumes:
 #   caddy_config:
 ```
 
-That is the whole installation. The image carries the app and its web
-assets, and nothing else is installed on the machine.
+</details>
 
-The bundled Caddy at the foot of that file is commented out, because a
-machine that already runs nginx or Apache must not have ports 80 and
-443 taken out from under it. Nothing is fronting this box yet? Take the
-`# ` off every line from the Caddy note to the bottom of the file and
-the HTTPS certificate arrives on its own within a minute of the first
-request. Something already is? Leave the hashes where they are and
-point it at `127.0.0.1:3100`, which the app publishes either way.
+## What you get
 
-Then log in at `https://your-domain/admin` with the email and password
-you put in the file, and change the password from the Account page.
+- **A page for every episode**, with a player, artwork, notes and chapters, and an RSS feed with the full iTunes namespace plus Podcasting 2.0 transcripts, chapters, people and funding tags. Directories take it as it is.
+- **Audio anywhere.** Upload it here, or paste the address of a file you keep on your own storage. The feed and the counting are the same either way, and nothing is copied.
+- **Numbers you can believe**, counted to the industry's own rules: one download per listener per episode per day, robots not counted, and a partial fetch only when it starts at the beginning. No cookies, nothing stored about any person.
+- **Your look, not ours.** One accent color, a tagline and a footer line, with a live preview. Every other shade is worked out from that color, and link text is walked darker or lighter until it clears 4.5:1.
+- **The people on it.** Each host gets a photo, a write-up and a page, and goes out in the feed so apps can put a face to a voice.
+- **Where to listen and where to find you**: Apple, Spotify, YouTube Music, Pocket Casts, Overcast and Podcast Index as buttons; Mastodon, Matrix, Bluesky and the rest beside them. Patreon, Ko-fi, Liberapay and PayPal become `podcast:funding` tags.
+- **Moving in is one paste.** Give it your old feed's address and every episode arrives with the identifier it already had, so nobody's app re-downloads your back catalog. Your old feed address keeps working.
+- **Help inside the app**, at `/help`, with no outside calls at all - so it works on a machine with no internet and describes the version you installed.
+- **Nothing phones home.** No analytics, no tracking, no crash reporting, no update check, no CDN, no call to any domain but your own. There are no npm dependencies to trust either: the app is plain Node and the image is Node plus our own files.
 
-The same file lives in the repository as `docker-compose.pull.yml`, and
-it runs the same image as the maintainer's own instances: every push to
-`main` publishes it.
+![The episodes screen: every episode with its artwork, date and links, and the form for a new one](docs/shots/episodes.png)
 
-To update: `docker compose pull && docker compose up -d`. Your data
-lives in the `fosscast_data` volume and is untouched by updates.
+![The stats screen: downloads all time, the last thirty days, feed pulls, and a chart month by month](docs/shots/stats.png)
 
-Working on FOSSCast itself, rather than running it? Clone the
-repository and use `docker-compose.yml`, which builds from source and
-mounts `web/` so edits appear on reload.
+## Free, and staying free
+
+FOSSCast is free software under the AGPL and always will be. Copy the compose file onto a machine you control and it is yours: no account, no key, no tier, nothing held back. Everything in this repository is everything there is.
+
+If you would rather not run a server, the people who write FOSSCast also host it: **[Castmorphic](https://castmorphic.com)** runs this same software for you with more built on top, and paying for that is what funds the work here. It is an alternative to self-hosting rather than a better version of it, and you will not find an ad for it inside the software.
+
+## What it does not do
+
+One instance is one podcast: its feed, its site, its counting, its media, an import from whatever host you are leaving, and the details a directory asks for. That scope is settled rather than merely unfinished, and these are not coming:
+
+- **Members and paid subscriptions.** No listener logins, no paywall, no private feeds.
+- **Advertising.** No ad server, no dynamic insertion, no marketplace.
+- **A newsletter or a blog.** FOSSCast publishes episodes; it is not a CMS and sends no email to your audience.
+- **A recording studio.** That is [FOSSStudio](https://github.com/lightmorphic/fossstudio), a separate app with its own repository. You add a finished file here.
+- **Listener accounts, or an app of our own.** People subscribe in the podcast app they already use.
+- **More than one podcast per instance.** Run a second instance.
+
+Some of those exist in the hosted service. They are not withheld from the free edition as a lever: they are a different product with a different shape, and putting them here would make this worse at the one job it has. The AGPL lets you fork it and build them yourself.
+
+<details>
+<summary><b>Installing behind something else: nginx, Apache, a tunnel, Tailscale, a proxy on another machine</b></summary>
+<br>
 
 ### Bring your own reverse proxy (nginx, Apache, a tunnel)
 
@@ -466,13 +391,11 @@ the directory must be writable by that user:
 sudo chown -R 1000:1000 ./data
 ```
 
-## Deploying updates from a dev machine
+</details>
 
-`FOSSCAST_HOST=root@<ip> scripts/deploy.sh` uploads a timestamped
-release folder, switches the `current` symlink and restarts the stack,
-with instant rollback via `scripts/rollback.sh`.
-
-## Development
+<details>
+<summary><b>Development, deploying and what is in a backup</b></summary>
+<br>
 
 ```bash
 cd server
@@ -480,41 +403,24 @@ npm start       # listens on http://localhost:3100
 npm test
 ```
 
-The app is plain Node with zero runtime npm dependencies. The web
-assets are plain CSS and inline SVG, one self-hosted variable font, no
-framework, no build step, no CDN, no trackers.
+The app is plain Node with zero runtime npm dependencies. The web assets are plain CSS and inline SVG, one self-hosted variable font, no framework, no build step, no CDN, no trackers. There is a linter at the root of the repository - `npm install && npm run lint` - which is a check on us rather than something FOSSCast needs.
 
-## Moving it, and backing it up
+`FOSSCAST_HOST=root@<ip> scripts/deploy.sh` uploads a timestamped release folder, switches the `current` symlink and restarts the stack, with instant rollback via `scripts/rollback.sh`.
 
-The dashboard's **Backup** page hands you one file with the whole
-instance in it: the podcast, its hosts and episodes, the settings, the
-download counts and every upload. It is an ordinary `.tar.gz`, so
-`tar tzf` shows you what is in a backup without this program's help.
+The dashboard's **Backup** page hands you one file with the whole instance in it: the podcast, its hosts and episodes, the settings, the download counts and every upload. It is an ordinary `.tar.gz`, so `tar tzf` shows what is inside without this program's help.
 
-Putting one back replaces everything on that server with what is in the
-file, which is why restoring a copy and moving a podcast to another
-machine are the same job. The file carries the login too - the password
-hash, the second factor and any passkeys - because that is what makes it
-a move rather than a copy of the words. Keep it where you would keep a
-password.
+Putting one back replaces everything on that server with what is in the file, which is why restoring a copy and moving a podcast to another machine are the same job. The file carries the login too - the password hash, the second factor and any passkeys - because that is what makes it a move rather than a copy of the words. Keep it where you would keep a password.
+
+</details>
 
 ## Reporting a problem
 
-- **Something broken, something confusing, something missing:** open an
-  issue on GitHub. During the beta this is the most useful thing you
-  can do. Tell us what you did, what you expected and what happened;
-  the version from the dashboard footer helps.
-- **A security problem:** please report it privately first. `SECURITY.md`
-  says how.
-- **Code:** we are not merging pull requests during the beta.
-  `CONTRIBUTING.md` explains why in full, and says what changes after
-  the beta.
+- **Something broken, confusing or missing:** open an issue. Tell us what you did, what you expected and what happened; the version in the dashboard footer helps.
+- **A security problem:** please report it privately first. [`SECURITY.md`](SECURITY.md) says how.
+- **Code:** we are not merging pull requests. [`CONTRIBUTING.md`](CONTRIBUTING.md) explains why in full, and what would have to change first.
 
 ## License
 
 Free software under the [GNU AGPL v3](LICENSE).
 
-`NOTICE.md` records who wrote what: FOSSCast is Lightmorphic's own work
-throughout, and the only third-party material in the repository is the
-Manrope typeface (SIL Open Font License 1.1, text in
-`web/fonts/OFL.txt`). There are no runtime npm dependencies at all.
+[`NOTICE.md`](NOTICE.md) records who wrote what: FOSSCast is Lightmorphic's own work throughout, and the only third-party material in the repository is the Manrope typeface (SIL Open Font License 1.1). There are no runtime npm dependencies at all.
