@@ -229,21 +229,17 @@ p { max-width: 65ch; }
     padding: 1rem;
   }
   .mainmenu { flex-direction: row; flex-wrap: wrap; gap: 0.25rem; }
-  .menu-head { width: 100%; margin: 0.6rem 0 0.1rem; }
+  /* A heading takes the whole line. Width alone does not do it: a flex
+     item may shrink below its width, so the heading squeezed itself in
+     beside the links and the grouping was lost. */
+  /* A heading takes the whole line. Two things stop it: a flex item may
+     shrink below its width, and every p on the page is capped at 65
+     characters - which quietly held the heading to 455px and let the
+     links sit up beside it. */
+  .menu-head { flex: 0 0 100%; max-width: none; margin: 0.6rem 0 0.1rem; }
   .menu-foot { margin-top: 0.6rem; padding-top: 0; flex-direction: row; flex-wrap: wrap; }
   .menu-foot hr { display: none; }
   .admin-link.logout { width: auto; }
-  .subnav {
-    width: auto;
-    height: auto;
-    overflow: visible;
-    margin-bottom: 1rem;
-    padding: 1rem;
-    flex-direction: row;
-    flex-wrap: wrap;
-    gap: 0.25rem;
-  }
-  .subnav-title { width: 100%; margin: 0 0 0.1rem; padding: 0; }
   .workspace { height: auto; overflow: visible; padding: 0 0 2rem; }
 }
 .admin-tag {
@@ -1430,6 +1426,24 @@ td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
 .subnav-link:hover { color: var(--fg); background: var(--muted); }
 .subnav-link.current { color: var(--on-accent-container); background: var(--accent-container); }
 
+/* On a phone the column becomes rows above the work, the way the main
+   menu above it does. This has to sit AFTER the rules it overrides:
+   same specificity, so the later one wins, and written up beside the
+   rest of the small-screen layout it quietly lost every time. */
+@media (max-width: 52rem) {
+  .subnav {
+    width: auto;
+    height: auto;
+    overflow: visible;
+    margin-bottom: 1rem;
+    padding: 1rem;
+    flex-direction: row;
+    flex-wrap: wrap;
+    gap: 0.25rem;
+  }
+  .subnav-title { flex: 0 0 100%; max-width: none; margin: 0 0 0.1rem; padding: 0; }
+}
+
 /* A form wide enough to use the room it is given: what the episode is
    on one side, where its audio and artwork come from on the other. */
 .form-cols {
@@ -1584,3 +1598,141 @@ form h2:first-child { margin-top: 0; }
 .help-marks .mark.yes circle { stroke: var(--accent); }
 .help-marks .mark.yes path { stroke: var(--accent); }
 .help-marks .mark text { fill: var(--fg); font-size: 13px; }
+
+/* Every answer as a card, at the top, so the page opens as a list of
+   things you might want rather than the first paragraph of the first
+   one. The icon is drawn for the answer it belongs to - a folder for
+   getting listed, a door for the counting door - and is there to be
+   recognized on the way back, not to decorate. */
+.help-cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1.75rem;
+}
+.help-card {
+  display: block;
+  padding: 1rem 1.1rem;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  text-decoration: none;
+  color: inherit;
+}
+.help-card:hover { border-color: var(--accent); }
+.help-card-icon {
+  display: block;
+  width: 1.5rem;
+  height: 1.5rem;
+  margin-bottom: 0.6rem;
+  color: var(--accent);
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.help-card h3 { margin: 0 0 0.25rem; font-size: 0.9375rem; }
+.help-card p { margin: 0; font-size: 0.8125rem; color: var(--muted-fg); line-height: 1.45; }
+
+/* The one-sentence answer. Bigger than the detail under it, because
+   somebody who reads only this line should still be able to go and do
+   the thing. */
+.answer-lead {
+  margin: 0 0 1.1rem;
+  font-size: 1.0625rem;
+  line-height: 1.55;
+  max-width: 44rem;
+}
+.help-h3 {
+  margin: 1.5rem 0 0.6rem;
+  font-size: 0.8125rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--muted-fg);
+}
+
+/* Moves to make, in order. The number is drawn in a circle down the
+   side so the steps read as steps at a glance. */
+.help-steps { list-style: none; counter-reset: step; margin: 0 0 1.1rem; padding: 0; }
+.help-steps li {
+  counter-increment: step;
+  position: relative;
+  padding: 0 0 0 2.5rem;
+  margin: 0 0 0.85rem;
+  line-height: 1.6;
+  max-width: 44rem;
+}
+.help-steps li:last-child { margin-bottom: 0; }
+.help-steps li::before {
+  content: counter(step);
+  position: absolute;
+  left: 0;
+  top: 0.05rem;
+  width: 1.7rem;
+  height: 1.7rem;
+  border-radius: 50%;
+  background: var(--accent-container);
+  color: var(--on-accent-container);
+  font-size: 0.8125rem;
+  font-weight: 700;
+  display: grid;
+  place-items: center;
+}
+
+/* Two choices side by side. A paragraph about one and then a paragraph
+   about the other makes a reader hold the first in their head. */
+.help-two {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1.1rem;
+}
+.help-mini {
+  padding: 0.9rem 1rem;
+  background: var(--muted);
+  border-radius: var(--radius);
+}
+.help-mini h4 { margin: 0 0 0.35rem; font-size: 0.9375rem; }
+.help-mini p { margin: 0; font-size: 0.9375rem; line-height: 1.55; color: var(--muted-fg); }
+
+/* Short statements, one line each, marked with a drawn tick rather
+   than a bullet the browser chose. */
+.help-points { list-style: none; margin: 0 0 1.1rem; padding: 0; }
+.help-points li {
+  position: relative;
+  padding: 0 0 0 1.6rem;
+  margin: 0 0 0.5rem;
+  line-height: 1.6;
+  max-width: 44rem;
+}
+.help-points li:last-child { margin-bottom: 0; }
+.help-points li::before {
+  content: "";
+  position: absolute;
+  left: 0.15rem;
+  top: 0.62em;
+  width: 0.4rem;
+  height: 0.4rem;
+  border-radius: 50%;
+  background: var(--accent);
+}
+
+/* The aside that stops somebody making the mistake: a gray panel and
+   nothing else. No color down the side, no shouting. */
+.help-note {
+  margin: 0 0 1.1rem;
+  padding: 0.85rem 1rem;
+  background: var(--muted);
+  border-radius: var(--radius);
+  color: var(--muted-fg);
+  line-height: 1.6;
+  max-width: 44rem;
+}
+.help-section > *:last-child { margin-bottom: 0; }
+
+/* The address bar in the drawing about the site address. */
+.help-diagram .bar rect { fill: var(--panel); stroke: var(--border); }
+.help-diagram .bar text { fill: var(--accent); font-size: 13px; font-family: ui-monospace, monospace; }
+.help-diagram > .s, .help-diagram text.s { fill: var(--muted-fg); font-size: 12px; text-anchor: middle; }

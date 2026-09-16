@@ -182,3 +182,31 @@ test('the drawings are drawn here and say what they are', () => {
   }
   assert.ok(!/<img /.test(page), 'nothing on the page is a bitmap');
 });
+
+test('every answer opens with the answer, and none of them is four paragraphs', () => {
+  // The shape is the point. A reader who takes only the first sentence
+  // should be able to go and do the thing, and what follows it should
+  // be something the eye can land on rather than more prose.
+  const sections = [...page.matchAll(/<section class="help-section" id="([^"]+)">([\s\S]*?)<\/section>/g)];
+  assert.strictEqual(sections.length, 12);
+  for (const [, id, html] of sections) {
+    assert.match(html, /class="answer-lead"/, `${id} does not open with a one-sentence answer`);
+    const structure = /help-steps|help-points|help-two|help-fig|class="cmd"/.test(html);
+    assert.ok(structure, `${id} is prose and nothing else`);
+    // Nothing on the page is a run of paragraphs with no break in it.
+    const runs = html.split(/<(?:ol|ul|div|figure|h3|p class="help-note")/);
+    for (const run of runs) {
+      const paras = (run.match(/<p>/g) || []).length;
+      assert.ok(paras <= 3, `${id} has ${paras} paragraphs in a row`);
+    }
+  }
+});
+
+test('the cards at the top are the way in, and cover every answer', () => {
+  const cards = [...page.matchAll(/class="help-card" href="#([^"]+)"/g)].map((m) => m[1]);
+  const ids = [...page.matchAll(/class="help-section" id="([^"]+)"/g)].map((m) => m[1]);
+  assert.deepStrictEqual(cards, ids, 'a card for every answer, in order');
+  // Each card carries a drawn mark rather than a letter or an emoji.
+  const icons = page.match(/class="help-card-icon"/g) || [];
+  assert.strictEqual(icons.length, ids.length);
+});
