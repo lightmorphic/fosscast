@@ -1,13 +1,13 @@
 # Contributing
 
-**FOSSCast is in public beta. During the beta: bug reports and
-discussion yes, code contributions no.**
+**Bug reports and discussion yes, code contributions no.** That is not
+about how finished FOSSCast is - it is 1.0 and in use - it is about who
+owns the copyright. The reason is written out in full below.
 
 ## What we want, and want badly
 
-- **Bug reports.** This is a beta and it will break. Telling us what
-  you did and what happened is worth more to us right now than a patch
-  would be.
+- **Bug reports.** Telling us what you did, what you expected and what
+  happened is worth more to us than a patch would be.
 - **Security reports.** See `SECURITY.md`. Please report privately.
 - **Ideas and questions.** Open a discussion. Tell us what is missing,
   what is confusing, what you expected to find and did not. We may well
@@ -30,10 +30,10 @@ file.
 If you want to change FOSSCast for your own use, fork it. The AGPL gives
 you that right and you do not need our permission.
 
-## After the beta
+## What would have to change first
 
-The beta rule is temporary. When FOSSCast reaches 1.0 proper, one of
-two things will happen here, and this file will say which:
+The rule is not permanent. One of two things happens before pull
+requests open, and this file will say which:
 
 1. **A contributor agreement.** A short document you sign once, saying
    the code is yours to give and that Lightmorphic may use it under any
@@ -50,7 +50,7 @@ be decided quietly.
 ## If you send code anyway
 
 Sometimes people paste a fix into a bug report, or send a patch by
-email. We would rather that did not happen during the beta, but if you
+email. We would rather that did not happen, but if you
 do send us code, by sending it you agree to the following:
 
 > You confirm the code is yours to give, that you wrote it, and that no

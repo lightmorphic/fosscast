@@ -1,10 +1,5 @@
 # FOSSCast architecture and decisions record
 
-> **This project is in public beta.** It is not ready to be relied on;
-> data loss and breaking changes are possible. Please do not put a real
-> podcast on it yet. This document describes the beta as it stands and
-> will change with it.
-
 The decisions behind the shape of the code, written down so future work
 does not have to rediscover them.
 

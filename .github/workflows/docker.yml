@@ -32,8 +32,8 @@ jobs:
           username: ${{ github.actor }}
           password: ${{ secrets.GITHUB_TOKEN }}
 
-      # A push to main moves :latest. A release tag publishes :0.2.0 and
-      # :0.2 as well, so a self-hoster can follow a line rather than
+      # A push to main moves :latest. A release tag publishes :1.0.0 and
+      # :1.0 as well, so a self-hoster can follow a line rather than
       # whatever landed this morning.
       - name: Work out the image tags
         run: |

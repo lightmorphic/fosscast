@@ -2,7 +2,33 @@
 
 All notable changes to FOSSCast are documented here.
 
-## Unreleased
+## 1.0.0 - 2026-09-16
+
+**The number changes what the words mean.** Until today this said beta,
+and beta meant: install it, break it, and do not put a real podcast on
+it. That warning is gone from the README, the website, the architecture
+notes and the contributing file, because it is no longer the honest
+description. What has not changed is the advice underneath it: keep
+your own copy of anything you cannot lose. The Backup page hands you
+the whole instance as one file, which is what makes that easy rather
+than a chore.
+
+There is one release and one branch from here. The old tags are gone
+and `main` is the only branch: what is on it is what the image is built
+from, and there is no other version of FOSSCast to be on.
+
+**A README somebody might actually read.** It opens with a picture of a
+podcast's site rather than a wall of text, shows the episodes screen
+and the stats screen, and the long install notes - nginx, Apache,
+tunnels, Tailscale, a proxy on another machine - are folded away under
+a summary for the people who need them.
+
+Everything in Unreleased below is in this release: the help page, the
+podcast settings as a column beside the page rather than a row of tabs,
+the whole-instance backup and restore, dark mode throughout, and the
+front page of an install with no podcast on it telling the truth.
+
+## What landed on the way to 1.0
 
 - **Help inside FOSSCast, at `/help`.** Behind the login, shipped with
   the code, and it makes no request to any other machine - a self-hosted
@@ -110,12 +136,9 @@ All notable changes to FOSSCast are documented here.
 
 ## 0.1.0 - 2026-09-13
 
-The first public release, and the number says what it is: a beta.
-
-**This is a public beta. It is not ready to be relied on. Data loss and
-breaking changes are possible. Please do not put a real podcast on it
-yet.** The README says so above everything else, and releases are marked
-as pre-release on GitHub.
+The first public release, and at the time the number said what it was:
+a beta. It is kept here for the record of what arrived when; 1.0.0
+above is the release to install.
 
 What is here:
 
