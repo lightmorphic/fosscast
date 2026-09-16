@@ -20,17 +20,6 @@ const sidebarOf = (html) => {
   return html.slice(i, html.indexOf('</aside>', i));
 };
 
-test('the work is the same width on a page with a section and one without', () => {
-  // Both pages put the same three columns in the same order, so the work
-  // starts and ends in the same place whether the section is there or not.
-  const without = adminPage({ title: 'Episodes', active: 'episodes', body: '<p>x</p>' });
-  const with_ = adminPage({ title: 'Podcast', active: 'podcast', body: '<p>x</p>', subnav });
-  const shape = (h) => ['sidebar', 'subnav', 'workspace']
-    .map((c) => h.includes(`class="${c}`) || h.includes(`class="${c}-gap"`));
-  assert.deepStrictEqual(shape(without), [true, true, true]);
-  assert.deepStrictEqual(shape(with_), [true, true, true]);
-});
-
 test('the main menu is identical with and without a second column', () => {
   const without = adminPage({ title: 'Episodes', active: 'episodes', body: '<p>x</p>' });
   const with_ = adminPage({ title: 'Podcast', active: 'podcast', body: '<p>x</p>', subnav });
@@ -52,19 +41,17 @@ test('the second column sits between the menu and the work', () => {
   assert.ok(html.includes('subnav-link current'));
 });
 
-test('a page with no section still holds the column open', () => {
+test('a page with no section has no second column at all', () => {
   const html = adminPage({ title: 'Episodes', active: 'episodes', body: '<p>x</p>' });
-  assert.ok(!html.includes('class="subnav"'), 'no links where there is no section');
-  assert.ok(html.includes('class="subnav-gap"'), 'the room is held open anyway');
-  const gap = html.indexOf('class="subnav-gap"');
-  assert.ok(html.indexOf('<aside class="sidebar">') < gap && gap < html.indexOf('<main class="workspace"'));
+  assert.ok(!html.includes('class="subnav"'));
+  assert.ok(!html.includes('subnav-gap'), 'no empty column either - the work takes the room');
 });
 
 test('the menu and the section are both a fixed width', () => {
   // Each has a second block inside the phone media query, so take every
   // block of that name and require one of them to be the fixed column.
   const blocks = (name) => [...css.matchAll(new RegExp(`\\${name}[,\\s][^{}]*\\{[^}]*\\}`, 'g'))].map((m) => m[0]);
-  for (const name of ['.sidebar', '.subnav', '.subnav-gap']) {
+  for (const name of ['.sidebar', '.subnav']) {
     const fixed = blocks(name).filter((b) => /flex: 0 0 13rem/.test(b) && /width: 13rem/.test(b));
     assert.strictEqual(fixed.length, 1, `${name} is not fixed at 13rem exactly once`);
   }
@@ -72,6 +59,7 @@ test('the menu and the section are both a fixed width', () => {
   // what used to slide the menu sideways from page to page.
   const shell = css.slice(css.indexOf('.shell {'), css.indexOf('}', css.indexOf('.shell {')));
   assert.match(shell, /width: 100%/, 'the shell must fill its width, not its contents');
+  assert.match(shell, /max-width: 78rem/, 'and stop at a standard page width');
 });
 
 test('nothing renders the old row of tabs any more', () => {
