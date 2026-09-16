@@ -66,7 +66,9 @@ label a link to that service, which is what trademark law calls
 nominative use. If you fork FOSSCast and use it for something else,
 that is your judgment to make, not a right the AGPL gives you.
 
-The Lightmorphic logo files (`web/img/lightmorphic-mark.*`,
-`web/img/lightmorphic-dark-tb-250x50-sq.webp`) are Lightmorphic's
-trademark. The AGPL covers the code, not the brand: remove them if you
-fork this and publish it as your own thing.
+The Castmorphic mark in the footer of a podcast's site - three bars,
+drawn inline in `server/lib/html.js` - is Castmorphic's trademark, and
+it is there because Castmorphic pays for FOSSCast being written. The
+AGPL covers the code, not the brand: remove it if you fork this and
+publish it as your own thing. An operator who has not forked anything
+replaces it by setting `BRAND_NAME` and `BRAND_MARK`.

@@ -5,7 +5,7 @@
 // design tool is often one frame with an opaque tile, which looks
 // broken in a footer and cannot be told apart by looking at a thumbnail.
 //
-//   node scripts/check-gif.js web/img/lightmorphic-mark.gif
+//   node scripts/check-gif.js web/img/some-mark.gif
 
 const fs = require('fs');
 
