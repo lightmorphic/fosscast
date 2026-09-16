@@ -75,7 +75,7 @@ function accentVars(hex) {
 }
 
 function normalise(input = {}) {
-  const t = { ...DEFAULTS, ...(input || {}) };
+  const t = { ...DEFAULTS, ...input };
   return {
     accent: parseHex(t.accent, DEFAULTS.accent),
     tagline: String(t.tagline || '').trim().slice(0, 200),

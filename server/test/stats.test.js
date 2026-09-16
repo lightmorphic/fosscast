@@ -88,7 +88,7 @@ test('twelve months come back in order, including the empty ones', () => {
   const months = stats.lastMonths(12);
   assert.strictEqual(months.length, 12);
   assert.ok(months.every((m) => /^\d{4}-\d{2}$/.test(m.month)));
-  assert.deepStrictEqual(months.map((m) => m.month), [...months.map((m) => m.month)].sort(), 'oldest first');
+  assert.deepStrictEqual(months.map((m) => m.month), months.map((m) => m.month).sort(), 'oldest first');
   assert.strictEqual(months[11].month, new Date().toISOString().slice(0, 7), 'this month is last');
 });
 

@@ -197,7 +197,7 @@ function route(req, res) {
     }
     if (req.method === 'GET') {
       const range = req.headers.range;
-      if (!range || /^bytes=0-/.test(range)) {
+      if (!range || range.startsWith('bytes=0-')) {
         stats.record(episode.id, clientIp(req), req.headers['user-agent'] || '', {
           headers: req.headers,
           published: episode.date,
@@ -225,7 +225,7 @@ function route(req, res) {
     // or ranges starting at 0), deduplicated per listener per day.
     if (req.method === 'GET') {
       const range = req.headers.range;
-      if (!range || /^bytes=0-/.test(range)) {
+      if (!range || range.startsWith('bytes=0-')) {
         const episode = store.load('episodes', []).find((e) => e.mediaUrl === p);
         if (episode) {
           stats.record(episode.id, clientIp(req), req.headers['user-agent'] || '', {

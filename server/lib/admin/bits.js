@@ -110,14 +110,15 @@ function redirect(res, to, extraHeaders = {}) {
 
 function html(res, page, status = 200) {
   const ancestors = config.frameAncestors();
-  res.writeHead(status, {
+  const headers = {
     'Content-Type': 'text/html; charset=utf-8',
     'Content-Security-Policy': `frame-ancestors ${ancestors || "'none'"}`,
-    // X-Frame-Options cannot say "this origin only", so when an
-    // ancestor is allowed the CSP directive speaks alone. Every
-    // browser that honors X-Frame-Options honors frame-ancestors.
-    ...(ancestors ? {} : { 'X-Frame-Options': 'DENY' }),
-  });
+  };
+  // X-Frame-Options cannot say "this origin only", so when an ancestor
+  // is allowed the CSP directive speaks alone. Every browser that
+  // honors X-Frame-Options honors frame-ancestors.
+  if (!ancestors) headers['X-Frame-Options'] = 'DENY';
+  res.writeHead(status, headers);
   res.end(page);
 }
 

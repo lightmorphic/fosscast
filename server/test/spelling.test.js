@@ -308,11 +308,11 @@ test('every file a person reads uses American spellings', () => {
 // checked. Left in place it would quietly excuse a line somebody adds
 // later that happens to contain the same text.
 test('no exception in the list has gone stale', () => {
-  const dead = ALLOWED.filter((a) => {
+  const dead = ALLOWED.flatMap((a) => {
     const full = path.join(ROOT, a.file);
-    if (!fs.existsSync(full)) return true;
-    return !fs.readFileSync(full, 'utf8').includes(a.text);
-  }).map((a) => `${a.file}: ${a.text}`);
+    const gone = !fs.existsSync(full) || !fs.readFileSync(full, 'utf8').includes(a.text);
+    return gone ? [`${a.file}: ${a.text}`] : [];
+  });
   assert.deepStrictEqual(dead, [], `exceptions matching nothing:\n${dead.join('\n')}`);
 });
 
