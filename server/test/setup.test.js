@@ -40,10 +40,12 @@ async function until(fn, ms = 5000) {
 }
 
 function post(path, data, cookie = '') {
+  const headers = { 'Content-Type': 'application/x-www-form-urlencoded' };
+  if (cookie) headers.cookie = cookie;
   return fetch(`${BASE}${path}`, {
     method: 'POST',
     redirect: 'manual',
-    headers: { 'Content-Type': 'application/x-www-form-urlencoded', ...(cookie ? { cookie } : {}) },
+    headers,
     body: new URLSearchParams(data).toString(),
   });
 }

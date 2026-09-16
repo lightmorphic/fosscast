@@ -930,7 +930,7 @@ function createAdminRouter(ctx) {
           const url = String(form.get(`social_${key}`) || '').trim().slice(0, 500);
           // Matrix rooms are often shared as a matrix: URI rather than a
           // matrix.to link, and both should work.
-          if (/^https?:\/\//.test(url) || (key === 'matrix' && /^matrix:/.test(url))) entry.social[key] = url;
+          if (/^https?:\/\//.test(url) || (key === 'matrix' && url.startsWith('matrix:'))) entry.social[key] = url;
         }
         entry.support = {};
         for (const [key] of SUPPORT) {

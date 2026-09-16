@@ -59,6 +59,10 @@ function request({
   path: where = '/admin/setup', headers = {}, form, cookie,
 }) {
   const body = form ? new URLSearchParams(form).toString() : null;
+  const sendHeaders = { host: host || `${to}:${port}` };
+  if (body) sendHeaders['Content-Type'] = 'application/x-www-form-urlencoded';
+  if (cookie) sendHeaders.cookie = cookie;
+  Object.assign(sendHeaders, headers);
   return new Promise((resolve, reject) => {
     const req = http.request({
       host: to,
@@ -66,12 +70,7 @@ function request({
       method,
       path: where,
       localAddress: from,
-      headers: {
-        host: host || `${to}:${port}`,
-        ...(body ? { 'Content-Type': 'application/x-www-form-urlencoded' } : {}),
-        ...(cookie ? { cookie } : {}),
-        ...headers,
-      },
+      headers: sendHeaders,
     }, (res) => {
       let text = '';
       res.on('data', (chunk) => { text += chunk; });

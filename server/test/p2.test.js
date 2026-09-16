@@ -104,7 +104,8 @@ test('subscribe buttons appear only for platforms the show is on', () => {
 });
 
 test('a feed with no owner email omits the tag rather than faking one', () => {
-  const { ownerName, ownerEmail, ...noOwner } = show;
+  // Named only to leave them out; nothing reads them.
+  const { ownerName: _name, ownerEmail: _email, ...noOwner } = show;
   const xml = feed(noOwner, episodes, 'pod.example');
   assert.ok(!xml.includes('<itunes:owner>'));
   assert.ok(!xml.includes('<managingEditor>'));
