@@ -1,7 +1,6 @@
 'use strict';
 // HTML helpers and the two page shells (public site and admin).
 
-const path = require('path');
 
 // The mark in the footer's right-hand corner. An operator running this
 // for other people puts their own there - a path, or a data URI so

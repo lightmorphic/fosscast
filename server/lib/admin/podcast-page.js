@@ -4,12 +4,10 @@
 
 const { esc, adminPage } = require('../html');
 const CATEGORIES = require('../categories');
-const feedAliases = require('../feedaliases');
 const { APPS, SUPPORT, SOCIAL, prefixed } = require('../public');
 const { siteDomain } = require('../domain');
-const config = require('../config');
 
-module.exports = function create({ episodes, settings }) {
+module.exports = function create({ episodes }) {
   // The Podcast page: everything about the overall podcast on one page.
   // The instance hosts a single podcast; its details are filled in once
   // and rarely change, so they live here, apart from the episodes.

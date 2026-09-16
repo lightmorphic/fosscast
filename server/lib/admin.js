@@ -20,7 +20,6 @@ const importer = require('./import');
 const { APPS, SUPPORT, SOCIAL, showPage } = require('./public');
 const themes = require('./theme');
 const transcripts = require('./transcripts');
-const config = require('./config');
 const {
   DEMO, MAX_SHOWS, MAX_HOSTS,
   parseDuration, parseChapters, slugify, parseCookies, clientIp, isSecure,
@@ -121,7 +120,7 @@ function createAdminRouter(ctx) {
   const { episodesPage, episodeEditPage } = episodeScreens({ episodes, mediaDir });
   const { lookPage } = lookScreen();
   const {
-    hostList, uniqueHostSlug, migrateHosts, hostFields, applyHostForm,
+    migrateHosts, applyHostForm,
     hostsPage, hostEditPage,
   } = hostScreens({ store, shows });
   const { podcastPage, createPodcastPage } = podcastScreens({ episodes, settings });
@@ -314,7 +313,6 @@ function createAdminRouter(ctx) {
     // same shell - and it has the short address because every link to
     // it is a link somebody may want to type.
     if (!p.startsWith('/admin') && p !== '/help') return false;
-    const domain = siteDomain();
 
     // ---- the first run ----------------------------------------------
     // Until somebody owns this instance there is nothing to log in to,
