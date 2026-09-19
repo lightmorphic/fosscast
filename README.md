@@ -403,7 +403,7 @@ npm start       # listens on http://localhost:3100
 npm test
 ```
 
-The app is plain Node with zero runtime npm dependencies. The web assets are plain CSS and inline SVG, one self-hosted variable font, no framework, no build step, no CDN, no trackers. There is a linter at the root of the repository - `npm install && npm run lint` - which is a check on us rather than something FOSSCast needs.
+The app is plain Node with zero runtime npm dependencies. The web assets are plain CSS and inline SVG, one self-hosted variable font, no framework, no build step, no CDN, no trackers.
 
 `FOSSCAST_HOST=root@<ip> scripts/deploy.sh` uploads a timestamped release folder, switches the `current` symlink and restarts the stack, with instant rollback via `scripts/rollback.sh`.
 

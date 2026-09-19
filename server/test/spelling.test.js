@@ -31,7 +31,6 @@ const READ_BY_PEOPLE = [
   'README.md', 'CHANGELOG.md', 'CONTRIBUTING.md', 'NOTICE.md',
   'TRADEMARKS.md', 'SECURITY.md', '.env.example', 'Caddyfile',
   'docker-compose.yml', 'docker-compose.pull.yml',
-  '.github/PULL_REQUEST_TEMPLATE.md',
   'scripts', 'docs', 'web/css', 'server/lib', 'server/server.js',
   'server/admin-login-link.js', 'server/reset-password.js',
 ];

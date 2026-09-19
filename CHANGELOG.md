@@ -2,6 +2,18 @@
 
 All notable changes to FOSSCast are documented here.
 
+## 1.0.1 - 2026-09-19
+
+**Only what FOSSCast needs, and only what is ours.** The style checker
+added on 16 September is gone, with its configuration, its npm files and
+its plugin. It was never part of the program, and its rules came from a
+source whose author and license could not be named - which made
+NOTICE.md's promise, that every line here is Lightmorphic's own work
+bar the Manrope typeface, untrue while it sat in the repository. A GIF
+inspector in `scripts/` and a pull-request template that contradicted
+CONTRIBUTING.md went with it. Nothing about how FOSSCast runs has
+changed.
+
 ## 1.0.0 - 2026-09-16
 
 **The number changes what the words mean.** Until today this said beta,
